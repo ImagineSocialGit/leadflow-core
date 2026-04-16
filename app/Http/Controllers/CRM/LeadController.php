@@ -11,6 +11,9 @@ class LeadController extends Controller
 {
     public function index()
     {
+
+        dd(session('staging_access'), session('test'));
+
         $leads = Lead::latest()->paginate(20);
 
         return view('crm.leads.index', compact('leads'));

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
+    dd(session('staging_access'), session('test'));
     return view('welcome');
 });
 
