@@ -19,6 +19,9 @@ Route::get('/staging-login', function () {
 })->name('staging.login');
 
 Route::post('/staging-login', function (Request $request) {
+
+    dd('hit');
+
     if (
         $request->input('user') === config('staging.user') &&
         $request->input('password') === config('staging.password')
