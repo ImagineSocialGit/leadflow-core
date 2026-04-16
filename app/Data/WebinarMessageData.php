@@ -20,6 +20,7 @@ readonly class WebinarMessageData
         public CarbonInterface $webinarStartsAt,
         public string $webinarTimezone,
         public string $joinUrl,
+        public string $platform,
     ) {}
 
     public static function fromRegistration(WebinarRegistration $registration): self
@@ -45,6 +46,7 @@ readonly class WebinarMessageData
             webinarStartsAt: $webinar->starts_at,
             webinarTimezone: $webinar->timezone ?: config('app.timezone', 'America/Chicago'),
             joinUrl: $webinar->join_url,
+            platform: $webinar->platform,
         );
     }
 
@@ -62,6 +64,7 @@ readonly class WebinarMessageData
             'webinar_starts_at' => $this->webinarStartsAt->toIso8601String(),
             'webinar_timezone' => $this->webinarTimezone,
             'join_url' => $this->joinUrl,
+            'platform' => $this->platform,
         ];
     }
 
@@ -79,6 +82,7 @@ readonly class WebinarMessageData
             webinarStartsAt: Carbon::parse($data['webinar_starts_at']),
             webinarTimezone: $data['webinar_timezone'],
             joinUrl: $data['join_url'],
+            platform: $data['platform'],
         );
     }
 
