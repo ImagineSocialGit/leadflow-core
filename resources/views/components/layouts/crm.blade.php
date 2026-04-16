@@ -21,6 +21,17 @@
                     <a href="/webinars" class="block rounded-lg px-3 py-2 font-medium text-slate-700 transition hover:bg-slate-100">
                         Webinars
                     </a>
+                    <form method="POST" action="/logout" class="">
+                        @csrf
+                        <div class="block">
+                            <button
+                                type="submit"
+                                class="w-full rounded-lg px-3 py-2 text-left text-red-600 hover:text-red-300 transition hover:bg-slate-100 font-bold cursor-pointer"
+                            >
+                                Logout
+                            </button>
+                        </div>
+                    </form>
                 </nav>
             </aside>
 

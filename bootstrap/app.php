@@ -12,18 +12,27 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
 
         then: function () {
-            Route::middleware('web')
-                ->domain('webinar.' . parse_url(config('app.url'), PHP_URL_HOST))
+            $domain = parse_url(config('app.url'), PHP_URL_HOST);
+
+            Route::middleware(['web'])
+                ->domain('webinar.' . $domain)
                 ->group(base_path('routes/webinar.php'));
 
-            Route::middleware('web')
-                ->domain('crm.' . parse_url(config('app.url'), PHP_URL_HOST))
+            Route::middleware(['web', 'auth'])
+                ->domain('crm.' . $domain)
                 ->group(base_path('routes/crm.php'));
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->alias([
+            'staging.access' => \App\Http\Middleware\ForceStagingAccess::class,
+        ]);
+
+        $middleware->web(append: [
+            \App\Http\Middleware\ForceStagingAccess::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
-    })->create();
+    })
+    ->create();
