@@ -20,7 +20,7 @@ Route::get('/staging-login', function () {
 
 Route::post('/staging-login', function (Request $request) {
     if (
-        $request->input('username') === config('staging.user') &&
+        $request->input('user') === config('staging.user') &&
         $request->input('password') === config('staging.password')
     ) {
         session(['staging_access' => true]);

@@ -14,7 +14,7 @@
             @auth
             <div class="mx-auto text-4xl text-primary">You're already logged in.</div>
             @else
-            <form class="pt-12 flex flex-col space-y-4 max-w-md mx-auto" action="/staging/login" method="post">
+            <form class="pt-12 flex flex-col space-y-4 max-w-md mx-auto" action="{{ route('staging.login.submit') }}" method="post">
                 @csrf
                 <input class="bg-white border border-black rounded px-2 py-1 text-lg" type="text" name="user" placeholder="Username">
                 <input class="bg-white border border-black rounded px-2 py-1 text-lg" type="password" name="password" id="password">
