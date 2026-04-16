@@ -20,16 +20,18 @@ Route::get('/staging-login', function () {
 
 Route::post('/staging-login', function (Request $request) {
 
-    dd('hit');
-
     if (
         $request->input('user') === config('staging.user') &&
         $request->input('password') === config('staging.password')
     ) {
         session(['staging_access' => true]);
 
+        dd('hit');
+
         return redirect('/');
     }
+
+    dd('failed');
 
     return back()->withErrors([
         'login' => 'Invalid credentials',
