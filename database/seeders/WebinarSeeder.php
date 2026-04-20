@@ -14,13 +14,13 @@ class WebinarSeeder extends Seeder
     public function run(): void
     {
         Webinar::updateOrCreate(
-            ['slug' => 'staging-webinar'],
+            ['slug' => 'dev-webinar'],
             [
-                'title' => 'Staging Webinar',
+                'title' => 'Dev Webinar',
                 'status' => 'active',
                 'platform' => 'zoom',
                 'join_url' => 'https://example.com/join-test',
-                'external_id' => '89453666282',
+                'external_id' => '86027600155',
                 'starts_at' => Carbon::create(2026, 4, 20, 13, 15, 0, 'America/Chicago')->utc(),
                 'ends_at' => Carbon::create(2026, 4, 20, 13, 30, 0, 'America/Chicago')->utc(),
                 'timezone' => 'America/Chicago',
