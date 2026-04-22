@@ -34,6 +34,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'staging.access' => \App\Http\Middleware\ForceStagingAccess::class,
         ]);
 
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/zoom',
+        ]);
+
         $middleware->web(append: [
             \App\Http\Middleware\ForceStagingAccess::class,
         ]);
