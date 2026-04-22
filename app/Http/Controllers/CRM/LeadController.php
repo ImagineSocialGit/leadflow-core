@@ -20,7 +20,7 @@ class LeadController extends Controller
     public function show(Lead $lead)
     {
         $lead->load([
-            'webinarRegistrations.webinar',
+            'registrations.webinar',
             'leadNotes' => fn ($query) => $query->latest(),
             'tasks' => fn ($query) => $query->latest(),
         ]);
