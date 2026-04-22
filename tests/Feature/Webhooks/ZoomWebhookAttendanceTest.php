@@ -7,6 +7,7 @@ use App\Models\WebinarRegistration;
 use App\Services\Zoom\ZoomWebinarService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class ZoomWebhookAttendanceTest extends TestCase
@@ -15,6 +16,9 @@ class ZoomWebhookAttendanceTest extends TestCase
 
     public function test_webinar_ended_webhook_reconciles_attendance(): void
     {
+
+        Queue::fake();
+
         config()->set('services.zoom.webhook_secret', 'test-webhook-secret');
 
         $webinar = Webinar::query()->create([
@@ -96,7 +100,7 @@ class ZoomWebhookAttendanceTest extends TestCase
         $response = $this->withHeaders([
             'x-zm-request-timestamp' => $timestamp,
             'x-zm-signature' => $signature,
-        ])->postJson('/webhooks/zoom', $payload);
+        ])->postJson('http://webinar.leadflowcore.test/webhooks/zoom', $payload);
 
         $response->assertNoContent();
 
@@ -113,6 +117,9 @@ class ZoomWebhookAttendanceTest extends TestCase
 
     public function test_zoom_webhook_rejects_invalid_signature(): void
     {
+
+        Queue::fake();
+
         config()->set('services.zoom.webhook_secret', 'test-webhook-secret');
 
         $payload = [
@@ -129,13 +136,15 @@ class ZoomWebhookAttendanceTest extends TestCase
         $response = $this->withHeaders([
             'x-zm-request-timestamp' => $timestamp,
             'x-zm-signature' => 'v0=invalid-signature',
-        ])->postJson('/webhooks/zoom', $payload);
+        ])->postJson('http://webinar.leadflowcore.test/webhooks/zoom', $payload);
 
         $response->assertStatus(401);
     }
 
     public function test_zoom_webhook_handles_endpoint_url_validation(): void
     {
+        Queue::fake();
+
         config()->set('services.zoom.webhook_secret', 'test-webhook-secret');
 
         $payload = [
@@ -145,7 +154,7 @@ class ZoomWebhookAttendanceTest extends TestCase
             ],
         ];
 
-        $response = $this->postJson('/webhooks/zoom', $payload);
+        $response = $this->postJson('http://webinar.leadflowcore.test/webhooks/zoom', $payload);
 
         $response
             ->assertOk()

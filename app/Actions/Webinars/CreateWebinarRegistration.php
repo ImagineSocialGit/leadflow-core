@@ -4,7 +4,6 @@ namespace App\Actions\Webinars;
 
 use App\Data\WebinarMessageData;
 use App\Jobs\Messaging\DispatchWebinarRegistrationMessagesJob;
-use App\Jobs\Webinars\RoutePostWebinarRegistrationJob;
 use App\Models\Lead;
 use App\Models\Webinar;
 use App\Models\WebinarRegistration;
@@ -79,10 +78,6 @@ class CreateWebinarRegistration
             )->onQueue('notifications');
 
             $this->scheduleWebinarRemindersAction->execute($registration);
-
-            RoutePostWebinarRegistrationJob::dispatch($registration->id)
-                ->delay($webinar->ends_at)
-                ->onQueue('notifications');
 
             return $registration;
         });

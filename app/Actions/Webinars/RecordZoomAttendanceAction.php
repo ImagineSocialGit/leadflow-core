@@ -2,6 +2,7 @@
 
 namespace App\Actions\Webinars;
 
+use App\Jobs\Webinars\RoutePostWebinarRegistrationJob;
 use App\Models\Webinar;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -91,6 +92,14 @@ class RecordZoomAttendanceAction
                 $registration->forceFill([
                     'meta' => $meta,
                 ])->save();
+            });
+
+        $webinar->registrations()
+            ->pluck('id')
+            ->each(function ($registrationId) {
+                RoutePostWebinarRegistrationJob::dispatch(
+                    $registrationId
+                )->onQueue('notifications');
             });
     }
 }

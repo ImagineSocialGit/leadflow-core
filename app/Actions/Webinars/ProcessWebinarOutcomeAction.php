@@ -11,29 +11,33 @@ class ProcessWebinarOutcomeAction
 {
     public function execute(WebinarRegistration $registration): void
     {
-        $registration->loadMissing(['lead', 'webinar']);
+        $registration->loadMissing('webinar');
 
-        if ($registration->attended_at && $registration->lead?->converted_at) {
+        if (data_get($registration->meta, 'post_webinar_routed_at')) {
             return;
         }
 
-        if ($registration->attended_at && ! $registration->lead?->converted_at) {
+        if ($registration->attended_at) {
             $this->dispatchFollowUpMessages($registration, 'post_replay');
 
             return;
         }
 
-        if (! $registration->attended_at) {
-            $this->dispatchFollowUpMessages($registration, 'post_missed');
-
-            return;
-        }
+        $this->dispatchFollowUpMessages($registration, 'post_missed');
     }
 
     protected function dispatchFollowUpMessages(
         WebinarRegistration $registration,
         string $messageType
     ): void {
+
+        $meta = $registration->meta ?? [];
+        $meta['post_webinar_routed_at'] = now()->toIso8601String();
+
+        $registration->forceFill([
+            'meta' => $meta,
+        ])->save();
+
         $this->dispatchEmail($registration, $messageType);
         $this->dispatchSms($registration, $messageType);
     }
