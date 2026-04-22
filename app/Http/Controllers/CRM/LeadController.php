@@ -21,7 +21,7 @@ class LeadController extends Controller
     {
         $lead->load([
             'registrations.webinar',
-            'leadNotes' => fn ($query) => $query->latest(),
+            'notes' => fn ($query) => $query->latest(),
             'tasks' => fn ($query) => $query->latest(),
         ]);
 
