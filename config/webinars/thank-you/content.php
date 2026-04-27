@@ -1,31 +1,69 @@
 <?php
 
 return [
-    'title' => 'Registration Complete',
-    'meta_description' => 'Your webinar registration has been received.',
+    'title' => 'You’re Registered',
+    'meta_description' => 'Your webinar registration is confirmed. Check your email and phone for access details and reminders.',
 
-    'card' => [
-        'align' => 'text-center',
-        'eyebrow' => 'You Are Registered',
-        'title' => 'Your seat is confirmed',
-        'body' => 'Thanks for registering. Keep an eye on your email and phone for confirmation details, reminders, and access information for the webinar.',
+    'hero' => [
+        'enabled' => true,
+        'eyebrow' => 'Registration Confirmed',
+        'title' => 'Your Seat Is Confirmed',
+        'body' => 'You’re registered for the live class. Your private access details and reminders are on the way.',
+    ],
+
+    'next_steps' => [
+        'enabled' => true,
+        'heading' => 'What Happens Next',
+        'items' => [
+            [
+                'title' => 'Check your email and phone',
+                'body' => 'We’ll send your private access details, reminders, and replay information there.',
+            ],
+            [
+                'title' => 'Add the class to your calendar',
+                'body' => 'Block the time now so you do not miss the live training.',
+            ],
+            [
+                'title' => 'Show up ready',
+                'body' => 'Bring your mortgage questions. This is strategy, not a sales pitch.',
+            ],
+        ],
+    ],
+
+    'event_details' => [
+        'enabled' => true,
+        'heading' => 'Class Details',
+        'items' => [
+            [
+                'key' => 'date',
+                'label' => 'Date',
+                'value' => null,
+            ],
+            [
+                'key' => 'time',
+                'label' => 'Time',
+                'value' => null,
+            ],
+            [
+                'key' => 'location',
+                'label' => 'Where',
+                'value' => 'Live on Zoom',
+            ],
+        ],
     ],
 
     'actions' => [
         [
             'label' => 'Back to Webinars',
             'route' => 'webinar.index',
-            'variant' => 'primary',
-        ],
-        [
-            'label' => 'View Other Sessions',
-            'route' => 'webinar.index',
             'variant' => 'secondary',
         ],
     ],
 
     'blocks' => [
-        'card',
+        'hero',
+        'next_steps',
+        'event_details',
         'actions',
     ],
 ];

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Public\WebinarJoinRedirectController;
 use App\Http\Controllers\Public\WebinarRegistrationController;
 use App\Http\Controllers\Webhooks\ZoomWebhookController;
+use App\Models\WebinarSeries;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [WebinarRegistrationController::class, 'index'])
@@ -21,8 +22,13 @@ Route::post('/{seriesSlug}', [WebinarRegistrationController::class, 'store'])
     ->name('webinar.store');
 
 Route::get('/{seriesSlug}/thank-you', function (string $seriesSlug) {
+
+    $series = WebinarSeries::query()
+        ->where('slug', $seriesSlug)
+        ->firstOrFail();
+
     return view('webinar.thank-you', [
-        'seriesSlug' => $seriesSlug,
+        'series' => $series,
     ]);
 })->name('webinar.thank_you');
 

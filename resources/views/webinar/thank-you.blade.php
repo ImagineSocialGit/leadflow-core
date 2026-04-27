@@ -1,62 +1,126 @@
 @php
-    $page = config('theme.webinar_public.pages.thank_you', []);
-    $tokens = config('theme.webinar_public.tokens', []);
+    $style = array_replace_recursive(
+        config('webinars.style', []),
+        config('webinars.thank-you.style', []),
+    );
+
+    $page = array_replace_recursive(
+        config('webinars.content', []),
+        config('webinars.thank-you.content', []),
+    );
+
+    $webinar = $registration->webinar ?? $series->nextUpcomingWebinar();
+
+    $eventDetailsItems = collect($page['event_details']['items'] ?? [])->map(function (array $item) use ($webinar) {
+        $key = $item['key'] ?? null;
+
+        $resolvedValue = match ($key) {
+            'date' => $webinar?->starts_at?->timezone($webinar->timezone ?? config('app.timezone'))->format('F j, Y'),
+            'time' => $webinar?->starts_at?->timezone($webinar->timezone ?? config('app.timezone'))->format('g:i A'),
+            default => $item['value'] ?? null,
+        };
+
+        return [
+            ...$item,
+            'resolved_value' => $resolvedValue,
+        ];
+    })->filter(fn (array $item) => filled($item['resolved_value'] ?? null))->values();
 @endphp
 
 <x-layouts.public
-    :title="$page['title'] ?? 'Thank You'"
+    :title="$page['title'] ?? 'You’re Registered'"
     :meta-description="$page['meta_description'] ?? null"
 >
-    <section class="{{ $page['section'] ?? 'mx-auto max-w-3xl px-6 py-20' }}">
-        <div class="{{ config('theme.webinar_public.layout.card') ?? 'rounded-3xl border bg-white shadow-sm' }}">
-            <div class="{{ config('theme.webinar_public.layout.card_padding') ?? 'p-8 sm:p-10' }} {{ $page['card']['align'] ?? 'text-center' }}">
+    <section class="{{ $style['section'] ?? 'bg-white text-ink' }}">
+        @if($page['hero']['enabled'] ?? false)
+            <div class="{{ $style['hero']['section'] ?? '' }}">
+                <div class="{{ $style['hero']['inner'] ?? '' }}">
+                    @if(filled($page['hero']['eyebrow'] ?? null))
+                        <p class="{{ $style['hero']['eyebrow'] ?? '' }}">
+                            {{ $page['hero']['eyebrow'] }}
+                        </p>
+                    @endif
 
-                @if(filled($page['card']['eyebrow'] ?? null))
-                    <p class="{{ $tokens['eyebrow'] ?? 'text-sm font-semibold uppercase tracking-[0.2em]' }}">
-                        {{ $page['card']['eyebrow'] }}
-                    </p>
-                @endif
+                    @if(filled($page['hero']['title'] ?? null))
+                        <h1 class="{{ $style['hero']['title'] ?? '' }}">
+                            {{ $page['hero']['title'] }}
+                        </h1>
+                    @endif
 
-                <h1 class="{{ $tokens['hero_title'] ?? 'text-4xl font-bold tracking-tight sm:text-5xl' }} mt-4">
-                    {{ $page['card']['title'] ?? "You're registered" }}
-                </h1>
+                    @if(filled($page['hero']['body'] ?? null))
+                        <p class="{{ $style['hero']['body'] ?? '' }}">
+                            {{ $page['hero']['body'] }}
+                        </p>
+                    @endif
+                </div>
+            </div>
+        @endif
 
-                @if(filled($page['card']['body'] ?? null))
-                    <p class="{{ $tokens['body'] ?? 'text-lg leading-8 text-slate-600' }} mt-6">
-                        {{ $page['card']['body'] }}
-                    </p>
-                @endif
+        @if($page['next_steps']['enabled'] ?? false)
+            <div class="{{ $style['next_steps']['section'] ?? '' }}">
+                <div class="{{ $style['next_steps']['inner'] ?? '' }}">
+                    @if(filled($page['next_steps']['heading'] ?? null))
+                        <h2 class="{{ $style['next_steps']['heading'] ?? '' }}">
+                            {{ $page['next_steps']['heading'] }}
+                        </h2>
+                    @endif
 
-                @if(!empty($page['actions']))
-                    <div class="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
-                        @foreach($page['actions'] as $action)
-                            @php
-                                $href = isset($action['route'])
-                                    ? route($action['route'])
-                                    : '#';
-                            @endphp
+                    <div class="{{ $style['next_steps']['grid'] ?? '' }}">
+                        @foreach(($page['next_steps']['items'] ?? []) as $item)
+                            <article class="{{ $style['next_steps']['card'] ?? '' }}">
+                                <h3 class="{{ $style['next_steps']['title'] ?? '' }}">
+                                    {{ $item['title'] ?? '' }}
+                                </h3>
 
-                            @if(($action['variant'] ?? 'primary') === 'secondary')
-                                <x-ui.button
-                                    as="a"
-                                    href="{{ $href }}"
-                                    variant="secondary"
-                                >
-                                    {{ $action['label'] }}
-                                </x-ui.button>
-                            @else
-                                <x-ui.button
-                                    as="a"
-                                    href="{{ $href }}"
-                                >
-                                    {{ $action['label'] }}
-                                </x-ui.button>
-                            @endif
+                                <p class="{{ $style['next_steps']['body'] ?? '' }}">
+                                    {{ $item['body'] ?? '' }}
+                                </p>
+                            </article>
                         @endforeach
                     </div>
-                @endif
-
+                </div>
             </div>
-        </div>
+        @endif
+
+        @if(($page['event_details']['enabled'] ?? false) && $eventDetailsItems->isNotEmpty())
+            <div class="{{ $style['event_details']['section'] ?? '' }}">
+                <div class="{{ $style['event_details']['inner'] ?? '' }}">
+                    @if(filled($page['event_details']['heading'] ?? null))
+                        <h2 class="{{ $style['event_details']['heading'] ?? '' }}">
+                            {{ $page['event_details']['heading'] }}
+                        </h2>
+                    @endif
+
+                    <div class="{{ $style['event_details']['grid'] ?? '' }}">
+                        @foreach($eventDetailsItems as $item)
+                            <div class="{{ $style['event_details']['card'] ?? '' }}">
+                                <p class="{{ $style['event_details']['label'] ?? '' }}">
+                                    {{ $item['label'] ?? '' }}
+                                </p>
+
+                                <p class="{{ $style['event_details']['value'] ?? '' }}">
+                                    {{ $item['resolved_value'] }}
+                                </p>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        @if(filled($page['actions'] ?? []))
+            <div class="{{ $style['actions']['section'] ?? '' }}">
+                <div class="{{ $style['actions']['wrapper'] ?? '' }}">
+                    @foreach($page['actions'] as $action)
+                        <x-ui.button
+                            :href="route($action['route'])"
+                            :variant="$action['variant'] ?? 'primary'"
+                        >
+                            {{ $action['label'] ?? 'Continue' }}
+                        </x-ui.button>
+                    @endforeach
+                </div>
+            </div>
+        @endif
     </section>
 </x-layouts.public>
