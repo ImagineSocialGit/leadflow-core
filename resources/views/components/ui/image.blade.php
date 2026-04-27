@@ -2,46 +2,87 @@
     'path',
     'alt' => '',
     'sizes' => '100vw',
+    'loading' => 'lazy',
+    'placeholder' => true,
 ])
 
 @php
-    $base = cdn_image($path);
+    $image = is_array($path) ? $path : [
+        'path' => $path,
+        'sizes' => [320, 640, 960, 1280, 1600],
+        'placeholder' => "{$path}/placeholder.webp",
+    ];
 
-    $widths = [320, 640, 960, 1280, 1600];
+    $imagePath = $image['path'];
+    $widths = $image['sizes'] ?? [320, 640, 960, 1280, 1600];
+
+    $cdn = rtrim(config('filesystems.disks.spaces.url'), '/');
+    $base = "{$cdn}/images/{$imagePath}";
 
     $avifSrcset = collect($widths)
-        ->map(fn ($w) => "{$base}/{$w}.avif {$w}w")
+        ->map(fn ($width) => "{$base}/{$width}.avif {$width}w")
         ->implode(', ');
 
     $webpSrcset = collect($widths)
-        ->map(fn ($w) => "{$base}/{$w}.webp {$w}w")
+        ->map(fn ($width) => "{$base}/{$width}.webp {$width}w")
         ->implode(', ');
 
-    $placeholder = "{$base}/placeholder.webp";
+    $fallbackWidth = collect($widths)->contains(960)
+        ? 960
+        : collect($widths)->max();
+
+    $placeholderUrl = "{$cdn}/images/" . ($image['placeholder'] ?? "{$imagePath}/placeholder.webp");
 @endphp
 
-<picture x-data="{ loaded: false }">
-    <source
-        type="image/avif"
-        srcset="{{ $avifSrcset }}"
-        sizes="{{ $sizes }}"
-    >
+<div
+    x-data="{ loaded: false }"
+    x-init="
+        loaded = $refs.image?.complete && $refs.image?.naturalWidth > 0;
+        $nextTick(() => {
+            if ($refs.image?.complete && $refs.image?.naturalWidth > 0) {
+                loaded = true;
+            }
+        });
+    "
+    class="relative block overflow-hidden"
+>
 
-    <source
-        type="image/webp"
-        srcset="{{ $webpSrcset }}"
-        sizes="{{ $sizes }}"
-    >
+    @if($placeholder)
+        <img
+            src="{{ $placeholderUrl }}"
+            alt=""
+            aria-hidden="true"
+            :class="{ 'opacity-0': loaded, 'opacity-100': ! loaded }"
+            class="absolute inset-0 h-full w-full object-cover transition-opacity duration-500"
+        >
+    @endif
 
-    <img
-        src="{{ $placeholder }}"
-        alt="{{ $alt }}"
-        loading="lazy"
-        @load="loaded = true"
-        {{ $attributes->class([
-            'transition-opacity duration-500',
-            'opacity-0' => '!loaded',
-            'opacity-100' => 'loaded',
-        ]) }}
-    >
-</picture>
+    <picture class="block">
+
+        <source
+            type="image/avif"
+            srcset="{{ $avifSrcset }}"
+            sizes="{{ $sizes }}"
+        >
+
+        <source
+            type="image/webp"
+            srcset="{{ $webpSrcset }}"
+            sizes="{{ $sizes }}"
+        >
+
+        <img
+            x-ref="image"
+            src="{{ "{$base}/{$fallbackWidth}.webp" }}"
+            alt="{{ $alt }}"
+            loading="{{ $loading }}"
+            @load="loaded = true"
+            :class="{ 'opacity-100': loaded, 'opacity-0': ! loaded }"
+            {{ $attributes->class([
+                'relative z-10 transition-opacity duration-500',
+            ]) }}
+        >
+
+    </picture>
+
+</div>

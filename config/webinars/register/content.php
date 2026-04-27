@@ -135,7 +135,7 @@ return [
 
     'instructor' => [
         'enabled' => true,
-        'image' => config('generated.images.webinar-landing'),
+        'image' => config('generated.images.instructor'),
         'image_alt' => 'Stacey Sandlin and family',
         'image_sizes' => '(min-width: 1024px) 34vw, 90vw',
         'image_caption' => 'A 3-generation mortgage family. We don’t guess — we underwrite upfront.',

@@ -250,8 +250,9 @@
                 </div>
             </div>
         @endif
-
+        
         @if(($page['problem']['enabled'] ?? false) || ($page['instructor']['enabled'] ?? false))
+        
             <div class="{{ $style['problem']['section'] ?? 'bg-white text-ink' }}">
                 <div class="{{ $style['problem']['inner'] ?? 'mx-auto grid w-full max-w-7xl gap-12 px-6 py-16 sm:py-24 lg:grid-cols-2 lg:items-center' }}">
                     @if($page['problem']['enabled'] ?? false)
@@ -294,8 +295,9 @@
                                     <x-ui.image
                                         :path="$page['instructor']['image']"
                                         :alt="$page['instructor']['image_alt'] ?? 'Instructor'"
-                                        sizes="{{ $page['instructor']['image_sizes'] ?? '(min-width:1024px) 40vw,100vw' }}"
+                                        :sizes="$page['instructor']['image_sizes'] ?? '(min-width:1024px) 40vw,100vw'"
                                         class="{{ $style['instructor']['image_class'] ?? 'w-full rounded-3xl object-cover' }}"
+                                        :placeholder="false"
                                     />
 
                                     @if(filled($page['instructor']['image_caption'] ?? null))

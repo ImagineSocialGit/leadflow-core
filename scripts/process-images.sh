@@ -8,7 +8,6 @@ MANIFEST_PATH="resources/images/manifest.json"
 SIZES=(320 640 960 1280 1600)
 
 find "$RAW_DIR" -type f -print0 | while IFS= read -r -d '' file; do
-
   filename=$(basename "$file")
   name="${filename%.*}"
 
@@ -27,25 +26,48 @@ find "$RAW_DIR" -type f -print0 | while IFS= read -r -d '' file; do
 
   echo "Processing $file"
 
+  printf "Max width for %s? [320/640/960/1280/1600, default 1600] " "$manifest_path" > /dev/tty
+  read -r max_width < /dev/tty
+
+  max_width="${max_width:-1600}"
+
+  case "$max_width" in
+    320|640|960|1280|1600) ;;
+    *)
+      echo "Invalid max width: $max_width"
+      exit 1
+      ;;
+  esac
+
+  processed_sizes=()
+
   for size in "${SIZES[@]}"; do
+    if [ "$size" -le "$max_width" ]; then
+      processed_sizes+=("$size")
 
-    sharp -i "$file" \
-      -o "$output_dir/$size.avif" \
-      -f avif \
-      -- resize "$size"
+      if [ "$file" -ot "$output_dir/$size.webp" ] && [ "$file" -ot "$output_dir/$size.avif" ]; then
+          continue
+      fi
 
-    sharp -i "$file" \
-      -o "$output_dir/$size.webp" \
-      -f webp \
-      -- resize "$size"
+      sharp -i "$file" \
+        -o "$output_dir/$size.avif" \
+        -f avif \
+        -- resize "$size"
 
+      sharp -i "$file" \
+        -o "$output_dir/$size.webp" \
+        -f webp \
+        -- resize "$size"
+    fi
   done
 
-  sharp -i "$file" \
-    -o "$output_dir/placeholder.webp" \
-    -f webp \
-    -- resize 40 \
-    -- blur 10
+  if [ ! -f "$output_dir/placeholder.webp" ] || [ "$file" -nt "$output_dir/placeholder.webp" ]; then
+    sharp -i "$file" \
+      -o "$output_dir/placeholder.webp" \
+      -f webp \
+      -- resize 40 \
+      -- blur 10
+  fi
 
   printf "Add manifest entry for %s? [y/N] " "$manifest_path" > /dev/tty
   read -r add_manifest < /dev/tty
@@ -56,10 +78,14 @@ find "$RAW_DIR" -type f -print0 | while IFS= read -r -d '' file; do
       read -r manifest_key < /dev/tty
 
       if [ -n "$manifest_key" ]; then
+        sizes_csv=$(IFS=,; echo "${processed_sizes[*]}")
+
         php -r '
           $manifestPath = $argv[1];
           $key = $argv[2];
-          $value = $argv[3];
+          $path = $argv[3];
+          $maxWidth = (int) $argv[4];
+          $sizes = array_map("intval", explode(",", $argv[5]));
 
           if (! file_exists($manifestPath)) {
               file_put_contents($manifestPath, "{}\n");
@@ -73,7 +99,14 @@ find "$RAW_DIR" -type f -print0 | while IFS= read -r -d '' file; do
               exit(1);
           }
 
-          $data[$key] = $value;
+          $data[$key] = [
+              "path" => $path,
+              "max_width" => $maxWidth,
+              "sizes" => $sizes,
+              "formats" => ["avif", "webp"],
+              "placeholder" => $path . "/placeholder.webp",
+          ];
+
           ksort($data);
 
           $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
@@ -84,11 +117,10 @@ find "$RAW_DIR" -type f -print0 | while IFS= read -r -d '' file; do
           }
 
           file_put_contents($manifestPath, $json . PHP_EOL);
-        ' "$MANIFEST_PATH" "$manifest_key" "$manifest_path"
+        ' "$MANIFEST_PATH" "$manifest_key" "$manifest_path" "$max_width" "$sizes_csv"
 
         echo "Added manifest entry: $manifest_key => $manifest_path"
       fi
       ;;
   esac
-
 done

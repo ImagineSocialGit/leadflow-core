@@ -4,7 +4,7 @@ return [
 
     'brand' => [
         'name' => config('app.name'),
-        'logo' => null,
+        'logo' => config('generated.images.logo'),
         'logo_alt' => config('app.name'),
     ],
 

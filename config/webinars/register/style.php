@@ -8,7 +8,7 @@ return [
     'hero' => [
         'theme' => 'dark',
         'section' => 'bg-secondary text-white',
-        'inner' => 'mx-auto grid w-full max-w-7xl gap-10 px-6 py-14 sm:py-20 lg:grid-cols-[1.05fr_0.95fr] lg:items-center',
+        'inner' => 'mx-auto grid w-full max-w-7xl gap-10 px-6 py-14 sm:pt-8 sm:pb-20 lg:grid-cols-[1.05fr_0.95fr] lg:items-center',
         'wrapper' => 'max-w-4xl text-left',
         'align' => 'text-left',
         'title' => 'mt-5 flex flex-col gap-4',
@@ -75,7 +75,7 @@ return [
     'instructor' => [
         'wrapper' => 'rounded-3xl border border-black/10 bg-soft p-6 shadow-xl shadow-black/10 sm:p-8',
         'image_wrapper' => 'mx-auto max-w-md',
-        'image_class' => 'w-full rounded-3xl object-cover shadow-2xl shadow-black/20',
+        'image_class' => 'w-full object-cover',
         'content_wrapper' => 'mt-8 space-y-4',
         'body' => 'space-y-4 text-base font-medium leading-7 text-ink',
         'credibility_list' => 'mt-6 grid gap-3',

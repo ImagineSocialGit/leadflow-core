@@ -13,6 +13,7 @@ return [
             'wrap' => 'sticky top-0 z-40 border-b border-white/10 bg-secondary/95 backdrop-blur',
             'inner' => 'mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4',
             'brand' => 'text-lg font-extrabold tracking-tight text-white',
+            'brand_image' => 'max-w-24 max-h-24',
             'nav' => 'hidden items-center gap-6 text-sm font-bold uppercase tracking-[0.12em] text-white/75 md:flex',
             'nav_link' => 'transition hover:text-primary',
             'primary_link' => [

@@ -1,3 +1,29 @@
 {
-    "webinar-landing": "webinar/landing"
+    "instructor": {
+        "path": "webinar/register/instructor",
+        "max_width": 960,
+        "sizes": [
+            320,
+            640,
+            960
+        ],
+        "formats": [
+            "avif",
+            "webp"
+        ],
+        "placeholder": "webinar/register/instructor/placeholder.webp"
+    },
+    "logo": {
+        "path": "brand/logo",
+        "max_width": 640,
+        "sizes": [
+            320,
+            640
+        ],
+        "formats": [
+            "avif",
+            "webp"
+        ],
+        "placeholder": "brand/logo/placeholder.webp"
+    }
 }
