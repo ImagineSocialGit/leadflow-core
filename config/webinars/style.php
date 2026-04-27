@@ -1,5 +1,7 @@
 <?php
 
+// Shared content
+
 return [
     'layout' => [
         'body' => 'min-h-screen flex flex-col bg-secondary text-white font-sans',
@@ -78,19 +80,19 @@ return [
 
     'tokens' => [
         'eyebrow' => 'text-sm font-extrabold uppercase tracking-[0.24em] text-primary',
-        'hero_title' => 'text-4xl font-extrabold tracking-[-0.04em] leading-[0.95] text-white sm:text-6xl',
-        'section_title' => 'text-3xl font-extrabold tracking-[-0.03em] leading-tight text-ink sm:text-5xl',
+        'hero_title' => 'text-4xl font-extrabold tracking-[-0.04em] leading-[0.95] text-white sm:text-5xl',
+        'section_title' => 'text-3xl font-extrabold tracking-[-0.03em] leading-tight text-ink sm:text-4xl',
         'dark_section_title' => 'text-3xl font-extrabold tracking-[-0.03em] leading-tight text-white sm:text-5xl',
         'body' => 'text-base font-medium leading-7 text-white/88 sm:text-lg',
-        'emphasize' => 'text-base font-bold leading-7 tracking-wide text-primary-light sm:text-xl',
+        'emphasize' => 'text-base font-bold leading-7 tracking-wide text-primary-light sm:text-2xl',
         'emphasize_dark' => 'text-base font-medium leading-7 text-ink sm:text-lg',
         'body_dark' => 'text-base font-medium leading-7 text-ink sm:text-lg',
         'muted' => 'text-sm font-medium text-white/75',
         'muted_dark' => 'text-sm font-medium text-slate-500',
         'pink' => 'text-primary',
         'list_link' => 'text-base font-extrabold text-primary underline decoration-primary underline-offset-4 transition hover:brightness-110',
-        'primary_button' => 'w-full animate-[pulse_2.8s_ease-in-out_infinite]',
-        'secondary_button' => '',
+        'primary_button' => 'w-full animate-[pulse_2.8s_ease-in-out_infinite] cursor-pointer',
+        'secondary_button' => 'w-fit animate-[pulse_2.8s_ease-in-out_infinite] cursor-pointer',
         'form_grid' => 'space-y-4',
         'field_error' => 'mt-1 text-sm text-red-600',
     ],

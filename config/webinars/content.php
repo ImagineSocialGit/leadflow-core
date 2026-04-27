@@ -1,5 +1,7 @@
 <?php
 
+// Shared content
+
 return [
 
     'brand' => [

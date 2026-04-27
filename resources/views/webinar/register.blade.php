@@ -119,25 +119,33 @@
                         @endif
 
                         @if($page['urgency_stats']['enabled'] ?? false)
-                            <div class="{{ $style['urgency_stats']['wrapper'] ?? 'mt-8 grid gap-3 sm:grid-cols-3' }}">
-                                @foreach(($page['urgency_stats']['items'] ?? []) as $item)
-                                    <div class="{{ $style['urgency_stats']['item'] ?? 'rounded-2xl p-5' }}">
-                                        <span class="{{ $style['urgency_stats']['value'] ?? 'block text-3xl font-extrabold' }}">
-                                            {{ $item['value'] ?? '' }}
-                                        </span>
+                            <div class="{{ $style['urgency_stats']['wrapper'] ?? 'mt-8' }}">
+                                @if(filled($page['urgency_stats']['intro'] ?? null))
+                                    <p class="{{ $style['urgency_stats']['intro'] ?? 'mt-6 text-lg font-bold' }}">
+                                        {{ $page['urgency_stats']['intro'] }}
+                                    </p>
+                                @endif
 
-                                        <span class="{{ $style['urgency_stats']['label'] ?? 'mt-1 block text-sm font-bold' }}">
-                                            {{ $item['label'] ?? '' }}
-                                        </span>
-                                    </div>
-                                @endforeach
+                                <div class="{{ $style['urgency_stats']['stats_wrapper'] ?? 'mt-4 grid gap-3 sm:grid-cols-3' }}">
+                                    @foreach(($page['urgency_stats']['items'] ?? []) as $item)
+                                        <div class="{{ $style['urgency_stats']['item'] ?? 'rounded-2xl p-5' }}">
+                                            <span class="{{ $style['urgency_stats']['value'] ?? 'block text-3xl font-extrabold' }}">
+                                                {{ $item['value'] ?? '' }}
+                                            </span>
+
+                                            <span class="{{ $style['urgency_stats']['label'] ?? 'mt-1 block text-sm font-bold' }}">
+                                                {{ $item['label'] ?? '' }}
+                                            </span>
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                @if(filled($page['urgency_stats']['closing_line'] ?? null))
+                                    <p class="{{ $style['urgency_stats']['closing_line'] ?? 'mt-6 text-lg font-bold' }}">
+                                        {{ $page['urgency_stats']['closing_line'] }}
+                                    </p>
+                                @endif
                             </div>
-
-                            @if(filled($page['urgency_stats']['closing_line'] ?? null))
-                                <p class="{{ $style['urgency_stats']['closing_line'] ?? 'mt-6 text-lg font-bold' }}">
-                                    {{ $page['urgency_stats']['closing_line'] }}
-                                </p>
-                            @endif
                         @endif
                     </div>
 
@@ -357,6 +365,8 @@
                         <x-ui.button
                             type="button"
                             @click="formOpen = true"
+                            class="{{ $tokens['secondary_button'] ?? 'w-full' }}"
+                            
                         >
                             {{ $page['secondary_cta']['label'] ?? 'Reserve Your Spot Now' }}
                         </x-ui.button>
@@ -513,8 +523,9 @@
                         <x-ui.button
                             type="button"
                             @click="formOpen = true"
+                            class="{{ $tokens['secondary_button'] ?? 'w-full' }}"
                         >
-                            {{ $page['final_close']['label'] ?? 'Secure My Spot Before It Fills' }}
+                            {{ $page['final_close']['label'] ?? 'Lock In My Spot Now' }}
                         </x-ui.button>
 
                         @if(filled($page['final_close']['helper_text'] ?? null))
@@ -586,6 +597,7 @@
                         <x-ui.button
                             type="button"
                             @click="exitIntentOpen = false; formOpen = true"
+                            class="{{ $tokens['secondary_button'] ?? 'w-full' }}"
                         >
                             {{ $page['exit_intent']['label'] ?? 'Let Me In' }}
                         </x-ui.button>

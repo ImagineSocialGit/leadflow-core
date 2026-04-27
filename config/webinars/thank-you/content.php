@@ -1,5 +1,7 @@
 <?php
 
+// Thank you content
+
 return [
     'title' => 'You’re Registered',
     'meta_description' => 'Your webinar registration is confirmed. Check your email and phone for access details and reminders.',

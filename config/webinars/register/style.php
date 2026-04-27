@@ -1,5 +1,7 @@
 <?php
 
+// Registered style
+
 return [
 
     'section' => 'bg-white',
@@ -12,12 +14,14 @@ return [
         'wrapper' => 'max-w-4xl text-left',
         'align' => 'text-left',
         'title' => 'mt-5 flex flex-col gap-4',
-        'body' => 'mt-6 max-w-2xl',
+        'body' => 'mt-6 max-w-2xl text-lg sm:text-xl',
         'supporting_copy' => 'mt-5 max-w-xl',
     ],
 
     'urgency_stats' => [
-        'wrapper' => 'mt-8 grid gap-3 sm:grid-cols-3',
+        'wrapper' => 'mt-8',
+        'stats_wrapper' => 'mt-4 grid gap-3 sm:grid-cols-3',
+        'intro' => 'text-xl font-semibold tracking-wide leading-tight text-white sm:text-3xl',
         'item' => 'rounded-2xl border border-white/10 bg-white/[0.06] p-5',
         'value' => 'block text-3xl font-extrabold tracking-[-0.03em] text-primary',
         'label' => 'mt-1 block text-sm font-bold leading-5 text-white',
@@ -134,6 +138,7 @@ return [
             inline-flex min-h-14 items-center justify-center rounded-full
             bg-primary px-8 text-base font-extrabold uppercase
             tracking-[0.16em] text-white transition hover:scale-[1.02]
+            animate-pulse motion-safe:animate-pulse cursor-pointer
         ',
 
         'helper_text' => '
@@ -143,7 +148,7 @@ return [
 
     'sticky_mobile' => [
         'wrapper' => 'fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-secondary/95 p-4 backdrop-blur md:hidden',
-        'button' => 'w-full rounded-2xl bg-primary px-6 py-4 text-center text-sm font-extrabold uppercase tracking-[0.16em] text-white shadow-xl shadow-primary/25',
+        'button' => 'w-full rounded-2xl bg-primary px-6 py-4 text-center text-sm font-extrabold uppercase tracking-[0.16em] text-white shadow-xl shadow-primary/25 animate-pulse motion-safe:animate-pulse cursor-pointer',
     ],
 
     'legal_links' => [

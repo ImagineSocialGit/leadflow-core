@@ -1,5 +1,7 @@
 <?php
 
+// Thank you style
+
 return [
     'section' => 'bg-white text-ink',
 
@@ -7,8 +9,8 @@ return [
         'section' => 'bg-secondary px-6 py-16 text-white sm:py-24',
         'inner' => 'mx-auto max-w-4xl text-center',
         'eyebrow' => 'text-sm font-extrabold uppercase tracking-[0.24em] text-primary',
-        'title' => 'mt-5 text-4xl font-extrabold tracking-[-0.04em] leading-tight text-white sm:text-6xl',
-        'body' => 'mx-auto mt-6 max-w-2xl text-lg font-medium leading-8 text-white/75',
+        'title' => 'mt-5 text-4xl font-extrabold tracking-[-0.04em] leading-tight text-white sm:text-5xl',
+        'body' => 'mx-auto mt-6 max-w-2xl font-medium leading-8 text-white/75',
     ],
 
     'next_steps' => [

@@ -1,5 +1,7 @@
 <?php
 
+// Registered content
+
 return [
 
     'title' => 'Register for Webinar',
@@ -29,12 +31,9 @@ return [
         'enabled' => true,
         'eyebrow' => 'Live Online Class',
         'title_prefix' => null,
-        'title' => '80,000 Buyers Were Denied After Going Under Contract Last Year',
-        'subtitle' => 'Even After Being Pre-Approved',
-        'body' => 'Most buyers think they’re approved… until their deal falls apart.',
-        'supporting_copy' => 'If your loan isn’t structured correctly upfront, you don’t find out early. You find out when the deal is already on the line.',
-        'closing_copy' => 'I’ll show you how to avoid getting denied and how to protect your deal once you’re under contract.',
-        'authority_line' => 'Taught by a 30-year mortgage strategist, former underwriter, $1B+ funded.',
+        'title' => 'Last Year, 80,000 Pre-Approved Buyers Were Denied After Going Under Contract',
+        'body' => 'Most buyers think they’re approved… until the home slips away',
+        'closing_copy' => 'I’ll Show You How to Avoid This—And Make Sure You Get Your Home',
         'image' => null,
     ],
 
@@ -44,28 +43,27 @@ return [
         'items' => [
             [
                 'value' => '400,000',
-                'label' => 'deals fell apart',
+                'label' => 'contracts fell apart',
             ],
             [
                 'value' => '280,000',
-                'label' => 'buyers were denied',
+                'label' => 'buyers loans WERE DENIED',
             ],
             [
                 'value' => '80,000',
-                'label' => 'denials happened after going under contract',
+                'label' => 'DENIALS WERE AFTER PRE-APPROVAL, CONTRACT AND MONEY SPENT',
             ],
         ],
-        'closing_line' => 'Here’s how to make sure that does not happen to you.',
     ],
 
     'primary_cta' => [
         'enabled' => true,
-        'pretext' => 'Next class starts in:',
-        'label' => 'Save My Seat',
-        'mobile_label' => 'Save My Seat',
-        'desktop_header_label' => 'Reserve Spot',
+        'pretext' => 'This Is Live. Seats Are Limited.',
+        'label' => 'Lock In My Spot Now',
+        'mobile_label' => 'Lock In My Spot Now',
+        'desktop_header_label' => 'Lock In My Spot Now',
         'route' => 'webinar.show',
-        'helper_text' => 'Free training • No fluff • Real strategy',
+        'helper_text' => 'We don’t pack the room. Small group. Real strategy. When it fills, it’s closed.',
     ],
 
     'countdown' => [
@@ -122,8 +120,13 @@ return [
         'heading' => 'Pre-approval is not the finish line. It’s the starting point.',
         'body' => [
             'Most buyers don’t lose their deal because they couldn’t qualify.',
-            'They lose it because something was missed early.',
-            'By the time it shows up, you’re already under contract. That’s when deals fall apart.',
+            'They lose it because the pre-approval wasn’t done correctly. ',
+            'A lot of pre-approvals are issued without actually reviewing everything upfront.',
+            'So things get missed.',
+            'And buyers move forward with a false sense of security.',
+            'By the time the problem shows up…',
+            'You’re already under contract.',
+            'That’s when everything falls apart.',
         ],
         'bullets' => [
             'Income not structured correctly',
@@ -150,7 +153,7 @@ return [
             '30 years in lending',
             'Former underwriter',
             '$1 Billion+ funded',
-            'Known for saving deals other lenders kill',
+            'Known for saving deals other lenders can’t',
         ],
     ],
 
@@ -191,10 +194,10 @@ return [
 
     'secondary_cta' => [
         'enabled' => true,
-        'headline' => 'Don’t risk losing your deal because something was missed upfront.',
-        'label' => 'Save My Seat',
+        'headline' => 'This Is Live. Seats Are Limited.',
+        'label' => 'Lock In My Spot Now',
         'route' => 'webinar.show',
-        'helper_text' => 'Takes 10 seconds to register.',
+        'helper_text' => 'We don’t pack the room. Small group. Real strategy. When it fills, it’s closed.',
     ],
 
     'trust' => [
@@ -224,8 +227,8 @@ return [
 
     'final_close' => [
         'enabled' => true,
-        'headline' => 'Most Buyers Don’t Know There’s a Problem… Until It’s Too Late',
-        'body' => 'By the time something goes wrong, you’ve already made an offer, spent money, and started planning your move.',
+        'headline' => 'This Is Live. Seats Are Limited.',
+        'body' => 'We don’t pack the room. Small group. Real strategy. When it fills, it’s closed.',
         'bullets' => [
             'You’ve made an offer',
             'You’re under contract',
@@ -233,11 +236,11 @@ return [
             'You’re planning your move',
         ],
         'closing_copy' => 'Not because you couldn’t buy. Because it wasn’t set up right from the beginning.',
-        'label' => 'Secure My Spot Before It Fills',
-        'helper_text' => 'No pressure • No sales pitch • Just strategy',
+        'label' => 'Lock In My Spot Now',
+        'helper_text' => null,
         'countdown' => [
             'enabled' => false,
-        ]
+        ],
     ],
 
     'exit_intent' => [
@@ -251,14 +254,14 @@ return [
         'text' => 'This is an educational class designed to help consumers better understand the homebuying and mortgage process. No application is required to attend. Loan approval is subject to credit, income, assets, and underwriting guidelines.',
     ],
 
-    'sticky_desktop' => [
+   'sticky_desktop' => [
         'enabled' => true,
-        'label' => 'Save My Seat',
-        'eyebrow' => 'Next class starts in:',
+        'label' => 'Lock In My Spot Now',
+        'eyebrow' => 'This Is Live. Seats Are Limited.',
     ],
 
     'sticky_mobile' => [
-        'label' => 'Save My Seat',
+        'label' => 'Lock In My Spot Now',
     ],
 
     'legal_links' => [
