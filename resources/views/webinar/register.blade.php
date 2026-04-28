@@ -125,9 +125,12 @@
                         @endif
 
                         @if(filled($page['hero']['supporting_copy'] ?? null))
-                            <p class="{{ $tokens['muted'] ?? 'text-sm text-slate-500' }} {{ $style['hero']['supporting_copy'] ?? 'mt-4' }}">
-                                {{ $page['hero']['supporting_copy'] }}
-                            </p>
+                            @foreach ($page['hero']['supporting_copy'] as $item)
+                            <p class="{{ $style['hero']['supporting_copy'] ?? 'mt-4' }}{{ $loop->last ? ' text-lg font-semibold' : ' text-base' }}">
+                                {{ $item }}
+                            </p>                                
+                            @endforeach
+
                         @endif
 
                         @if(filled($page['hero']['closing_copy'] ?? null))
@@ -303,14 +306,27 @@
                                 @endif
 
                                 @foreach(($page['problem']['body'] ?? []) as $paragraph)
-                                    <p class="{{ $style['problem']['paragraph'] ?? 'text-lg leading-8 text-ink' }}">
+                                <p class="{{ $style['problem']['paragraph'] ?? 'text-lg leading-8 text-ink' }}">
+                                    @if(is_array($paragraph))
+                                        @foreach($paragraph as $part)
+                                            @if($part['emphasis'] ?? false)
+                                                <strong class="{{ $style['problem']['paragraph_emphasis'] ?? 'font-black text-primary' }}">
+                                                    {{ $part['text'] ?? '' }}
+                                                </strong>
+                                            @else
+                                                <span>{{ $part['text'] ?? '' }}</span>
+                                            @endif
+                                        @endforeach
+                                    @else
                                         {{ $paragraph }}
-                                    </p>
+                                    @endif
+                                </p>
                                 @endforeach
 
                                 @if(filled($page['problem']['bullets'] ?? []))
+                                    <p class="text-2xl font-semibold">{{ $page['problem']['bullets']['intro']}}</p>
                                     <ul class="{{ $style['problem']['list'] ?? 'space-y-3' }}">
-                                        @foreach($page['problem']['bullets'] as $bullet)
+                                        @foreach($page['problem']['bullets']['list'] as $bullet)
                                             <li class="{{ $style['problem']['list_item'] ?? 'flex gap-3 text-base font-bold' }}">
                                                 <span class="{{ $style['problem']['icon'] ?? 'mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-extrabold text-white' }}">✓</span>
                                                 <span>{{ $bullet }}</span>
@@ -354,11 +370,23 @@
                                         </h2>
                                     @endif
 
-                                    <div class="{{ $style['instructor']['body'] ?? 'space-y-4 text-base font-medium leading-7 text-ink' }}">
-                                        @foreach(($page['instructor']['body'] ?? []) as $paragraph)
-                                            <p>{{ $paragraph }}</p>
-                                        @endforeach
-                                    </div>
+                                    @foreach(($page['instructor']['body'] ?? []) as $paragraph)
+                                    <p class="{{ $style['instructor']['body'] ?? 'space-y-4 text-base font-medium leading-7 text-ink' }}">
+                                        @if(is_array($paragraph))
+                                            @foreach($paragraph as $part)
+                                                @if($part['emphasis'] ?? false)
+                                                    <strong class="{{ $style['instructor']['paragraph_emphasis'] ?? 'font-black text-primary' }}">
+                                                        {{ $part['text'] ?? '' }}
+                                                    </strong>
+                                                @else
+                                                    <span>{{ $part['text'] ?? '' }}</span>
+                                                @endif
+                                            @endforeach
+                                        @else
+                                            {{ $paragraph }}
+                                        @endif
+                                    </p>
+                                    @endforeach
 
                                     @if(filled($page['instructor']['credibility'] ?? []))
                                         <ul class="{{ $style['instructor']['credibility_list'] ?? 'mt-6 grid gap-3' }}">

@@ -15,7 +15,7 @@ return [
         'align' => 'text-left',
         'title' => 'mt-5 flex flex-col gap-4',
         'body' => 'mt-6 max-w-2xl text-lg sm:text-xl',
-        'supporting_copy' => 'mt-5 max-w-xl',
+        'supporting_copy' => 'mt-2 max-w-xl text-white',
     ],
 
     'urgency_stats' => [
@@ -93,7 +93,7 @@ return [
 
     'instructor' => [
         'wrapper' => 'rounded-3xl border border-black/10 bg-soft p-6 shadow-xl shadow-black/10 sm:p-8',
-        'image_wrapper' => 'mx-auto max-w-md',
+        'image_wrapper' => 'mx-auto max-w-sm',
         'image_class' => 'w-full object-cover',
         'content_wrapper' => 'mt-8 space-y-4',
         'body' => 'space-y-4 text-base font-medium leading-7 text-ink',

@@ -29,10 +29,24 @@ return [
 
     'hero' => [
         'enabled' => true,
-        'eyebrow' => 'Live Online Class',
+        'eyebrow' => 'Live Homebuyer Seminar',
         'title_prefix' => null,
         'title' => 'Last Year, 80,000 Pre-Approved Buyers Were Denied After Going Under Contract',
-        'body' => 'Most buyers think they’re approved… until the home slips away',
+        'body' => 'Most buyers think they’re approved. They’re not.',
+        'supporting_copy' =>[
+            'Why this matters:',
+            'By the time a problem shows up, you’re already under contract.',
+            'There’s no time to fix it.',
+        ],
+        'class_details' => [
+            'title' => 'In this class, I’ll show you how to get fully approved:',
+            'bullets' => [
+                'Income not structured correctly',
+                'Assets not sourced properly',
+                'Credit not fully reviewed',
+                'Underwriting issues discovered too late',
+            ],
+        ],
         'closing_copy' => 'I’ll Show You How to Avoid This—And Make Sure You Get Your Home',
         'image' => null,
     ],
@@ -63,8 +77,8 @@ return [
     'primary_cta' => [
         'enabled' => true,
         'pretext' => 'Next class starts in:',
-        'label' => 'Save My Seat',
-        'mobile_label' => 'Save My Seat',
+        'label' => 'Lock In My Seat',
+        'mobile_label' => 'Lock In My Seat',
         'desktop_header_label' => 'Reserve Spot',
         'route' => 'webinar.show',
         'helper_text' => 'Free training • No fluff • Real strategy',
@@ -123,19 +137,28 @@ return [
         'heading' => 'Pre-approval is not the finish line. It’s the starting point.',
         'body' => [
             'Most buyers don’t lose their deal because they couldn’t qualify.',
-            'They lose it because the pre-approval wasn’t done correctly. ',
-            'A lot of pre-approvals are issued without actually reviewing everything upfront.',
-            'So things get missed.',
-            'And buyers move forward with a false sense of security.',
-            'By the time the problem shows up…',
-            'You’re already under contract.',
-            'That’s when everything falls apart.',
+            [
+                ['text' => 'They lose it because'],
+                ['text' => 'they didn’t have a plan—and a real pre-approval.', 'emphasis' => true],
+            ],
+            'A lot of pre-approvals are issued without fully reviewing everything upfront. Things get missed.',
+            [
+                ['text' => 'And buyers move forward with a'],
+                ['text' => 'false sense of security.', 'emphasis' => true],
+            ],
+            [
+                ['text' => 'By the time the problem shows up, you’re already under contract.'],
+                ['text' => 'There’s no time to fix it.', 'emphasis' => true],
+            ]
         ],
         'bullets' => [
-            'Income not structured correctly',
-            'Assets not sourced properly',
-            'Credit not fully reviewed',
-            'Underwriting issues discovered too late',
+            'intro' => 'That’s when everything falls apart.',
+            'list' => [
+                'Income not structured correctly',
+                'Assets not sourced properly',
+                'Credit not fully reviewed',
+                'Underwriting issues discovered too late',
+            ]
         ],
     ],
 
@@ -149,14 +172,22 @@ return [
         'heading' => 'I don’t guess.',
         'body' => [
             'I’ve spent 30 years inside this process — including underwriting loans before they ever get approved.',
-            'I’ve seen exactly where deals break, and I structure them so they don’t.',
-            'Most lenders don’t fully underwrite upfront. That’s where problems start.',
+            [
+                ['text' => 'I know exactly where deals break.'],
+                ['text' => 'I structure them so they don’t.', 'emphasis' => true],
+            ],
+            [
+                ['text' => 'Most lenders don’t fully underwrite upfront.'],
+            ],
+            [
+                ['text' => 'That’s where problems start.', 'emphasis' => true],
+            ]
         ],
         'credibility' => [
             '30 years in lending',
             'Former underwriter',
             '$1 Billion+ funded',
-            'Known for savings deals other lenders can’t',
+            'Known for saving deals other lenders miss',
         ],
     ],
 
@@ -198,7 +229,7 @@ return [
     'secondary_cta' => [
         'enabled' => true,
         'headline' => 'Don’t risk losing your deal because something was missed upfront.',
-        'label' => 'Save My Seat',
+        'label' => 'SAVE MY SEAT BEFORE IT’S GONE',
         'route' => 'webinar.show',
         'helper_text' => 'Takes 10 seconds to register.',
     ],
@@ -259,7 +290,7 @@ return [
 
     'sticky_desktop' => [
         'enabled' => true,
-        'label' => 'Save My Seat',
+        'label' => 'LOCK IN MY SEAT NOW',
         'eyebrow' => 'Next class starts in:',
     ],
 
