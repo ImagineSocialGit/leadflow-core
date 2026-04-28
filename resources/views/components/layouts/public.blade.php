@@ -20,16 +20,23 @@
 
 <x-layouts.app :title="$title ?? $brandName" :meta-description="$metaDescription ?? null">
     <div class="{{ $layout['body'] ?? 'min-h-screen flex flex-col bg-white text-slate-900' }}">
-        <header class="{{ $header['wrap'] ?? 'border-b border-slate-200 bg-white' }}">
+        <header
+            x-data="{compactLogo: false}"
+            x-init="window.addEventListener('scroll', () => {
+                    compactLogo = window.scrollY > 60;
+                }, { passive: true });"
+                class="{{ $header['wrap'] ?? 'border-b border-slate-200 bg-white' }}">
             <div class="{{ $header['inner'] ?? 'mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4' }}">
 
                 @if ($brand['logo'] ?? null)
-                <a href="{{ $primaryLinkHref }}" class="{{ $header['brand_image'] ?? 'max-w-20 max-h-20 w-full h-full' }}">
+                <a href="{{ $primaryLinkHref }}"
+                    class="transition-all"
+                    :class="compactLogo ? '{{ $header['brand_link_compact'] ?? 'max-w-16 max-h-16' }}' : '{{ $header['brand_link'] ?? 'max-w-20 max-h-20' }}'">
                     <x-ui.image
                         :path="$brand['logo']"
                         :alt="$brand['image_alt'] ?? 'Logo'"
                         :sizes="$brand['image_sizes'] ?? '(min-width:1024px) 40vw,100vw'"
-                        class="{{ $style['instructor']['image_class'] ?? 'w-full rounded-3xl object-cover' }}"
+                        class="{{ $header['brand_image'] ?? 'w-full rounded-3xl object-cover' }}"
                         :placeholder="false"
                     />
                 </a>

@@ -47,28 +47,31 @@ return [
             ],
             [
                 'value' => '280,000',
-                'label' => 'buyers loans WERE DENIED',
+                'label' => 'buyers loans were denied',
             ],
             [
                 'value' => '80,000',
-                'label' => 'DENIALS WERE AFTER PRE-APPROVAL, CONTRACT AND MONEY SPENT',
+                'label' => 'denials were after pre-approval, contract, and money spent',
             ],
         ],
     ],
 
+    'webinar_title' => [
+        'enabled' => true
+    ],
+
     'primary_cta' => [
         'enabled' => true,
-        'pretext' => 'This Is Live. Seats Are Limited.',
-        'label' => 'Lock In My Spot Now',
-        'mobile_label' => 'Lock In My Spot Now',
-        'desktop_header_label' => 'Lock In My Spot Now',
+        'pretext' => 'Next class starts in:',
+        'label' => 'Save My Seat',
+        'mobile_label' => 'Save My Seat',
+        'desktop_header_label' => 'Reserve Spot',
         'route' => 'webinar.show',
-        'helper_text' => 'We don’t pack the room. Small group. Real strategy. When it fills, it’s closed.',
+        'helper_text' => 'Free training • No fluff • Real strategy',
     ],
 
     'countdown' => [
         'enabled' => true,
-        'label' => 'Next class starts in:',
         'items' => [
             [
                 'method' => 'days',
@@ -153,7 +156,7 @@ return [
             '30 years in lending',
             'Former underwriter',
             '$1 Billion+ funded',
-            'Known for saving deals other lenders can’t',
+            'Known for savings deals other lenders can’t',
         ],
     ],
 
@@ -194,10 +197,10 @@ return [
 
     'secondary_cta' => [
         'enabled' => true,
-        'headline' => 'This Is Live. Seats Are Limited.',
-        'label' => 'Lock In My Spot Now',
+        'headline' => 'Don’t risk losing your deal because something was missed upfront.',
+        'label' => 'Save My Seat',
         'route' => 'webinar.show',
-        'helper_text' => 'We don’t pack the room. Small group. Real strategy. When it fills, it’s closed.',
+        'helper_text' => 'Takes 10 seconds to register.',
     ],
 
     'trust' => [
@@ -227,8 +230,8 @@ return [
 
     'final_close' => [
         'enabled' => true,
-        'headline' => 'This Is Live. Seats Are Limited.',
-        'body' => 'We don’t pack the room. Small group. Real strategy. When it fills, it’s closed.',
+        'headline' => 'Most Buyers Don’t Know There’s a Problem… Until It’s Too Late',
+        'body' => 'By the time something goes wrong, you’ve already made an offer, spent money, and started planning your move.',
         'bullets' => [
             'You’ve made an offer',
             'You’re under contract',
@@ -236,11 +239,11 @@ return [
             'You’re planning your move',
         ],
         'closing_copy' => 'Not because you couldn’t buy. Because it wasn’t set up right from the beginning.',
-        'label' => 'Lock In My Spot Now',
-        'helper_text' => null,
+        'label' => 'Secure My Spot Before It Fills',
+        'helper_text' => 'No pressure • No sales pitch • Just strategy',
         'countdown' => [
             'enabled' => false,
-        ],
+        ]
     ],
 
     'exit_intent' => [
@@ -254,14 +257,14 @@ return [
         'text' => 'This is an educational class designed to help consumers better understand the homebuying and mortgage process. No application is required to attend. Loan approval is subject to credit, income, assets, and underwriting guidelines.',
     ],
 
-   'sticky_desktop' => [
+    'sticky_desktop' => [
         'enabled' => true,
-        'label' => 'Lock In My Spot Now',
-        'eyebrow' => 'This Is Live. Seats Are Limited.',
+        'label' => 'Save My Seat',
+        'eyebrow' => 'Next class starts in:',
     ],
 
     'sticky_mobile' => [
-        'label' => 'Lock In My Spot Now',
+        'label' => 'Save My Seat',
     ],
 
     'legal_links' => [

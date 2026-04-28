@@ -10,7 +10,7 @@ return [
     'hero' => [
         'theme' => 'dark',
         'section' => 'bg-secondary text-white',
-        'inner' => 'mx-auto grid w-full max-w-7xl gap-10 px-6 py-14 sm:pt-8 sm:pb-20 lg:grid-cols-[1.05fr_0.95fr] lg:items-center',
+        'inner' => 'mx-auto grid w-full max-w-7xl lg:gap-10 px-6 pt-14 pb-2 sm:pt-8 lg:pb-20 lg:grid-cols-[1.05fr_0.95fr] lg:items-center',
         'wrapper' => 'max-w-4xl text-left',
         'align' => 'text-left',
         'title' => 'mt-5 flex flex-col gap-4',
@@ -19,30 +19,45 @@ return [
     ],
 
     'urgency_stats' => [
-        'wrapper' => 'mt-8',
-        'stats_wrapper' => 'mt-4 grid gap-3 sm:grid-cols-3',
-        'intro' => 'text-xl font-semibold tracking-wide leading-tight text-white sm:text-3xl',
-        'item' => 'rounded-2xl border border-white/10 bg-white/[0.06] p-5',
-        'value' => 'block text-3xl font-extrabold tracking-[-0.03em] text-primary',
-        'label' => 'mt-1 block text-sm font-bold leading-5 text-white',
-        'closing_line' => 'mt-6 max-w-2xl text-lg font-bold leading-7 text-white',
+        'wrapper' => 'mt-6 sm:mt-8',
+        'stats_wrapper' => 'mt-3 grid gap-2 sm:mt-4 sm:grid-cols-3',
+        'intro' => 'text-2xl font-extrabold tracking-wide leading-tight text-white sm:text-3xl',
+        'item' => 'border-b border-white/10 py-2 sm:rounded-2xl sm:border sm:border-white/10 sm:bg-white/[0.06] sm:p-5',
+        'value' => 'inline text-2xl font-extrabold tracking-[-0.03em] text-primary sm:block sm:text-3xl',
+        'label' => 'ml-2 inline text-sm font-bold leading-5 text-white sm:ml-0 sm:mt-1 sm:block',
+        'closing_line' => 'mt-5 max-w-2xl text-lg font-bold leading-7 text-white',
+    ],
+
+    'webinar_title' => [
+        'title' => 'text-4xl font-semibold text-white'
     ],
 
     'primary_cta' => [
-        'wrapper' => 'mt-9 flex flex-col gap-4 text-left',
+        'wrapper' => 'mt-5 flex flex-col gap-4 text-left sm:mt-9',
         'action_row' => 'flex flex-col-reverse gap-5 sm:max-w-md',
         'pretext' => 'text-sm font-extrabold uppercase tracking-[0.18em] text-primary',
         'helper_text' => 'text-sm font-bold text-white/70',
     ],
 
+    'mobile_after_hero_cta' => [
+        'wrapper' => '
+            lg:hidden
+            sticky bottom-0
+            flex flex-col gap-2
+            bg-secondary
+            px-4 py-4
+            z-50
+        ',
+    ],
+
     'countdown' => [
         'themes' => [
             'dark' => [
-                'wrapper' => 'rounded-2xl border border-white/10 bg-white/[0.07] px-5 py-4 text-white',
+                'wrapper' => 'rounded-2xl border border-white/10 bg-white/[0.07] px-3 py-2 lg:px-5 lg:py-4 text-white',
                 'label'   => 'mb-3 text-xs font-extrabold uppercase tracking-[0.2em] text-white/65',
-                'item'    => 'min-w-12 rounded-xl bg-black/30 px-2 py-3',
+                'item'    => 'flex lg:flex-col gap-2 items-end lg:items-center min-w-12 rounded-xl bg-black/30 px-1 py-2 lg:px-2 lg:py-3',
                 'value'   => 'text-2xl font-extrabold leading-none text-white',
-                'unit'    => 'mt-1 text-[0.65rem] font-extrabold uppercase tracking-[0.14em] text-primary',
+                'unit'    => 'text-[0.65rem] font-extrabold uppercase tracking-[0.14em] text-primary',
             ],
 
             'light' => [
@@ -56,12 +71,12 @@ return [
     ],
 
     'event_details' => [
-        'wrapper' => 'mt-10',
+        'wrapper' => '',
         'heading_class' => 'text-left',
-        'grid' => 'mt-6 grid gap-4 md:grid-cols-3',
-        'card' => 'rounded-2xl border border-white/10 bg-white/[0.06] p-5',
+        'grid' => 'mt-4 grid grid-cols-2 gap-3 sm:mt-6 md:grid-cols-3',
+        'card' => 'rounded-2xl border border-white/10 bg-white/[0.06] p-4 sm:p-5 [&:nth-child(3)]:col-span-2 [&:nth-child(3)]:text-center md:[&:nth-child(3)]:col-span-1 md:[&:nth-child(3)]:text-left',
         'label' => 'text-xs font-extrabold uppercase tracking-[0.2em] text-primary',
-        'value' => 'mt-2 text-lg font-extrabold tracking-tight text-white',
+        'value' => 'mt-2 text-base font-extrabold tracking-tight text-white sm:text-lg',
         'footnote' => 'mt-5 text-sm font-medium text-white/65',
     ],
 
