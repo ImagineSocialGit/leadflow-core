@@ -145,6 +145,18 @@
                             </p>
                         @endif
 
+                        @if(filled($page['hero']['bullets'] ?? []))
+                            <p class="text-2xl font-semibold text-primary mt-6 mb-2">{{ $page['hero']['bullets']['intro']}}</p>
+                            <ul class="{{ $style['hero']['list'] ?? 'space-y-3' }}">
+                                @foreach($page['hero']['bullets']['list'] as $bullet)
+                                    <li class="{{ $style['hero']['list_item'] ?? 'ml-4 flex gap-3 text-base font-bold' }}">
+                                        <span class="{{ $style['hero']['icon'] ?? 'mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-extrabold text-white' }}">✓</span>
+                                        <span>{{ $bullet }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @endif
+
                         @if($page['urgency_stats']['enabled'] ?? false)
                             <div class="{{ $style['urgency_stats']['wrapper'] ?? 'mt-8' }}">
                                 @if(filled($page['urgency_stats']['intro'] ?? null))
@@ -187,10 +199,10 @@
 
                             @if (($page['webinar_title']['enabled'] ?? false))
                                 <span class="{{ $style['webinar_title']['lead'] ?? 'text-xl text-white/85' }}">
-                                    Lock your spot in my
+                                    Seminar Details for the
                                 </span>
                                 <h1 class="{{ $style['webinar_title']['title'] }}">
-                                    {{ $series->title }} Class
+                                    {{ $series->title }}
                                 </h1>
                             @endif
 

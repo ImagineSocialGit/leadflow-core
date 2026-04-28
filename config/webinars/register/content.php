@@ -34,9 +34,7 @@ return [
         'title' => 'Last Year, 80,000 Pre-Approved Buyers Were Denied After Going Under Contract',
         'body' => 'Most buyers think they’re approved. They’re not.',
         'supporting_copy' =>[
-            'Why this matters:',
-            'By the time a problem shows up, you’re already under contract.',
-            'There’s no time to fix it.',
+            'By the time problems show up, it’s too late to fix them.',
         ],
         'class_details' => [
             'title' => 'In this class, I’ll show you how to get fully approved:',
@@ -47,7 +45,15 @@ return [
                 'Underwriting issues discovered too late',
             ],
         ],
-        'closing_copy' => 'I’ll Show You How to Avoid This—And Make Sure You Get Your Home',
+        'bullets' => [
+            'intro' => 'I give you the Roadmap: From Pre-Approval To Keys:',
+            'list' => [
+                'Get a full plan, strategy and pre-approval before you shop',
+                'Know exactly what lenders actually verify',
+                'Catch issues early—before you go under contract',
+                'Avoid getting denied after you’ve made an offer',
+            ]
+        ],
         'image' => null,
     ],
 
