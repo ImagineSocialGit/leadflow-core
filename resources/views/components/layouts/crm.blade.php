@@ -53,7 +53,7 @@
                 </header>
 
                 <main class="flex-1">
-                    <div class="mx-auto w-full max-w-7xl px-6 py-8">
+                    <div class="mx-auto w-full max-w-375 px-6 py-8">
                         {{ $slot }}
                     </div>
                 </main>

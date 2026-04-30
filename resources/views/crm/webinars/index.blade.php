@@ -118,7 +118,22 @@
                                         <button
                                             type="button"
                                             x-on:click="
-                                                navigator.clipboard.writeText(@js($registrationUrl));
+                                                const text = @js($registrationUrl);
+
+                                                if (navigator.clipboard && window.isSecureContext) {
+                                                    await navigator.clipboard.writeText(text);
+                                                } else {
+                                                    const textarea = document.createElement('textarea');
+                                                    textarea.value = text;
+                                                    textarea.style.position = 'fixed';
+                                                    textarea.style.opacity = '0';
+                                                    document.body.appendChild(textarea);
+                                                    textarea.focus();
+                                                    textarea.select();
+                                                    document.execCommand('copy');
+                                                    textarea.remove();
+                                                }
+
                                                 copied = true;
                                                 setTimeout(() => copied = false, 1500);
                                             "
