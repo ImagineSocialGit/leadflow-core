@@ -17,7 +17,8 @@ use Illuminate\View\View;
 
 class WebinarController extends Controller
 {
-    public function index(Request $request,
+    public function index(
+        Request $request,
         AdvanceWebinarSeriesStatusAction $advanceWebinarSeriesStatusAction
     ): View {
         $series = WebinarSeries::query()
