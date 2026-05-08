@@ -10,12 +10,22 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        User::updateOrCreate(
-            ['email' => config('setup.seed_user.email')],
-            [
-                'name' => config('setup.seed_user.name'),
-                'password' => Hash::make(config('setup.seed_user.password')),
-            ]
-        );
+        if (config('app.env') == 'production'){
+            User::updateOrCreate(
+                ['email' => config('setup.seed_user.email')],
+                [
+                    'name' => config('setup.seed_user.name'),
+                    'password' => Hash::make(config('setup.seed_user.password')),
+                ]
+            );
+        } else {
+            User::updateOrCreate(
+                ['email' => 'admin@test.com'],
+                [
+                    'name' => 'admin',
+                    'password' => Hash::make('password'),
+                ]
+            );
+        }
     }
 }

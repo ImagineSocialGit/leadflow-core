@@ -10,6 +10,8 @@ use App\Models\Webinar;
 use App\Models\WebinarSeries;
 use App\Services\Zoom\ZoomWebinarService;
 use Carbon\Carbon;
+use Illuminate\Http\Client\RequestException;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -43,7 +45,7 @@ class WebinarController extends Controller
             ->limit(50)
             ->get();
 
-        return view('crm.webinar-series.index', [
+        return view('crm.webinars.index', [
             'title' => 'Webinars',
             'heading' => 'Webinars',
             'webinars' => $webinars,
@@ -67,7 +69,25 @@ class WebinarController extends Controller
     ): RedirectResponse {
         $series = WebinarSeries::query()->findOrFail($request->validated('series_id'));
 
-        $fetchedWebinars = $zoomWebinarService->listWebinarsByTitle($series->title);
+        try {
+            $fetchedWebinars = $zoomWebinarService->listWebinarsByTitle($series->title);
+        } catch (RequestException $e) {
+            report($e);
+
+            $message = $e->response?->json('message')
+                ?? $e->response?->body()
+                ?? 'Zoom sync failed.';
+
+            return redirect()
+                ->route('crm.webinar-series.index')
+                ->with('zoom_sync_error', $message);
+        } catch (ConnectionException $e) {
+            report($e);
+
+            return redirect()
+                ->route('crm.webinar-series.index')
+                ->with('zoom_sync_error', 'Unable to connect to Zoom.');
+        }
 
         $created = 0;
         $updated = 0;
@@ -80,7 +100,7 @@ class WebinarController extends Controller
 
         foreach ($fetchedWebinars as $fetchedWebinar) {
             $webinar = Webinar::query()->firstOrNew([
-                'platform' => 'zoom',
+                'platform' => config('webinars.provider', 'zoom'),
                 'external_id' => $fetchedWebinar['external_id'],
                 'series_id' => $series->id,
             ]);
@@ -133,7 +153,7 @@ class WebinarController extends Controller
         }
 
         $missingWebinars = $series->webinars()
-            ->where('platform', 'zoom')
+            ->where('platform', config('webinars.provider', 'zoom'))
             ->whereNotIn('external_id', $fetchedExternalIds)
             ->get();
 

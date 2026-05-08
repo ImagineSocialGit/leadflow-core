@@ -20,7 +20,7 @@
         class="{{ $card['wrapper'] ?? '' }}"
     >
         <p class="{{ $card['eyebrow'] ?? '' }}">
-            {{ $content['sticky_desktop']['eyebrow'] ?? 'Next class starts in:' }}
+            {{ $content['sticky_desktop']['eyebrow'] ?? '' }}
         </p>
 
         <x-webinars.countdown

@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Webinar;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 
@@ -14,16 +13,10 @@ class WebinarSeeder extends Seeder
     public function run(): void
     {
 
-        $homebuyerSeries = \App\Models\WebinarSeries::firstOrCreate([
-            'slug' => 'homebuyer-game-plan',
+        $devSeries = \App\Models\WebinarSeries::firstOrCreate([
+            'slug' => 'dev-webinar',
         ], [
-            'title' => 'Homebuyer Game Plan',
-        ]);
-
-        $vaSeries = \App\Models\WebinarSeries::firstOrCreate([
-            'slug' => 'va-homebuyer-game-plan',
-        ], [
-            'title' => 'VA Homebuyer Game Plan',
+            'title' => 'Dev Webinar',
         ]);
 
     }

@@ -1,5 +1,35 @@
 <x-layouts.crm :title="$title" :heading="$heading">
     <div class="space-y-6">
+        
+        @if (session('zoom_sync_error'))
+            <div
+                x-data="{ open: true }"
+                x-show="open"
+                x-cloak
+                class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+            >
+                <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+                    <h2 class="text-lg font-bold text-gray-950">
+                        Zoom Sync Failed
+                    </h2>
+
+                    <p class="mt-3 text-sm leading-6 text-gray-700">
+                        {{ session('zoom_sync_error') }}
+                    </p>
+
+                    <div class="mt-6 flex justify-end">
+                        <button
+                            type="button"
+                            x-on:click="open = false"
+                            class="rounded-lg bg-gray-950 px-4 py-2 text-sm font-semibold text-white"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         @if(session('sync_conflicts') && count(session('sync_conflicts')))
             <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
                 <p class="font-medium">Active webinar conflicts detected.</p>

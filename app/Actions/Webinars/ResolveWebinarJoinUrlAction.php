@@ -10,17 +10,7 @@ class ResolveWebinarJoinUrlAction
     {
         $registration->loadMissing('webinar');
 
-        $webinar = $registration->webinar;
-
-        if (! $webinar) {
-            return null;
-        }
-
-        $providerJoinUrl = match ($webinar->platform) {
-            'zoom' => data_get($registration->meta, 'zoom.join_url'),
-            default => null,
-        };
-
-        return $providerJoinUrl ?: $webinar->join_url;
+        return data_get($registration->meta, 'provider.join_url')
+            ?: $registration->webinar?->join_url;
     }
 }

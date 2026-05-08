@@ -2,6 +2,7 @@
 
 namespace App\Actions\Webinars;
 
+use App\Actions\Webinars\RegisterAttendeeWithWebinarProviderAction;
 use App\Data\WebinarMessageData;
 use App\Jobs\Messaging\DispatchWebinarRegistrationMessagesJob;
 use App\Models\Lead;
@@ -16,6 +17,7 @@ class CreateWebinarRegistration
     public function __construct(
         protected PhoneNumberNormalizer $phoneNumberNormalizer,
         protected ScheduleWebinarRemindersAction $scheduleWebinarRemindersAction,
+        protected RegisterAttendeeWithWebinarProviderAction $registerAttendeeWithWebinarProviderAction,
     ) {}
 
     public function handle(array $validated, Request $request, string $webinarSlug = 'default'): WebinarRegistration
@@ -86,7 +88,7 @@ class CreateWebinarRegistration
         WebinarRegistration $registration,
         Webinar $webinar
     ): void {
-        if ($webinar->platform !== 'zoom') {
+        if ($webinar->platform !== config('webinars.provider', 'zoom')) {
             return;
         }
 
@@ -94,24 +96,22 @@ class CreateWebinarRegistration
             return;
         }
 
-        $zoom = app(\App\Services\Zoom\ZoomWebinarService::class);
-
-        $response = $zoom->registerAttendee(
-            $webinar->external_id,
-            [
-                'email' => $registration->email,
-                'first_name' => $registration->first_name,
-                'last_name' => $registration->last_name,
-            ]
+        $providerResponse = $this->registerAttendeeWithWebinarProviderAction->handle(
+            $webinar,
+            $registration
         );
 
+        $meta = $registration->meta ?? [];
+
+        $meta['provider'] = [
+            'name' => $providerResponse['name'],
+            'registrant_id' => $providerResponse['registrant_id'] ?? null,
+            'join_url' => $providerResponse['join_url'] ?? null,
+            'raw' => $providerResponse['raw'] ?? null,
+        ];
+
         $registration->update([
-            'meta' => array_merge($registration->meta ?? [], [
-                'zoom' => [
-                    'registrant_id' => $response['registrant_id'] ?? null,
-                    'join_url' => $response['join_url'] ?? null,
-                ],
-            ]),
+            'meta' => $meta,
         ]);
     }
 }
