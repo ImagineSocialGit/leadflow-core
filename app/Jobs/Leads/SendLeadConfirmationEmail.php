@@ -15,8 +15,5 @@ class SendLeadConfirmationEmail implements ShouldQueue
         $this->onQueue('emails');
     }
 
-    public function handle(): void
-    {
-        
-    }
+    public function handle(): void {}
 }

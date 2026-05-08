@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use Carbon\Carbon;
+use App\Models\WebinarSeries;
 use Illuminate\Database\Seeder;
 
 class WebinarSeeder extends Seeder
@@ -13,7 +13,7 @@ class WebinarSeeder extends Seeder
     public function run(): void
     {
 
-        $devSeries = \App\Models\WebinarSeries::firstOrCreate([
+        $devSeries = WebinarSeries::firstOrCreate([
             'slug' => 'dev-webinar',
         ], [
             'title' => 'Dev Webinar',

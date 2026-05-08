@@ -241,8 +241,8 @@ return [
                 'eyebrow' => null,
                 'heading' => 'Meet Your Mortgage Strategist',
                 'body' => [
-                    "You’ll learn from a mortgage strategist with real underwriting perspective and years of hands-on industry experience.",
-                    "This class is built to help buyers understand what lenders actually review, where approvals break down, and how to protect a deal before problems show up late in the process.",
+                    'You’ll learn from a mortgage strategist with real underwriting perspective and years of hands-on industry experience.',
+                    'This class is built to help buyers understand what lenders actually review, where approvals break down, and how to protect a deal before problems show up late in the process.',
                 ],
             ],
 
@@ -282,7 +282,7 @@ return [
             'secondary_cta' => [
                 'enabled' => true,
                 'wrapper' => 'mt-20 text-center',
-                'headline' => "Don’t risk losing your deal because of bad information",
+                'headline' => 'Don’t risk losing your deal because of bad information',
                 'label' => 'Reserve Your Spot Now',
                 'route' => 'webinar.show',
                 'helper_text' => 'Limited seats. Live training. Clear next steps.',

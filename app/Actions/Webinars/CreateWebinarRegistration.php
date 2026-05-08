@@ -2,7 +2,6 @@
 
 namespace App\Actions\Webinars;
 
-use App\Actions\Webinars\RegisterAttendeeWithWebinarProviderAction;
 use App\Data\WebinarMessageData;
 use App\Jobs\Messaging\DispatchWebinarRegistrationMessagesJob;
 use App\Models\Lead;

@@ -18,6 +18,6 @@ class TestQueueJob implements ShouldQueue
 
     public function handle(): void
     {
-        file_put_contents(storage_path('logs/queue-test.log'), now() . " ran\n", FILE_APPEND);
+        file_put_contents(storage_path('logs/queue-test.log'), now()." ran\n", FILE_APPEND);
     }
 }

@@ -39,6 +39,7 @@ class SmsMessagingService
                 'normalized_phone' => $to,
                 'message' => $message,
             ]);
+
             return;
         }
 
@@ -74,6 +75,7 @@ class SmsMessagingService
                 'normalized_phone' => $to,
                 'message' => $message,
             ]);
+
             return;
         }
 
@@ -109,6 +111,7 @@ class SmsMessagingService
                 'normalized_phone' => $to,
                 'message' => $message,
             ]);
+
             return;
         }
 
@@ -122,37 +125,37 @@ class SmsMessagingService
     {
         return match ($messageType) {
             'reminder_10d' => sprintf(
-                "%s is 10 days away: %s on %s. Join here: %s",
+                '%s is 10 days away: %s on %s. Join here: %s',
                 $data->webinarTitle,
                 $data->webinarTitle,
                 $data->formattedStart('M j g:i A'),
                 $data->webinarJoinUrl
             ),
             'reminder_7d' => sprintf(
-                "%s is 1 week away. It starts %s. Join here: %s",
+                '%s is 1 week away. It starts %s. Join here: %s',
                 $data->webinarTitle,
                 $data->formattedStart('M j g:i A'),
                 $data->webinarJoinUrl
             ),
             'reminder_24h' => sprintf(
-                "Reminder: %s is tomorrow at %s. Join here: %s",
+                'Reminder: %s is tomorrow at %s. Join here: %s',
                 $data->webinarTitle,
                 $data->formattedStart('M j g:i A'),
                 $data->webinarJoinUrl
             ),
             'reminder_30m' => sprintf(
-                "%s starts in 30 minutes at %s. Join here: %s",
+                '%s starts in 30 minutes at %s. Join here: %s',
                 $data->webinarTitle,
                 $data->formattedStart('g:i A'),
                 $data->webinarJoinUrl
             ),
             'reminder_10m' => sprintf(
-                "%s starts in 10 minutes. Join here: %s",
+                '%s starts in 10 minutes. Join here: %s',
                 $data->webinarTitle,
                 $data->webinarJoinUrl
             ),
             'late_joiner_5m' => sprintf(
-                "%s is live now. Join here: %s",
+                '%s is live now. Join here: %s',
                 $data->webinarTitle,
                 $data->webinarJoinUrl
             ),

@@ -33,7 +33,7 @@ class WebinarSeries extends Model
         return $this->hasMany(Webinar::class, 'series_id');
     }
 
-    public function nextUpcomingWebinar(): ?\App\Models\Webinar
+    public function nextUpcomingWebinar(): ?Webinar
     {
         return $this->webinars()
             ->where('status', 'active')

@@ -10,7 +10,7 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        if (config('app.env') == 'production'){
+        if (config('app.env') == 'production') {
             User::updateOrCreate(
                 ['email' => config('setup.seed_user.email')],
                 [

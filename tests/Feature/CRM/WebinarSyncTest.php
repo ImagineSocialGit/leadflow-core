@@ -7,9 +7,9 @@ use App\Models\Webinar;
 use App\Models\WebinarSeries;
 use App\Services\Zoom\ZoomWebinarService;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
 use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class WebinarSyncTest extends TestCase
 {

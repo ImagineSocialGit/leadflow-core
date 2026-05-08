@@ -18,10 +18,10 @@ class WebinarFactory extends Factory
 
         return [
             'title' => 'Test Webinar',
-            'slug' => 'test-webinar-' . Str::lower(Str::random(6)),
+            'slug' => 'test-webinar-'.Str::lower(Str::random(6)),
             'series_id' => WebinarSeries::query()->create([
                 'title' => 'Test Series',
-                'slug' => 'test-series-' . Str::lower(Str::random(6)),
+                'slug' => 'test-series-'.Str::lower(Str::random(6)),
                 'status' => 'active',
             ])->id,
             'platform' => 'zoom',

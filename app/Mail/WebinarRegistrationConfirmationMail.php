@@ -21,8 +21,7 @@ class WebinarRegistrationConfirmationMail extends Mailable
     public function build(): self
     {
         return $this
-            ->subject('You’re registered: ' . $this->data->webinarTitle)
+            ->subject('You’re registered: '.$this->data->webinarTitle)
             ->view('emails.webinars.registration-confirmation');
     }
-
 }

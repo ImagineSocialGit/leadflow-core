@@ -187,9 +187,9 @@ class ZoomWebhookTest extends TestCase
 
         $body = json_encode($payload, JSON_UNESCAPED_SLASHES);
 
-        $signature = 'v0=' . hash_hmac(
+        $signature = 'v0='.hash_hmac(
             'sha256',
-            'v0:' . $timestamp . ':' . $body,
+            'v0:'.$timestamp.':'.$body,
             config('services.zoom.webhook_secret')
         );
 

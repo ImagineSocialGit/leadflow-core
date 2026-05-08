@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\ForceStagingAccess;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -20,13 +21,13 @@ return Application::configure(basePath: dirname(__DIR__))
                 });
 
             Route::middleware(['web'])
-                ->domain('webinar.' . $domain)
+                ->domain('webinar.'.$domain)
                 ->group(function () {
                     require base_path('routes/webinar.php');
                 });
 
             Route::middleware(['web'])
-                ->domain('crm.' . $domain)
+                ->domain('crm.'.$domain)
                 ->group(function () {
                     require base_path('routes/crm.php');
                 });
@@ -34,7 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'staging.access' => \App\Http\Middleware\ForceStagingAccess::class,
+            'staging.access' => ForceStagingAccess::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [
@@ -42,7 +43,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->web(append: [
-            \App\Http\Middleware\ForceStagingAccess::class,
+            ForceStagingAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

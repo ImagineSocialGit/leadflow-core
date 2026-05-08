@@ -19,7 +19,7 @@ class PhoneNumberNormalizer
         }
 
         if (str_starts_with($trimmed, '+')) {
-            $normalized = '+' . preg_replace('/\D+/', '', substr($trimmed, 1));
+            $normalized = '+'.preg_replace('/\D+/', '', substr($trimmed, 1));
 
             if (! preg_match('/^\+[1-9]\d{1,14}$/', $normalized)) {
                 throw new InvalidArgumentException('Phone number is not valid E.164 format.');
@@ -35,10 +35,10 @@ class PhoneNumberNormalizer
         }
 
         if (strlen($digits) === 10) {
-            $digits = $defaultCountryCode . $digits;
+            $digits = $defaultCountryCode.$digits;
         }
 
-        $normalized = '+' . $digits;
+        $normalized = '+'.$digits;
 
         if (! preg_match('/^\+[1-9]\d{1,14}$/', $normalized)) {
             throw new InvalidArgumentException('Phone number could not be normalized to valid E.164 format.');

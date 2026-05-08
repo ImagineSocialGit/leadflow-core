@@ -12,6 +12,6 @@ class WebinarJoinLinkGenerator
             'token' => $registration->join_token,
         ], false);
 
-        return rtrim(config('app.webinar_url', config('app.url')), '/') . $path;
+        return rtrim(config('app.webinar_url', config('app.url')), '/').$path;
     }
 }

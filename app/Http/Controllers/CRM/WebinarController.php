@@ -10,8 +10,8 @@ use App\Models\Webinar;
 use App\Models\WebinarSeries;
 use App\Services\Zoom\ZoomWebinarService;
 use Carbon\Carbon;
-use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -19,10 +19,9 @@ use Illuminate\View\View;
 
 class WebinarController extends Controller
 {
-
     public function index(Request $request,
         AdvanceWebinarSeriesStatusAction $advanceWebinarSeriesStatusAction
-    ): View{
+    ): View {
         $series = WebinarSeries::query()
             ->orderBy('title')
             ->get();
@@ -189,7 +188,7 @@ class WebinarController extends Controller
             ->with(
                 'success',
                 "Sync complete: {$created} created, {$updated} updated, {$deleted} deleted, "
-                .count($missing)." missing preserved."
+                .count($missing).' missing preserved.'
             )
             ->with('sync_conflicts', $conflicts)
             ->with('sync_missing', $missing);

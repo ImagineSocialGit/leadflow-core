@@ -25,8 +25,7 @@ class StoreWebinarRegistrationRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'consent_messages.accepted' =>
-                'Registering for this webinar requires accepting messages containing links to the event.',
+            'consent_messages.accepted' => 'Registering for this webinar requires accepting messages containing links to the event.',
         ];
     }
 }

@@ -42,7 +42,7 @@ class WebinarRegistrationController extends Controller
     public function show(
         string $seriesSlug,
         AdvanceWebinarSeriesStatusAction $advanceWebinarSeriesStatusAction
-    ){
+    ) {
         $series = WebinarSeries::query()
             ->where('slug', $seriesSlug)
             ->firstOrFail();

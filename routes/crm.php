@@ -7,7 +7,7 @@ use App\Http\Controllers\CRM\WebinarController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
-    Route::get('/', [LeadController::class, 'index'])->name('crm.index');;
+    Route::get('/', [LeadController::class, 'index'])->name('crm.index');
     Route::get('/leads', [LeadController::class, 'index'])->name('crm.leads.index');
     Route::get('/leads/{lead}', [LeadController::class, 'show'])->name('crm.leads.show');
 
@@ -23,7 +23,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/webinar-series/{series}/fix-active', [WebinarController::class, 'fixActive'])
         ->name('crm.webinar-series.fix-active');
 
-    Route::post('/leads/{lead}/notes', [LeadNoteController::class, 'store'])->name('crm.leads.notes.store');;
+    Route::post('/leads/{lead}/notes', [LeadNoteController::class, 'store'])->name('crm.leads.notes.store');
     Route::post('/leads/{lead}/tasks', [LeadTaskController::class, 'store'])->name('crm.leads.tasks.store');
 
     Route::patch('/leads/{lead}/tasks/{task}/complete', [LeadTaskController::class, 'complete'])->name('crm.leads.tasks.complete');

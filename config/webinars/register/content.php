@@ -33,7 +33,7 @@ return [
         'title_prefix' => null,
         'title' => 'Last Year, 80,000 Pre-Approved Buyers Were Denied After Going Under Contract',
         'body' => 'Most buyers think they’re approved. They’re not.',
-        'supporting_copy' =>[
+        'supporting_copy' => [
             'By the time problems show up, it’s too late to fix them.',
         ],
         'class_details' => [
@@ -52,7 +52,7 @@ return [
                 'Know exactly what lenders actually verify',
                 'Catch issues early—before you go under contract',
                 'Avoid getting denied after you’ve made an offer',
-            ]
+            ],
         ],
         'image' => null,
     ],
@@ -77,7 +77,7 @@ return [
     ],
 
     'webinar_title' => [
-        'enabled' => true
+        'enabled' => true,
     ],
 
     'primary_cta' => [
@@ -155,7 +155,7 @@ return [
             [
                 ['text' => 'By the time the problem shows up, you’re already under contract.'],
                 ['text' => 'There’s no time to fix it.', 'emphasis' => true],
-            ]
+            ],
         ],
         'bullets' => [
             'intro' => 'That’s when everything falls apart.',
@@ -164,7 +164,7 @@ return [
                 'Assets not sourced properly',
                 'Credit not fully reviewed',
                 'Underwriting issues discovered too late',
-            ]
+            ],
         ],
     ],
 
@@ -187,7 +187,7 @@ return [
             ],
             [
                 ['text' => 'That’s where problems start.', 'emphasis' => true],
-            ]
+            ],
         ],
         'credibility' => [
             '30 years in lending',
@@ -283,7 +283,7 @@ return [
         'helper_text' => 'No pressure • No sales pitch • Just strategy',
         'countdown' => [
             'enabled' => false,
-        ]
+        ],
     ],
 
     'compliance' => [
@@ -329,6 +329,5 @@ return [
         'final_close',
         'compliance',
     ],
-
 
 ];

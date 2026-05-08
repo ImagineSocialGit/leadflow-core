@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Webinar;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class WebinarCopyController extends Controller
@@ -39,7 +40,7 @@ class WebinarCopyController extends Controller
         $copies = collect($validated['copies'])
             ->map(function (array $copy) {
                 $copy['external_id'] = preg_replace('/\D/', '', (string) $copy['external_id']);
-                $copy['slug'] = filled($copy['slug'] ?? null) ? \Illuminate\Support\Str::slug($copy['slug']) : null;
+                $copy['slug'] = filled($copy['slug'] ?? null) ? Str::slug($copy['slug']) : null;
 
                 return $copy;
             })
@@ -74,7 +75,7 @@ class WebinarCopyController extends Controller
         }
 
         if ($slugs->count() !== $slugs->unique()->count()) {
-            $errors['copies'] = ($errors['copies'] ?? '') . ' Duplicate slugs were submitted.';
+            $errors['copies'] = ($errors['copies'] ?? '').' Duplicate slugs were submitted.';
         }
 
         return $errors;
@@ -92,7 +93,7 @@ class WebinarCopyController extends Controller
         }
 
         if (! empty($slugs) && Webinar::query()->whereIn('slug', $slugs)->exists()) {
-            $errors['copies'] = ($errors['copies'] ?? '') . ' One or more slugs already exist.';
+            $errors['copies'] = ($errors['copies'] ?? '').' One or more slugs already exist.';
         }
 
         return $errors;

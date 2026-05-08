@@ -29,7 +29,7 @@ return [
     ],
 
     'webinar_title' => [
-        'title' => 'text-4xl font-semibold text-white'
+        'title' => 'text-4xl font-semibold text-white',
     ],
 
     'primary_cta' => [
@@ -54,18 +54,18 @@ return [
         'themes' => [
             'dark' => [
                 'wrapper' => 'rounded-2xl border border-white/10 bg-white/[0.07] px-3 py-2 lg:px-5 lg:py-4 text-white',
-                'label'   => 'mb-3 text-xs font-extrabold uppercase tracking-[0.2em] text-white/65',
-                'item'    => 'flex lg:flex-col gap-2 items-end lg:items-center min-w-12 rounded-xl bg-black/30 px-1 py-2 lg:px-2 lg:py-3',
-                'value'   => 'text-2xl font-extrabold leading-none text-white',
-                'unit'    => 'text-[0.65rem] font-extrabold uppercase tracking-[0.14em] text-primary',
+                'label' => 'mb-3 text-xs font-extrabold uppercase tracking-[0.2em] text-white/65',
+                'item' => 'flex lg:flex-col gap-2 items-end lg:items-center min-w-12 rounded-xl bg-black/30 px-1 py-2 lg:px-2 lg:py-3',
+                'value' => 'text-2xl font-extrabold leading-none text-white',
+                'unit' => 'text-[0.65rem] font-extrabold uppercase tracking-[0.14em] text-primary',
             ],
 
             'light' => [
                 'wrapper' => 'rounded-2xl border border-black/10 bg-soft px-5 py-4 text-ink',
-                'label'   => 'mb-3 text-xs font-extrabold uppercase tracking-[0.2em] text-ink/55',
-                'item'    => 'min-w-12 rounded-xl bg-white px-2 py-3 shadow-sm',
-                'value'   => 'text-2xl font-extrabold leading-none text-ink',
-                'unit'    => 'mt-1 text-[0.65rem] font-extrabold uppercase tracking-[0.14em] text-primary',
+                'label' => 'mb-3 text-xs font-extrabold uppercase tracking-[0.2em] text-ink/55',
+                'item' => 'min-w-12 rounded-xl bg-white px-2 py-3 shadow-sm',
+                'value' => 'text-2xl font-extrabold leading-none text-ink',
+                'unit' => 'mt-1 text-[0.65rem] font-extrabold uppercase tracking-[0.14em] text-primary',
             ],
         ],
     ],

@@ -35,9 +35,9 @@ class ZoomWebhookVerifier
             return false;
         }
 
-        $message = 'v0:' . $timestamp . ':' . $request->getContent();
+        $message = 'v0:'.$timestamp.':'.$request->getContent();
 
-        $expected = 'v0=' . hash_hmac(
+        $expected = 'v0='.hash_hmac(
             'sha256',
             $message,
             $secret

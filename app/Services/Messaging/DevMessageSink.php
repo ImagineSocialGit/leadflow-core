@@ -9,7 +9,7 @@ class DevMessageSink
 {
     public function store(string $channel, array $payload): void
     {
-        $directory = storage_path('app/dev-messages/' . now()->format('Y-m-d'));
+        $directory = storage_path('app/dev-messages/'.now()->format('Y-m-d'));
 
         if (! File::exists($directory)) {
             File::makeDirectory($directory, 0755, true);
@@ -23,7 +23,7 @@ class DevMessageSink
         );
 
         File::put(
-            $directory . '/' . $filename,
+            $directory.'/'.$filename,
             json_encode([
                 'channel' => $channel,
                 'created_at' => now()->toIso8601String(),

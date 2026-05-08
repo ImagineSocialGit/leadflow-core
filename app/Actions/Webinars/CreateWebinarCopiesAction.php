@@ -83,7 +83,7 @@ class CreateWebinarCopiesAction
     protected function generateSlug(string $title, Carbon $startsAtLocal): string
     {
         return Str::slug(
-            $title . '-' . $startsAtLocal->format('Y-m-d-gia')
+            $title.'-'.$startsAtLocal->format('Y-m-d-gia')
         );
     }
 }

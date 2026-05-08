@@ -28,7 +28,7 @@ class ZoomOAuthService
 
             if ($response->failed()) {
                 throw new RuntimeException(
-                    'Unable to retrieve Zoom access token: ' . $response->body()
+                    'Unable to retrieve Zoom access token: '.$response->body()
                 );
             }
 

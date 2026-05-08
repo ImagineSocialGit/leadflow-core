@@ -3,9 +3,9 @@
 namespace App\Services\Messaging;
 
 use App\Data\WebinarMessageData;
+use App\Mail\WebinarPostFollowUpMail;
 use App\Mail\WebinarRegistrationConfirmationMail;
 use App\Mail\WebinarReminderMail;
-use App\Mail\WebinarPostFollowUpMail;
 use Illuminate\Support\Facades\Mail;
 
 class EmailMessagingService
@@ -25,6 +25,7 @@ class EmailMessagingService
                 ...$data->toArray(),
                 'kind' => 'registration_confirmation',
             ]);
+
             return;
         }
 
@@ -51,6 +52,7 @@ class EmailMessagingService
                 'message_type' => $messageType,
                 'subject' => $subject,
             ]);
+
             return;
         }
 
@@ -77,6 +79,7 @@ class EmailMessagingService
                 'follow_up_type' => $followUpType,
                 'subject' => $subject,
             ]);
+
             return;
         }
 
@@ -87,12 +90,12 @@ class EmailMessagingService
     protected function subjectForReminder(WebinarMessageData $data, string $messageType): ?string
     {
         return match ($messageType) {
-            'reminder_10d' => '10 days until ' . $data->webinarTitle,
-            'reminder_7d' => '1 week until ' . $data->webinarTitle,
-            'reminder_24h' => 'Tomorrow: ' . $data->webinarTitle,
-            'reminder_30m' => 'Starting soon: ' . $data->webinarTitle,
-            'reminder_10m' => 'Starts in 10 minutes: ' . $data->webinarTitle,
-            'late_joiner_5m' => 'We are live: ' . $data->webinarTitle,
+            'reminder_10d' => '10 days until '.$data->webinarTitle,
+            'reminder_7d' => '1 week until '.$data->webinarTitle,
+            'reminder_24h' => 'Tomorrow: '.$data->webinarTitle,
+            'reminder_30m' => 'Starting soon: '.$data->webinarTitle,
+            'reminder_10m' => 'Starts in 10 minutes: '.$data->webinarTitle,
+            'late_joiner_5m' => 'We are live: '.$data->webinarTitle,
             default => null,
         };
     }
@@ -100,8 +103,8 @@ class EmailMessagingService
     protected function subjectForPostFollowUp(WebinarMessageData $data, string $followUpType): ?string
     {
         return match ($followUpType) {
-            'missed' => 'Sorry we missed you: ' . $data->webinarTitle,
-            'replay' => 'Thanks for joining: ' . $data->webinarTitle,
+            'missed' => 'Sorry we missed you: '.$data->webinarTitle,
+            'replay' => 'Thanks for joining: '.$data->webinarTitle,
             default => null,
         };
     }
