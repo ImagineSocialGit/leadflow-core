@@ -15,7 +15,7 @@ class ZoomWebinarService
     protected function client()
     {
         return Http::withToken($this->auth->getAccessToken())
-            ->baseUrl(config('services.zoom.base_url'));
+            ->baseUrl(config('webinars.providers.zoom.base_url'));
     }
 
     public function registerAttendee(string $webinarId, array $data): array

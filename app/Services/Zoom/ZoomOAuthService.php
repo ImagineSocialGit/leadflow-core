@@ -2,26 +2,43 @@
 
 namespace App\Services\Zoom;
 
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use RuntimeException;
 
 class ZoomOAuthService
 {
     public function getAccessToken(): string
     {
-        return Cache::remember('zoom_access_token', 3500, function () {
+        $provider = config('webinars.provider', 'zoom');
 
+        $cacheKey = config("webinars.providers.{$provider}.oauth_token_cache_key", 'zoom_access_token');
+        $ttl = (int) config("webinars.providers.{$provider}.oauth_token_ttl_seconds", 3500);
+
+        return Cache::remember($cacheKey, $ttl, function () use ($provider): string {
             $response = Http::asForm()
                 ->withBasicAuth(
                     config('services.zoom.client_id'),
                     config('services.zoom.client_secret')
                 )
-                ->post('https://zoom.us/oauth/token', [
+                ->post(config("webinars.providers.{$provider}.oauth_url"), [
                     'grant_type' => 'account_credentials',
                     'account_id' => config('services.zoom.account_id'),
                 ]);
 
-            return $response->json('access_token');
+            if ($response->failed()) {
+                throw new RuntimeException(
+                    'Unable to retrieve Zoom access token: ' . $response->body()
+                );
+            }
+
+            $token = $response->json('access_token');
+
+            if (! is_string($token) || $token === '') {
+                throw new RuntimeException('Zoom access token response did not contain an access_token.');
+            }
+
+            return $token;
         });
     }
 }

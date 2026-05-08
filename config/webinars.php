@@ -6,6 +6,15 @@ return [
 
     'provider' => env('WEBINAR_PROVIDER', 'zoom'),
 
+    'providers' => [
+        'zoom' => [
+            'base_url' => env('ZOOM_BASE_URL', 'https://api.zoom.us/v2'),
+            'oauth_url' => env('ZOOM_OAUTH_URL', 'https://zoom.us/oauth/token'),
+            'oauth_token_cache_key' => env('ZOOM_OAUTH_TOKEN_CACHE_KEY', 'zoom_access_token'),
+            'oauth_token_ttl_seconds' => env('ZOOM_OAUTH_TOKEN_TTL_SECONDS', 3500),
+        ],
+    ],
+
     'managed_by' => env('WEBINAR_MANAGED_BY', 'client'),
 
     'queues' => [
