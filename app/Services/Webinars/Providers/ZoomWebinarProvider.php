@@ -29,8 +29,10 @@ class ZoomWebinarProvider implements WebinarProvider
 
         return [
             'name' => $this->name(),
-            'registrant_id' => $response['registrant_id'] ?? $response['id'] ?? null,
-            'join_url' => $response['join_url'] ?? null,
+            'data' => [
+                'registrant_id' => $response['registrant_id'] ?? $response['id'] ?? null,
+                'join_url' => $response['join_url'] ?? null,
+            ],
             'raw' => $response,
         ];
     }

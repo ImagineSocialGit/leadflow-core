@@ -2,7 +2,8 @@
 
 namespace Tests\Feature\Webhooks;
 
-use App\Actions\Webinars\RecordZoomAttendanceAction;
+use App\Actions\Webinars\RecordWebinarAttendanceAction;
+use App\Services\Webinars\Providers\Zoom\ZoomAttendanceMapper;
 use App\Services\Zoom\ZoomWebinarService;
 use Mockery\MockInterface;
 use Tests\TestCase;
@@ -63,30 +64,26 @@ class ZoomWebhookTest extends TestCase
 
     public function test_it_ignores_irrelevant_signed_events(): void
     {
-        $payload = [
+        $response = $this->signedZoomPost([
             'event' => 'webinar.started',
             'payload' => [
                 'object' => [
                     'id' => '123456789',
                 ],
             ],
-        ];
-
-        $response = $this->signedZoomPost($payload);
+        ]);
 
         $response->assertNoContent();
     }
 
     public function test_it_ignores_supported_events_without_a_webinar_id(): void
     {
-        $payload = [
+        $response = $this->signedZoomPost([
             'event' => 'webinar.ended',
             'payload' => [
                 'object' => [],
             ],
-        ];
-
-        $response = $this->signedZoomPost($payload);
+        ]);
 
         $response->assertNoContent();
     }
@@ -103,6 +100,22 @@ class ZoomWebhookTest extends TestCase
             ],
         ]);
 
+        $attendanceRecords = collect([
+            [
+                'registrant_id' => null,
+                'email' => 'person@example.com',
+                'status' => 'attended',
+                'duration' => 3600,
+                'join_time' => null,
+                'leave_time' => null,
+                'raw' => [
+                    'id' => 'participant-1',
+                    'user_email' => 'person@example.com',
+                    'duration' => 3600,
+                ],
+            ],
+        ]);
+
         $this->mock(ZoomWebinarService::class, function (MockInterface $mock) use ($webinarId, $participants) {
             $mock->shouldReceive('listPastWebinarParticipants')
                 ->once()
@@ -110,10 +123,17 @@ class ZoomWebhookTest extends TestCase
                 ->andReturn($participants);
         });
 
-        $this->mock(RecordZoomAttendanceAction::class, function (MockInterface $mock) use ($webinarId, $participants) {
+        $this->mock(ZoomAttendanceMapper::class, function (MockInterface $mock) use ($participants, $attendanceRecords) {
+            $mock->shouldReceive('map')
+                ->once()
+                ->with($participants)
+                ->andReturn($attendanceRecords);
+        });
+
+        $this->mock(RecordWebinarAttendanceAction::class, function (MockInterface $mock) use ($webinarId, $attendanceRecords) {
             $mock->shouldReceive('execute')
                 ->once()
-                ->with($webinarId, $participants);
+                ->with('zoom', $webinarId, $attendanceRecords);
         });
 
         $response = $this->signedZoomPost([
@@ -134,9 +154,25 @@ class ZoomWebhookTest extends TestCase
 
         $participants = collect([
             [
-                'id' => 'participant-1',
-                'user_email' => 'person@example.com',
-                'duration' => 3600,
+                'id' => 'participant-2',
+                'user_email' => 'another@example.com',
+                'duration' => 1800,
+            ],
+        ]);
+
+        $attendanceRecords = collect([
+            [
+                'registrant_id' => null,
+                'email' => 'another@example.com',
+                'status' => 'attended',
+                'duration' => 1800,
+                'join_time' => null,
+                'leave_time' => null,
+                'raw' => [
+                    'id' => 'participant-2',
+                    'user_email' => 'another@example.com',
+                    'duration' => 1800,
+                ],
             ],
         ]);
 
@@ -147,10 +183,17 @@ class ZoomWebhookTest extends TestCase
                 ->andReturn($participants);
         });
 
-        $this->mock(RecordZoomAttendanceAction::class, function (MockInterface $mock) use ($webinarId, $participants) {
+        $this->mock(ZoomAttendanceMapper::class, function (MockInterface $mock) use ($participants, $attendanceRecords) {
+            $mock->shouldReceive('map')
+                ->once()
+                ->with($participants)
+                ->andReturn($attendanceRecords);
+        });
+
+        $this->mock(RecordWebinarAttendanceAction::class, function (MockInterface $mock) use ($webinarId, $attendanceRecords) {
             $mock->shouldReceive('execute')
                 ->once()
-                ->with($webinarId, $participants);
+                ->with('zoom', $webinarId, $attendanceRecords);
         });
 
         $response = $this->signedZoomPost([

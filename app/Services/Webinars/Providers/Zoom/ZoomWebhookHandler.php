@@ -2,7 +2,7 @@
 
 namespace App\Services\Webinars\Providers\Zoom;
 
-use App\Actions\Webinars\RecordZoomAttendanceAction;
+use App\Actions\Webinars\RecordWebinarAttendanceAction;
 use App\Services\Zoom\ZoomWebinarService;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -12,7 +12,8 @@ class ZoomWebhookHandler
     public function __construct(
         protected ZoomWebhookVerifier $verifier,
         protected ZoomWebinarService $zoomWebinarService,
-        protected RecordZoomAttendanceAction $recordZoomAttendanceAction,
+        protected ZoomAttendanceMapper $zoomAttendanceMapper,
+        protected RecordWebinarAttendanceAction $recordWebinarAttendanceAction,
     ) {}
 
     public function handle(Request $request): Response
@@ -45,9 +46,12 @@ class ZoomWebhookHandler
         $participants = $this->zoomWebinarService
             ->listPastWebinarParticipants($webinarId);
 
-        $this->recordZoomAttendanceAction->execute(
-            $webinarId,
-            $participants
+        $attendanceRecords = $this->zoomAttendanceMapper->map($participants);
+
+        $this->recordWebinarAttendanceAction->execute(
+            provider: 'zoom',
+            externalWebinarId: $webinarId,
+            attendanceRecords: $attendanceRecords,
         );
 
         return response()->noContent();
