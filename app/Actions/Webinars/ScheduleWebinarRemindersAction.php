@@ -6,164 +6,114 @@ use App\Data\WebinarMessageData;
 use App\Jobs\Messaging\SendWebinarReminderEmailJob;
 use App\Jobs\Messaging\SendWebinarReminderSmsJob;
 use App\Models\WebinarRegistration;
-use App\Models\WebinarScheduledMessage;
-use Carbon\CarbonInterface;
+use Carbon\CarbonInterval;
+use Illuminate\Support\Carbon;
 
 class ScheduleWebinarRemindersAction
 {
-    public function execute(WebinarRegistration $registration): void
+    public function handle(WebinarRegistration $registration): void
     {
-        $registration->loadMissing(['lead', 'webinar']);
-
         $data = WebinarMessageData::fromRegistration($registration);
-        $schedule = $this->scheduleFor($data);
 
-        foreach ($schedule as $messageType => $runAt) {
-            $channels = $this->channelsFor($messageType);
+        foreach (config('webinar_messaging.reminders', []) as $reminder) {
+            $type = $reminder['type'];
+            $channels = $reminder['channels'] ?? [];
 
-            if ($channels['email']) {
-                $this->scheduleEmail($registration, $data, $messageType, $runAt);
+            $sendAt = $this->resolveSendAt(
+                registration: $registration,
+                reminder: $reminder
+            );
+
+            if (! $sendAt || $sendAt->isPast()) {
+                continue;
             }
 
-            if ($channels['sms']) {
-                $this->scheduleSms($registration, $data, $messageType, $runAt);
+            foreach ($channels as $channel) {
+                $this->dispatchReminder(
+                    channel: $channel,
+                    type: $type,
+                    data: $data,
+                    sendAt: $sendAt
+                );
             }
         }
     }
 
-    protected function scheduleEmail(
+    protected function resolveSendAt(
         WebinarRegistration $registration,
-        WebinarMessageData $data,
-        string $messageType,
-        CarbonInterface $runAt
-    ): void {
-        $scheduled = WebinarScheduledMessage::query()->firstOrNew([
-            'webinar_registration_id' => $registration->id,
-            'channel' => 'email',
-            'message_type' => $messageType,
-        ]);
+        array $reminder
+    ): ?Carbon {
+        $webinar = $registration->webinar;
+        $timing = $reminder['timing'] ?? [];
 
-        if ($scheduled->exists) {
-            return;
+        if (($timing['after_registration'] ?? false) === true) {
+            return now();
         }
 
-        if ($this->shouldSkip($runAt)) {
-            $scheduled->fill([
-                'status' => 'skipped',
-                'send_at' => $runAt,
-                'skipped_at' => now(),
-                'meta' => [
-                    'reason' => 'send_at_in_past',
-                ],
-            ])->save();
-
-            return;
+        if (isset($timing['before_start'])) {
+            return $webinar->starts_at->copy()->sub(
+                CarbonInterval::make($timing['before_start'])
+            );
         }
 
-        $scheduled->fill([
-            'status' => 'pending',
-            'send_at' => $runAt,
-            'meta' => null,
-        ])->save();
+        if (($timing['at_start'] ?? false) === true) {
+            return $webinar->starts_at->copy();
+        }
 
-        $payload = [
-            ...$data->toArray(),
-            'message_type' => $messageType,
-            'scheduled_message_id' => $scheduled->id,
-        ];
+        if (isset($timing['after_start'])) {
+            return $webinar->starts_at->copy()->add(
+                CarbonInterval::make($timing['after_start'])
+            );
+        }
 
-        SendWebinarReminderEmailJob::dispatch($payload)
-            ->delay($runAt)
-            ->onQueue(config('webinars.queues.reminders'));
+        if (isset($timing['after_end'])) {
+            return $webinar->ends_at->copy()->add(
+                CarbonInterval::make($timing['after_end'])
+            );
+        }
+
+        return null;
     }
 
-    protected function scheduleSms(
-        WebinarRegistration $registration,
+    protected function dispatchReminder(
+        string $channel,
+        string $type,
         WebinarMessageData $data,
-        string $messageType,
-        CarbonInterface $runAt
+        Carbon $sendAt
     ): void {
-        $scheduled = WebinarScheduledMessage::query()->firstOrNew([
-            'webinar_registration_id' => $registration->id,
-            'channel' => 'sms',
-            'message_type' => $messageType,
-        ]);
-
-        if ($scheduled->exists) {
-            return;
-        }
-
-        if ($this->shouldSkip($runAt)) {
-            $scheduled->fill([
-                'status' => 'skipped',
-                'send_at' => $runAt,
-                'skipped_at' => now(),
-                'meta' => [
-                    'reason' => 'send_at_in_past',
-                ],
-            ])->save();
-
-            return;
-        }
-
-        $scheduled->fill([
-            'status' => 'pending',
-            'send_at' => $runAt,
-            'meta' => null,
-        ])->save();
-
-        $payload = [
-            ...$data->toArray(),
-            'message_type' => $messageType,
-            'scheduled_message_id' => $scheduled->id,
-        ];
-
-        SendWebinarReminderSmsJob::dispatch($payload)
-            ->delay($runAt)
-            ->onQueue(config('webinars.queues.reminders'));
-    }
-
-    protected function scheduleFor(WebinarMessageData $data): array
-    {
         if (config('webinar_messaging.testing.enabled')) {
-            return $this->testingSchedule();
+            $sendAt = $this->localTestingSendAt($type);
         }
 
-        $startsAt = $data->webinarStartsAt->copy();
+        match ($channel) {
+            'email' => SendWebinarReminderEmailJob::dispatch(
+                payload: $data->toArray(),
+                messageType: $type,
+            )
+                ->delay($sendAt)
+                ->onQueue('emails'),
 
-        return [
-            'reminder_10d' => $startsAt->copy()->subDays(10),
-            'reminder_7d' => $startsAt->copy()->subDays(7),
-            'reminder_24h' => $startsAt->copy()->subHours(24),
-            'reminder_30m' => $startsAt->copy()->subMinutes(30),
-            'reminder_10m' => $startsAt->copy()->subMinutes(10),
-            'late_joiner_5m' => $startsAt->copy()->addMinutes(5),
-        ];
+            'sms' => SendWebinarReminderSmsJob::dispatch(
+                payload: $data->toArray(),
+                messageType: $type,
+            )
+                ->delay($sendAt)
+                ->onQueue('notifications'),
+
+            default => null,
+        };
     }
 
-    protected function testingSchedule(): array
+    protected function localTestingSendAt(string $type): Carbon
     {
-        $delays = config('webinar_messaging.testing.delays', []);
+        $reminders = collect(config('webinar_messaging.reminders', []))
+            ->pluck('type')
+            ->values();
 
-        $schedule = [];
+        $index = $reminders->search($type);
 
-        foreach ($delays as $messageType => $seconds) {
-            $schedule[$messageType] = now()->copy()->addSeconds((int) $seconds);
-        }
+        $step = (int) config('webinar_messaging.testing.delay_step_seconds', 60);
 
-        return $schedule;
-    }
-
-    protected function shouldSkip(CarbonInterface $runAt): bool
-    {
-        return $runAt->lessThanOrEqualTo(now());
-    }
-
-    protected function channelsFor(string $messageType): array
-    {
-        return config("webinar_messaging.message_types.{$messageType}", [
-            'email' => false,
-            'sms' => false,
-        ]);
+        return now()->addSeconds(($index === false ? 1 : $index + 1) * $step);
     }
 }

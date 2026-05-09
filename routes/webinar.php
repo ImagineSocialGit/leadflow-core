@@ -20,6 +20,7 @@ Route::get('/{seriesSlug}', [WebinarRegistrationController::class, 'show'])
     ->name('webinar.show');
 
 Route::post('/{seriesSlug}', [WebinarRegistrationController::class, 'store'])
+    ->middleware('throttle:webinar-registration')
     ->name('webinar.registration.store');
 
 Route::get('/{seriesSlug}/thank-you', [WebinarRegistrationController::class, 'showThankYou'])

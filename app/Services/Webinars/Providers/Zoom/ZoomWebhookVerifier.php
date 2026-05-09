@@ -3,6 +3,7 @@
 namespace App\Services\Webinars\Providers\Zoom;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class ZoomWebhookVerifier
 {
@@ -35,6 +36,19 @@ class ZoomWebhookVerifier
             return false;
         }
 
+        if (! ctype_digit($timestamp)) {
+            return false;
+        }
+
+        $maxDrift = (int) config(
+            'services.zoom.max_timestamp_drift_seconds',
+            300
+        );
+
+        if (abs(time() - (int) $timestamp) > $maxDrift) {
+            return false;
+        }
+
         $message = 'v0:'.$timestamp.':'.$request->getContent();
 
         $expected = 'v0='.hash_hmac(
@@ -43,6 +57,32 @@ class ZoomWebhookVerifier
             $secret
         );
 
-        return hash_equals($expected, $signature);
+        if (! hash_equals($expected, $signature)) {
+            return false;
+        }
+
+        $fingerprint = hash(
+            'sha256',
+            $timestamp.'|'.$signature.'|'.$request->getContent()
+        );
+
+        $cacheKey = 'zoom:webhook:replay:'.$fingerprint;
+
+        if (Cache::has($cacheKey)) {
+            return false;
+        }
+
+        Cache::put(
+            $cacheKey,
+            true,
+            now()->addSeconds(
+                (int) config(
+                    'services.zoom.replay_cache_ttl_seconds',
+                    600
+                )
+            )
+        );
+
+        return true;
     }
 }

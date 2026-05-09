@@ -224,9 +224,17 @@ class ZoomWebhookTest extends TestCase
         $response->assertNotFound();
     }
 
-    private function signedZoomPost(array $payload)
-    {
-        $timestamp = (string) time();
+    private ?string $reusedTimestamp = null;
+
+    private function signedZoomPost(
+        array $payload,
+        bool $reuseTimestamp = false
+    ) {
+        $timestamp = $reuseTimestamp && $this->reusedTimestamp
+            ? $this->reusedTimestamp
+            : (string) time();
+
+        $this->reusedTimestamp = $timestamp;
 
         $body = json_encode($payload, JSON_UNESCAPED_SLASHES);
 
@@ -247,5 +255,64 @@ class ZoomWebhookTest extends TestCase
             ],
             content: $body
         );
+    }
+
+    public function test_it_rejects_requests_with_stale_timestamps(): void
+    {
+        $timestamp = (string) (time() - 1000);
+
+        $payload = [
+            'event' => 'webinar.ended',
+            'payload' => [
+                'object' => [
+                    'id' => '123456789',
+                ],
+            ],
+        ];
+
+        $body = json_encode($payload, JSON_UNESCAPED_SLASHES);
+
+        $signature = 'v0='.hash_hmac(
+            'sha256',
+            'v0:'.$timestamp.':'.$body,
+            config('services.zoom.webhook_secret')
+        );
+
+        $response = $this->call(
+            method: 'POST',
+            uri: route('webhooks.zoom'),
+            server: [
+                'CONTENT_TYPE' => 'application/json',
+                'HTTP_ACCEPT' => 'application/json',
+                'HTTP_X_ZM_REQUEST_TIMESTAMP' => $timestamp,
+                'HTTP_X_ZM_SIGNATURE' => $signature,
+            ],
+            content: $body
+        );
+
+        $response->assertUnauthorized();
+    }
+
+    public function test_it_rejects_replayed_requests(): void
+    {
+        $payload = [
+            'event' => 'webinar.started',
+            'payload' => [
+                'object' => [
+                    'id' => '123456789',
+                ],
+            ],
+        ];
+
+        $firstResponse = $this->signedZoomPost($payload);
+
+        $firstResponse->assertNoContent();
+
+        $secondResponse = $this->signedZoomPost(
+            $payload,
+            reuseTimestamp: true
+        );
+
+        $secondResponse->assertUnauthorized();
     }
 }

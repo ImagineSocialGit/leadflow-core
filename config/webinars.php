@@ -52,6 +52,13 @@ return [
             'per_phone_minutes' => 15,
             'per_ip_minutes' => 15,
         ],
+
+        'rate_limits' => [
+
+            'per_ip_per_minute' => 10,
+
+            'per_email_per_hour' => 5,
+        ],
     ],
 
     'webhooks' => [

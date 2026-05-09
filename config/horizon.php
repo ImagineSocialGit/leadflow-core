@@ -97,7 +97,7 @@ return [
     */
 
     'waits' => [
-        'redis:default' => 60,
+        'redis:default' => env('HORIZON_WAIT_THRESHOLD_DEFAULT', 60),
     ],
 
     /*
@@ -183,7 +183,7 @@ return [
     |
     */
 
-    'memory_limit' => 64,
+    'memory_limit' => env('HORIZON_MASTER_MEMORY_LIMIT', 64),
 
     /*
     |--------------------------------------------------------------------------
@@ -212,12 +212,12 @@ return [
             'queue' => ['default'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
-            'maxProcesses' => 1,
+            'maxProcesses' => env('HORIZON_MAX_PROCESSES', 1),
             'maxTime' => 0,
             'maxJobs' => 0,
-            'memory' => 128,
-            'tries' => 1,
-            'timeout' => 60,
+            'memory' => env('HORIZON_MEMORY', 128),
+            'tries' => env('HORIZON_TRIES', 1),
+            'timeout' => env('HORIZON_TIMEOUT', 60),
             'nice' => 0,
         ],
     ],
@@ -225,9 +225,9 @@ return [
     'environments' => [
         'production' => [
             'supervisor-1' => [
-                'maxProcesses' => 10,
-                'balanceMaxShift' => 1,
-                'balanceCooldown' => 3,
+                'maxProcesses' => env('HORIZON_PRODUCTION_MAX_PROCESSES', 10),
+                'balanceMaxShift' => env('HORIZON_BALANCE_MAX_SHIFT', 1),
+                'balanceCooldown' => env('HORIZON_BALANCE_COOLDOWN', 3),
                 'queue' => explode(',', env(
                     'HORIZON_SUPERVISOR_1_QUEUES',
                     'default,webinars,emails,notifications,webhooks'
@@ -237,7 +237,7 @@ return [
 
         'staging' => [
             'supervisor-1' => [
-                'maxProcesses' => 3,
+                'maxProcesses' => env('HORIZON_STAGING_MAX_PROCESSES', 3),
                 'queue' => explode(',', env(
                     'HORIZON_SUPERVISOR_1_QUEUES',
                     'default,webinars,emails,notifications,webhooks'
@@ -247,7 +247,7 @@ return [
 
         'local' => [
             'supervisor-1' => [
-                'maxProcesses' => 3,
+                'maxProcesses' => env('HORIZON_LOCAL_MAX_PROCESSES', 3),
                 'queue' => explode(',', env(
                     'HORIZON_SUPERVISOR_1_QUEUES',
                     'default,webinars,emails,notifications,webhooks'

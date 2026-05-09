@@ -62,7 +62,7 @@ class CreateWebinarRegistration
                 'email' => $validated['email'],
                 'phone' => $normalizedPhone,
                 'meta' => [
-                    'ip' => $request->ip(),
+                    'request_ip' => $request->ip(),
                     'user_agent' => $request->userAgent(),
                 ],
                 'registered_at' => now(),

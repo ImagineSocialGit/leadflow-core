@@ -34,6 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+
         $middleware->alias([
             'staging.access' => ForceStagingAccess::class,
         ]);

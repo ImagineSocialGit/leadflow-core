@@ -11,10 +11,69 @@ class SmsMessagingService
         protected Client $twilio,
         protected DevMessageSink $devMessageSink,
         protected PhoneNumberNormalizer $phoneNumberNormalizer,
+        protected SmsSendGuard $smsSendGuard,
     ) {}
 
     public function sendRegistrationConfirmation(WebinarMessageData $data): void
     {
+        $this->send(
+            data: $data,
+            kind: 'registration_confirmation',
+            message: sprintf(
+                "You're registered for %s on %s. Join here: %s",
+                $data->webinarTitle,
+                $data->formattedStart('M j g:i A'),
+                $data->webinarJoinUrl
+            )
+        );
+    }
+
+    public function sendReminder(WebinarMessageData $data, string $messageType): void
+    {
+        $message = $this->messageForReminder($data, $messageType);
+
+        if (! $message) {
+            return;
+        }
+
+        $this->send(
+            data: $data,
+            kind: 'reminder',
+            message: $message,
+            metadata: [
+                'message_type' => $messageType,
+            ]
+        );
+    }
+
+    public function sendPostWebinarFollowUp(WebinarMessageData $data, string $followUpType): void
+    {
+        $message = $this->messageForPostFollowUp($data, $followUpType);
+
+        if (! $message) {
+            return;
+        }
+
+        $this->send(
+            data: $data,
+            kind: 'post_webinar_follow_up',
+            message: $message,
+            metadata: [
+                'follow_up_type' => $followUpType,
+            ]
+        );
+    }
+
+    private function send(
+        WebinarMessageData $data,
+        string $kind,
+        string $message,
+        array $metadata = []
+    ): void {
+        if (! config('sms.enabled')) {
+            return;
+        }
+
         if (! $data->leadPhone) {
             return;
         }
@@ -25,20 +84,20 @@ class SmsMessagingService
             return;
         }
 
-        $message = sprintf(
-            "You're registered for %s on %s. Join here: %s",
-            $data->webinarTitle,
-            $data->formattedStart('M j g:i A'),
-            $data->webinarJoinUrl
-        );
+        if (! $this->smsSendGuard->allows($data, $to, $message, $kind)) {
+            return;
+        }
 
         if (app()->environment('local')) {
             $this->devMessageSink->store('sms', [
                 ...$data->toArray(),
-                'kind' => 'registration_confirmation',
+                ...$metadata,
+                'kind' => $kind,
                 'normalized_phone' => $to,
                 'message' => $message,
             ]);
+
+            $this->smsSendGuard->record($data, $to, $message, $kind);
 
             return;
         }
@@ -47,78 +106,8 @@ class SmsMessagingService
             'from' => config('sms.from'),
             'body' => $message,
         ]);
-    }
 
-    public function sendReminder(WebinarMessageData $data, string $messageType): void
-    {
-        if (! $data->leadPhone) {
-            return;
-        }
-
-        $to = $this->phoneNumberNormalizer->normalize($data->leadPhone);
-
-        if (! $to) {
-            return;
-        }
-
-        $message = $this->messageForReminder($data, $messageType);
-
-        if (! $message) {
-            return;
-        }
-
-        if (app()->environment('local')) {
-            $this->devMessageSink->store('sms', [
-                ...$data->toArray(),
-                'kind' => 'reminder',
-                'message_type' => $messageType,
-                'normalized_phone' => $to,
-                'message' => $message,
-            ]);
-
-            return;
-        }
-
-        $this->twilio->messages->create($to, [
-            'from' => config('services.twilio.from'),
-            'body' => $message,
-        ]);
-    }
-
-    public function sendPostWebinarFollowUp(WebinarMessageData $data, string $followUpType): void
-    {
-        if (! $data->leadPhone) {
-            return;
-        }
-
-        $to = $this->phoneNumberNormalizer->normalize($data->leadPhone);
-
-        if (! $to) {
-            return;
-        }
-
-        $message = $this->messageForPostFollowUp($data, $followUpType);
-
-        if (! $message) {
-            return;
-        }
-
-        if (app()->environment('local')) {
-            $this->devMessageSink->store('sms', [
-                ...$data->toArray(),
-                'kind' => 'post_webinar_follow_up',
-                'follow_up_type' => $followUpType,
-                'normalized_phone' => $to,
-                'message' => $message,
-            ]);
-
-            return;
-        }
-
-        $this->twilio->messages->create($to, [
-            'from' => config('services.twilio.from'),
-            'body' => $message,
-        ]);
+        $this->smsSendGuard->record($data, $to, $message, $kind);
     }
 
     protected function messageForReminder(WebinarMessageData $data, string $messageType): ?string

@@ -22,6 +22,7 @@ readonly class WebinarMessageData
         public string $webinarTimezone,
         public string $webinarJoinUrl,
         public string $webinarPlatform,
+        public ?string $requestIp = null,
     ) {}
 
     public static function fromRegistration(WebinarRegistration $registration): self
@@ -49,6 +50,9 @@ readonly class WebinarMessageData
             webinarTimezone: $webinar->timezone ?: config('app.timezone', 'America/Chicago'),
             webinarJoinUrl: $joinLinkGenerator->forRegistration($registration),
             webinarPlatform: $webinar->platform,
+            requestIp: $registration->meta['request_ip']
+                ?? $registration->meta['ip_address']
+                ?? null,
         );
     }
 
@@ -67,6 +71,7 @@ readonly class WebinarMessageData
             'webinar_timezone' => $this->webinarTimezone,
             'webinar_join_url' => $this->webinarJoinUrl,
             'webinar_platform' => $this->webinarPlatform,
+            'request_ip' => $this->requestIp,
         ];
     }
 
@@ -85,6 +90,7 @@ readonly class WebinarMessageData
             webinarTimezone: $data['webinar_timezone'],
             webinarJoinUrl: $data['webinar_join_url'],
             webinarPlatform: $data['webinar_platform'],
+            requestIp: $data['request_ip'] ?? null,
         );
     }
 
