@@ -87,7 +87,7 @@ class CreateWebinarRegistration
         WebinarRegistration $registration,
         Webinar $webinar
     ): void {
-        if ($webinar->platform !== config('webinars.provider', 'zoom')) {
+        if ($webinar->platform !== config('webinars.provider')) {
             return;
         }
 

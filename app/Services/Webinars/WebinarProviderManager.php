@@ -14,7 +14,7 @@ class WebinarProviderManager
 
     public function provider(?string $name = null): WebinarProvider
     {
-        $name = $name ?: config('webinars.provider', 'zoom');
+        $name = $name ?: config('webinars.provider');
 
         return match ($name) {
             'zoom' => $this->zoomWebinarProvider,

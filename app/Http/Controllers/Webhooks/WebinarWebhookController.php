@@ -11,7 +11,7 @@ class WebinarWebhookController extends Controller
 {
     public function __invoke(Request $request, ZoomWebhookHandler $zoomWebhookHandler): Response
     {
-        return match (config('webinars.provider', 'zoom')) {
+        return match (config('webinars.provider')) {
             'zoom' => $zoomWebhookHandler->handle($request),
             default => abort(404),
         };

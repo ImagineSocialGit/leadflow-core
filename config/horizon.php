@@ -238,14 +238,20 @@ return [
         'staging' => [
             'supervisor-1' => [
                 'maxProcesses' => 3,
-                'queue' => ['default', 'webinars', 'emails', 'notifications'],
+                'queue' => explode(',', env(
+                    'HORIZON_SUPERVISOR_1_QUEUES',
+                    'default,webinars,emails,notifications,webhooks'
+                )),
             ],
         ],
 
         'local' => [
             'supervisor-1' => [
                 'maxProcesses' => 3,
-                'queue' => ['default', 'webinars', 'emails', 'notifications'],
+                'queue' => explode(',', env(
+                    'HORIZON_SUPERVISOR_1_QUEUES',
+                    'default,webinars,emails,notifications,webhooks'
+                )),
             ],
         ],
     ],

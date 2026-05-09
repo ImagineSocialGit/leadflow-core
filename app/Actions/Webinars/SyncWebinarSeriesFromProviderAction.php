@@ -23,7 +23,7 @@ class SyncWebinarSeriesFromProviderAction
         $deleted = 0;
         $conflicts = [];
 
-        $provider = config('webinars.provider', 'zoom');
+        $provider = config('webinars.provider');
 
         $fetchedExternalIds = collect($fetchedWebinars)
             ->pluck('external_id')

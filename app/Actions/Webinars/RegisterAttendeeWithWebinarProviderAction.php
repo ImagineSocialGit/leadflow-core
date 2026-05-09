@@ -14,7 +14,7 @@ class RegisterAttendeeWithWebinarProviderAction
 
     public function handle(Webinar $webinar, WebinarRegistration $registration): array
     {
-        $providerName = $webinar->platform ?: config('webinars.provider', 'zoom');
+        $providerName = $webinar->platform ?: config('webinars.provider');
 
         return $this->webinarProviderManager
             ->provider($providerName)
