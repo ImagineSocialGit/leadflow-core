@@ -2,8 +2,11 @@
 
 namespace App\Actions\Webinars;
 
-use App\Jobs\Messaging\SendWebinarMissedYouFollowUpJob;
-use App\Jobs\Messaging\SendWebinarReplayFollowUpJob;
+use App\Data\WebinarMessageData;
+use App\Jobs\Messaging\SendEmailMessageJob;
+use App\Jobs\Messaging\SendSmsMessageJob;
+use App\Messaging\Payloads\Webinars\WebinarFollowUpEmailPayload;
+use App\Messaging\Payloads\Webinars\WebinarFollowUpSmsPayload;
 use App\Models\WebinarRegistration;
 use App\Models\WebinarScheduledMessage;
 
@@ -18,19 +21,18 @@ class ProcessWebinarOutcomeAction
         }
 
         if ($registration->attended_at) {
-            $this->dispatchFollowUpMessages($registration, 'post_replay');
+            $this->dispatchFollowUpMessages($registration, 'replay');
 
             return;
         }
 
-        $this->dispatchFollowUpMessages($registration, 'post_missed');
+        $this->dispatchFollowUpMessages($registration, 'missed');
     }
 
     protected function dispatchFollowUpMessages(
         WebinarRegistration $registration,
-        string $messageType
+        string $followUpType
     ): void {
-
         $meta = $registration->meta ?? [];
         $meta['post_webinar_routed_at'] = now()->toIso8601String();
 
@@ -38,19 +40,19 @@ class ProcessWebinarOutcomeAction
             'meta' => $meta,
         ])->save();
 
-        $this->dispatchEmail($registration, $messageType);
-        $this->dispatchSms($registration, $messageType);
+        $this->dispatchEmail($registration, $followUpType);
+        $this->dispatchSms($registration, $followUpType);
     }
 
     protected function dispatchEmail(
         WebinarRegistration $registration,
-        string $messageType
+        string $followUpType
     ): void {
         $scheduled = WebinarScheduledMessage::query()->firstOrCreate(
             [
                 'webinar_registration_id' => $registration->id,
                 'channel' => 'email',
-                'message_type' => $messageType,
+                'message_type' => 'post_'.$followUpType,
             ],
             [
                 'status' => 'pending',
@@ -63,26 +65,25 @@ class ProcessWebinarOutcomeAction
             return;
         }
 
-        if ($messageType === 'post_replay') {
-            SendWebinarReplayFollowUpJob::dispatch($registration->id, $scheduled->id)
-                ->onQueue(config('webinars.queues.followups'));
-
-            return;
-        }
-
-        SendWebinarMissedYouFollowUpJob::dispatch($registration->id, $scheduled->id)
-            ->onQueue(config('webinars.queues.followups'));
+        SendEmailMessageJob::dispatch(
+            payloadClass: WebinarFollowUpEmailPayload::class,
+            payload: [
+                ...WebinarMessageData::fromRegistration($registration)->toArray(),
+                'follow_up_type' => $followUpType,
+            ],
+            scheduledMessageId: $scheduled->id,
+        )->onQueue(config('webinars.queues.followups'));
     }
 
     protected function dispatchSms(
         WebinarRegistration $registration,
-        string $messageType
+        string $followUpType
     ): void {
         $scheduled = WebinarScheduledMessage::query()->firstOrCreate(
             [
                 'webinar_registration_id' => $registration->id,
                 'channel' => 'sms',
-                'message_type' => $messageType,
+                'message_type' => 'post_'.$followUpType,
             ],
             [
                 'status' => 'pending',
@@ -95,14 +96,13 @@ class ProcessWebinarOutcomeAction
             return;
         }
 
-        if ($messageType === 'post_replay') {
-            SendWebinarReplayFollowUpJob::dispatch($registration->id, $scheduled->id)
-                ->onQueue(config('webinars.queues.followups'));
-
-            return;
-        }
-
-        SendWebinarMissedYouFollowUpJob::dispatch($registration->id, $scheduled->id)
-            ->onQueue(config('webinars.queues.followups'));
+        SendSmsMessageJob::dispatch(
+            payloadClass: WebinarFollowUpSmsPayload::class,
+            payload: [
+                ...WebinarMessageData::fromRegistration($registration)->toArray(),
+                'follow_up_type' => $followUpType,
+            ],
+            scheduledMessageId: $scheduled->id,
+        )->onQueue(config('webinars.queues.followups'));
     }
 }

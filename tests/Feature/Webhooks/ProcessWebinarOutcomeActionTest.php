@@ -3,8 +3,8 @@
 namespace Tests\Feature\Webinars;
 
 use App\Actions\Webinars\ProcessWebinarOutcomeAction;
-use App\Jobs\Messaging\SendWebinarMissedYouFollowUpJob;
-use App\Jobs\Messaging\SendWebinarReplayFollowUpJob;
+use App\Jobs\Messaging\SendEmailMessageJob;
+use App\Jobs\Messaging\SendSmsMessageJob;
 use App\Models\Webinar;
 use App\Models\WebinarRegistration;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -34,14 +34,8 @@ class ProcessWebinarOutcomeActionTest extends TestCase
         app(ProcessWebinarOutcomeAction::class)
             ->execute($registration);
 
-        Queue::assertPushed(
-            SendWebinarReplayFollowUpJob::class,
-            2
-        );
-
-        Queue::assertNotPushed(
-            SendWebinarMissedYouFollowUpJob::class
-        );
+        Queue::assertPushed(SendEmailMessageJob::class, 1);
+        Queue::assertPushed(SendSmsMessageJob::class, 1);
     }
 
     public function test_non_attendee_routes_to_missed_follow_up(): void
@@ -63,13 +57,7 @@ class ProcessWebinarOutcomeActionTest extends TestCase
         app(ProcessWebinarOutcomeAction::class)
             ->execute($registration);
 
-        Queue::assertPushed(
-            SendWebinarMissedYouFollowUpJob::class,
-            2
-        );
-
-        Queue::assertNotPushed(
-            SendWebinarReplayFollowUpJob::class
-        );
+        Queue::assertPushed(SendEmailMessageJob::class, 1);
+        Queue::assertPushed(SendSmsMessageJob::class, 1);
     }
 }

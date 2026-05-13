@@ -2,32 +2,37 @@
 
 namespace App\Jobs\Messaging;
 
-use App\Data\WebinarMessageData;
+use App\Contracts\Messaging\EmailMessagePayload;
 use App\Models\WebinarScheduledMessage;
 use App\Services\Messaging\EmailMessagingService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use InvalidArgumentException;
 use Throwable;
 
-class SendWebinarReminderEmailJob implements ShouldQueue
+class SendEmailMessageJob implements ShouldQueue
 {
     use Queueable;
 
     public function __construct(
-        public array $payload
+        public string $payloadClass,
+        public array $payload,
+        public ?int $scheduledMessageId = null,
     ) {}
 
     public function handle(EmailMessagingService $emailMessagingService): void
     {
-        $scheduled = WebinarScheduledMessage::find(
-            $this->payload['scheduled_message_id'] ?? null
-        );
+        if (! is_subclass_of($this->payloadClass, EmailMessagePayload::class)) {
+            throw new InvalidArgumentException("{$this->payloadClass} must implement ".EmailMessagePayload::class);
+        }
+
+        $scheduled = $this->scheduledMessageId
+            ? WebinarScheduledMessage::query()->find($this->scheduledMessageId)
+            : null;
 
         try {
-            $emailMessagingService->sendReminder(
-                WebinarMessageData::fromArray($this->payload),
-                $this->payload['message_type']
-            );
+            $this->payloadClass::fromArray($this->payload)
+                ->send($emailMessagingService);
 
             if ($scheduled) {
                 $scheduled->update([
@@ -35,9 +40,7 @@ class SendWebinarReminderEmailJob implements ShouldQueue
                     'sent_at' => now(),
                 ]);
             }
-
         } catch (Throwable $e) {
-
             if ($scheduled) {
                 $scheduled->update([
                     'status' => 'failed',

@@ -3,8 +3,10 @@
 namespace App\Actions\Webinars;
 
 use App\Data\WebinarMessageData;
-use App\Jobs\Messaging\SendWebinarReminderEmailJob;
-use App\Jobs\Messaging\SendWebinarReminderSmsJob;
+use App\Jobs\Messaging\SendEmailMessageJob;
+use App\Jobs\Messaging\SendSmsMessageJob;
+use App\Messaging\Payloads\Webinars\WebinarReminderEmailPayload;
+use App\Messaging\Payloads\Webinars\WebinarReminderSmsPayload;
 use App\Models\WebinarRegistration;
 use Carbon\CarbonInterval;
 use Illuminate\Support\Carbon;
@@ -86,19 +88,27 @@ class ScheduleWebinarRemindersAction
         }
 
         match ($channel) {
-            'email' => SendWebinarReminderEmailJob::dispatch(
-                payload: $data->toArray(),
-                messageType: $type,
+            'email' => SendEmailMessageJob::dispatch(
+                payloadClass: WebinarReminderEmailPayload::class,
+                payload: [
+                    ...$payload,
+                    'message_type' => $messageType,
+                ],
+                scheduledMessageId: $scheduledMessage->id,
             )
                 ->delay($sendAt)
-                ->onQueue('emails'),
+                ->onQueue(config('webinars.queues.reminders')),
 
-            'sms' => SendWebinarReminderSmsJob::dispatch(
-                payload: $data->toArray(),
-                messageType: $type,
+            'sms' => SendSmsMessageJob::dispatch(
+                payloadClass: WebinarReminderSmsPayload::class,
+                payload: [
+                    ...$payload,
+                    'message_type' => $messageType,
+                ],
+                scheduledMessageId: $scheduledMessage->id,
             )
                 ->delay($sendAt)
-                ->onQueue('notifications'),
+                ->onQueue(config('webinars.queues.reminders')),
 
             default => null,
         };

@@ -12,6 +12,7 @@ class SyncWebinarSeriesFromProviderAction
 {
     public function __construct(
         protected ZoomWebinarService $zoomWebinarService,
+        protected GetNextUpcomingWebinarAction $getNextUpcomingWebinarAction,
     ) {}
 
     public function execute(WebinarSeries $series): array
@@ -24,6 +25,10 @@ class SyncWebinarSeriesFromProviderAction
         $conflicts = [];
 
         $provider = config('webinars.provider');
+
+        $hadUpcomingWebinarBeforeSync = filled(
+            $this->getNextUpcomingWebinarAction->getForSeries($series)
+        );
 
         $fetchedExternalIds = collect($fetchedWebinars)
             ->pluck('external_id')
@@ -112,6 +117,17 @@ class SyncWebinarSeriesFromProviderAction
                 'status' => $missingWebinar->status,
                 'has_registrations' => $hasRegistrations,
             ];
+        }
+
+        $this->getNextUpcomingWebinarAction->forgetForSeries($series);
+        $this->getNextUpcomingWebinarAction->forgetGlobal();
+
+        $hasUpcomingWebinarAfterSync = filled(
+            $this->getNextUpcomingWebinarAction->getForSeries($series)
+        );
+
+        if (! $hadUpcomingWebinarBeforeSync && $hasUpcomingWebinarAfterSync) {
+            // NotifyWebinarWaitlistJob::dispatch($series);
         }
 
         return [
