@@ -23,7 +23,7 @@ return [
     ],
 
     'form' => [
-        'route' => 'webinar.notify-me.store',
+        'action' => 'webinar.waitlist.store',
     ],
 
     'form_card' => [

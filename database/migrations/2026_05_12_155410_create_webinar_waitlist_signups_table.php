@@ -23,6 +23,7 @@ return new class extends Migration
 
             $table->timestamp('email_consent_at')->nullable();
             $table->timestamp('sms_consent_at')->nullable();
+            $table->timestamp('notified_at')->nullable()->index();
 
             $table->string('source_page')->nullable();
             $table->string('ip_address', 45)->nullable();
@@ -32,6 +33,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['webinar_series_id', 'email']);
+            $table->index(['webinar_series_id', 'notified_at']);
             $table->index('email');
             $table->index('phone');
         });

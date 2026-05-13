@@ -26,4 +26,10 @@ class GetActiveWebinarSeriesAction
             ->orderBy('title')
             ->get();
     }
+
+    public function findBySlug(string $seriesSlug): ?WebinarSeries
+    {
+        return $this->handle()
+            ->firstWhere('slug', $seriesSlug);
+    }
 }

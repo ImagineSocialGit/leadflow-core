@@ -3,6 +3,7 @@
 use App\Http\Controllers\Public\WebinarJoinRedirectController;
 use App\Http\Controllers\Public\WebinarRegistrationController;
 use App\Http\Controllers\Webhooks\WebinarWebhookController;
+use App\Http\Controllers\WebinarWaitlistSignupController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [WebinarRegistrationController::class, 'index'])
@@ -19,9 +20,9 @@ Route::pattern('seriesSlug', '[a-z0-9-]+');
 Route::get('/{seriesSlug}', [WebinarRegistrationController::class, 'show'])
     ->name('webinar.show');
 
-Route::post('/{seriesSlug}/notify-me', [WebinarRegistrationController::class, 'storeNotificationSignup'])
+Route::post('/{seriesSlug}/waitlist', WebinarWaitlistSignupController::class)
     ->middleware('throttle:webinar-registration')
-    ->name('webinar.notify-me.store');
+    ->name('webinar.waitlist.store');
 
 Route::post('/{seriesSlug}', [WebinarRegistrationController::class, 'store'])
     ->middleware('throttle:webinar-registration')

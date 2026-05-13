@@ -24,15 +24,16 @@ class WebinarRegistrationController extends Controller
 
     public function show(
         string $seriesSlug,
+        GetActiveWebinarSeriesAction $getActiveWebinarSeriesAction,
         GetNextUpcomingWebinarAction $getNextUpcomingWebinarAction
     ): Response {
         $html = Cache::remember(
             CacheKey::webinarLandingPage($seriesSlug),
             (int) config('cache-keys.ttl.webinar_landing_page_seconds'),
-            function () use ($seriesSlug, $getNextUpcomingWebinarAction): string {
-                $series = WebinarSeries::query()
-                    ->where('slug', $seriesSlug)
-                    ->firstOrFail();
+            function () use ($seriesSlug, $getActiveWebinarSeriesAction, $getNextUpcomingWebinarAction): string {
+                $series = $getActiveWebinarSeriesAction->findBySlug($seriesSlug);
+
+                abort_unless($series, 404);
 
                 $webinar = $getNextUpcomingWebinarAction->getForSeries($series);
 

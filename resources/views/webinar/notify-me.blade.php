@@ -70,6 +70,11 @@
                 </div>
 
                 @if($page['form_card']['enabled'] ?? true)
+                    @if(session('success'))
+                        <div class="mb-6 rounded-2xl bg-green-100 px-4 py-3 text-sm font-bold text-green-800">
+                            {{ session('success') }}
+                        </div>
+                    @endif
                     <div class="{{ $style['form_card']['class'] ?? 'rounded-3xl border border-black/10 bg-white p-6 text-ink shadow-2xl shadow-black/20 sm:p-8' }}">
                         <h2 class="{{ $style['form_card']['title'] ?? 'text-2xl font-extrabold tracking-[-0.03em] text-ink' }}">
                             {{ $page['form_card']['title'] ?? 'Get Notified' }}
@@ -83,7 +88,7 @@
 
                         <form
                             method="POST"
-                            action="{{ route($page['form']['route'] ?? 'webinar.notify-me.store', $series->slug) }}"
+                            action="{{ route($page['form']['action'] ?? 'webinar.waitlist.store', $series->slug) }}"
                             class="{{ $style['form']['class'] ?? 'mt-6 space-y-5' }}"
                         >
                             @csrf
@@ -99,6 +104,7 @@
                                         name="first_name"
                                         type="text"
                                         value="{{ old('first_name') }}"
+                                        autocomplete="given-name"
                                         placeholder="{{ $page['fields']['first_name']['placeholder'] ?? 'Enter your first name' }}"
                                         required
                                         class="{{ $style['form']['input'] ?? 'mt-2 w-full rounded-2xl border border-black/10 px-4 py-3 text-base text-ink shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20' }}"
@@ -119,8 +125,8 @@
                                         name="last_name"
                                         type="text"
                                         value="{{ old('last_name') }}"
+                                        autocomplete="family-name"
                                         placeholder="{{ $page['fields']['last_name']['placeholder'] ?? 'Enter your last name' }}"
-                                        required
                                         class="{{ $style['form']['input'] ?? 'mt-2 w-full rounded-2xl border border-black/10 px-4 py-3 text-base text-ink shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20' }}"
                                     >
 
@@ -140,6 +146,7 @@
                                     name="email"
                                     type="email"
                                     value="{{ old('email') }}"
+                                    autocomplete="email"
                                     placeholder="{{ $page['fields']['email']['placeholder'] ?? 'Enter your email address' }}"
                                     required
                                     class="{{ $style['form']['input'] ?? 'mt-2 w-full rounded-2xl border border-black/10 px-4 py-3 text-base text-ink shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20' }}"
@@ -160,6 +167,7 @@
                                     name="phone"
                                     type="tel"
                                     value="{{ old('phone') }}"
+                                    autocomplete="tel"
                                     placeholder="{{ $page['fields']['phone']['placeholder'] ?? 'Enter your phone number' }}"
                                     class="{{ $style['form']['input'] ?? 'mt-2 w-full rounded-2xl border border-black/10 px-4 py-3 text-base text-ink shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20' }}"
                                 >
