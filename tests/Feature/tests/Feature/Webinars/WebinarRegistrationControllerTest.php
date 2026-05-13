@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Webinars;
 
+use App\Actions\Caching\FlushWebinarCachesAction;
 use App\Models\Webinar;
 use App\Models\WebinarSeries;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -108,5 +109,38 @@ class WebinarRegistrationControllerTest extends TestCase
         $response->assertRedirect(route('webinar.show', [
             'seriesSlug' => $series->slug,
         ]));
+    }
+
+    public function test_show_page_cache_is_flushed_after_sync(): void
+    {
+        Cache::flush();
+
+        $series = WebinarSeries::factory()->create([
+            'status' => 'active',
+            'slug' => 'first-time-homebuyer',
+            'title' => 'First Time Homebuyer',
+        ]);
+
+        $this->get(route('webinar.show', $series->slug))
+            ->assertOk()
+            ->assertSee('notify');
+
+        Webinar::factory()->create([
+            'series_id' => $series->id,
+            'title' => 'New Webinar',
+            'slug' => 'new-webinar',
+            'join_url' => 'https://example.com/join',
+            'starts_at' => now()->addWeek(),
+            'ends_at' => now()->addWeek()->addHour(),
+            'timezone' => 'America/Chicago',
+        ]);
+
+        app(FlushWebinarCachesAction::class)
+            ->handle(seriesSlug: $series->slug);
+
+        $this->get(route('webinar.show', $series->slug))
+            ->assertOk()
+            ->assertSee(route('webinar.registration.store', $series->slug), false)
+            ->assertDontSee(route('webinar.waitlist.store', $series->slug), false);
     }
 }

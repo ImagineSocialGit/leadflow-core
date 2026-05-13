@@ -2,13 +2,16 @@
 
 namespace Tests\Feature\CRM;
 
+use App\Actions\Caching\FlushWebinarCachesAction;
 use App\Jobs\Webinars\NotifyWebinarWaitlistJob;
 use App\Models\User;
 use App\Models\Webinar;
 use App\Models\WebinarSeries;
 use App\Services\Zoom\ZoomWebinarService;
+use App\Support\Caching\CacheKey;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
 use Mockery;
 use Tests\TestCase;
@@ -325,6 +328,85 @@ class WebinarSyncTest extends TestCase
         ]);
 
         Queue::assertPushed(NotifyWebinarWaitlistJob::class);
+    }
+
+    public function test_sync_does_not_dispatch_waitlist_notifications_when_series_was_already_scheduled(): void
+    {
+        Queue::fake();
+
+        $this->freezeTime();
+
+        $user = User::factory()->create();
+
+        $series = WebinarSeries::query()->create([
+            'title' => 'Home Buyer Game Plan',
+            'slug' => 'home-buyer-game-plan',
+        ]);
+
+        Webinar::query()->create([
+            'series_id' => $series->id,
+            'platform' => 'zoom',
+            'external_id' => 'zoom-existing',
+            'title' => 'Home Buyer Game Plan',
+            'slug' => 'home-buyer-game-plan-existing',
+            'join_url' => 'https://example.com/existing-join',
+            'registration_url' => 'https://example.com/existing-register',
+            'starts_at' => now()->addDays(3),
+            'ends_at' => now()->addDays(3)->addHour(),
+            'timezone' => 'America/Chicago',
+            'description' => 'Existing webinar',
+            'meta' => [],
+        ]);
+
+        $zoomWebinarService = Mockery::mock(ZoomWebinarService::class);
+
+        $zoomWebinarService->shouldReceive('listWebinarsByTitle')
+            ->once()
+            ->with('Home Buyer Game Plan')
+            ->andReturn(collect([
+                [
+                    'external_id' => 'zoom-existing',
+                    'title' => 'Home Buyer Game Plan',
+                    'join_url' => 'https://example.com/existing-join',
+                    'registration_url' => 'https://example.com/existing-register',
+                    'starts_at' => now()->addDays(3),
+                    'ends_at' => now()->addDays(3)->addHour(),
+                    'timezone' => 'America/Chicago',
+                    'description' => 'Existing webinar',
+                    'meta' => [],
+                ],
+            ]));
+
+        $this->app->instance(ZoomWebinarService::class, $zoomWebinarService);
+
+        $this->actingAs($user)->post(route('crm.webinar-series.sync'), [
+            'series_id' => $series->id,
+        ]);
+
+        Queue::assertNotPushed(NotifyWebinarWaitlistJob::class);
+    }
+
+    public function test_sync_flushes_webinar_show_page_cache(): void
+    {
+        Cache::flush();
+
+        $series = WebinarSeries::factory()->create([
+            'status' => 'active',
+            'slug' => 'home-buyer-game-plan',
+        ]);
+
+        Cache::put(
+            CacheKey::webinarLandingPage($series->slug),
+            'stale cached page',
+            now()->addMinutes(10)
+        );
+
+        $this->assertTrue(Cache::has(CacheKey::webinarLandingPage($series->slug)));
+
+        app(FlushWebinarCachesAction::class)
+            ->handle(seriesSlug: $series->slug);
+
+        $this->assertFalse(Cache::has(CacheKey::webinarLandingPage($series->slug)));
     }
 
     protected function tearDown(): void
