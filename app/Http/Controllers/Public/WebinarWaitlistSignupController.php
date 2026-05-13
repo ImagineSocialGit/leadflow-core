@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Public;
 
 use App\Actions\Webinars\GetActiveWebinarSeriesAction;
+use App\Http\Controllers\Controller;
 use App\Models\Lead;
 use App\Models\WebinarWaitlistSignup;
 use Illuminate\Http\RedirectResponse;
@@ -61,6 +62,8 @@ class WebinarWaitlistSignupController extends Controller
             ],
         );
 
-        return back()->with('success', 'You’re on the list. We’ll let you know when the next webinar is scheduled.');
+        return redirect()
+            ->route('webinar.show', $series->slug)
+            ->with('success', 'You’re on the list. We’ll let you know when the next webinar is scheduled.');
     }
 }

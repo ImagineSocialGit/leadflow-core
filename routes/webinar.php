@@ -2,8 +2,8 @@
 
 use App\Http\Controllers\Public\WebinarJoinRedirectController;
 use App\Http\Controllers\Public\WebinarRegistrationController;
+use App\Http\Controllers\Public\WebinarWaitlistSignupController;
 use App\Http\Controllers\Webhooks\WebinarWebhookController;
-use App\Http\Controllers\WebinarWaitlistSignupController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [WebinarRegistrationController::class, 'index'])
