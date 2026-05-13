@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Public;
 
-use App\Actions\Webinars\AdvanceWebinarSeriesStatusAction;
 use App\Actions\Webinars\CreateWebinarRegistration;
 use App\Actions\Webinars\GetActiveWebinarSeriesAction;
 use App\Actions\Webinars\GetNextUpcomingWebinarAction;
@@ -57,14 +56,12 @@ class WebinarRegistrationController extends Controller
         StoreWebinarRegistrationRequest $request,
         string $seriesSlug,
         CreateWebinarRegistration $createWebinarRegistration,
-        AdvanceWebinarSeriesStatusAction $advanceWebinarSeriesStatusAction,
         GetNextUpcomingWebinarAction $getNextUpcomingWebinarAction
     ) {
         $series = WebinarSeries::query()
             ->where('slug', $seriesSlug)
             ->firstOrFail();
 
-        $advanceWebinarSeriesStatusAction->execute($series);
         $series->refresh();
 
         $webinar = $getNextUpcomingWebinarAction->getForSeries($series);

@@ -16,7 +16,6 @@ class Webinar extends Model
         'series_id',
         'title',
         'slug',
-        'status',
         'platform',
         'external_id',
         'host_account_key',
@@ -43,7 +42,6 @@ class Webinar extends Model
             if (! $webinar->wasChanged([
                 'starts_at',
                 'ends_at',
-                'status',
                 'series_id',
                 'registration_url',
                 'join_url',

@@ -2,6 +2,7 @@
 
 namespace App\Actions\Webinars;
 
+use App\Jobs\Webinars\NotifyWebinarWaitlistJob;
 use App\Models\Webinar;
 use App\Models\WebinarSeries;
 use App\Services\Zoom\ZoomWebinarService;
@@ -17,18 +18,18 @@ class SyncWebinarSeriesFromProviderAction
 
     public function execute(WebinarSeries $series): array
     {
+        $hadUpcomingWebinarBeforeSync = filled(
+            $this->getNextUpcomingWebinarAction->getForSeries($series)
+        );
+
         $fetchedWebinars = $this->zoomWebinarService->listWebinarsByTitle($series->title);
 
         $created = 0;
         $updated = 0;
         $deleted = 0;
-        $conflicts = [];
+        $missing = [];
 
         $provider = config('webinars.provider');
-
-        $hadUpcomingWebinarBeforeSync = filled(
-            $this->getNextUpcomingWebinarAction->getForSeries($series)
-        );
 
         $fetchedExternalIds = collect($fetchedWebinars)
             ->pluck('external_id')
@@ -58,7 +59,6 @@ class SyncWebinarSeriesFromProviderAction
             ]);
 
             if (! $webinar->exists) {
-                $webinar->status = 'scheduled';
                 $webinar->provider_settings = null;
             }
 
@@ -71,41 +71,15 @@ class SyncWebinarSeriesFromProviderAction
             }
         }
 
-        $seriesWebinars = $series->webinars()
-            ->where('ends_at', '>', now())
-            ->orderBy('starts_at')
-            ->get();
-
-        $active = $seriesWebinars->firstWhere('status', 'active');
-        $earliest = $seriesWebinars->first();
-
-        if ($active && $earliest && $active->id !== $earliest->id) {
-            $conflicts[] = [
-                'series_id' => $series->id,
-                'series' => $series->title,
-                'active' => $active->title,
-                'expected' => $earliest->title,
-            ];
-        }
-
         $missingWebinars = $series->webinars()
             ->where('platform', $provider)
             ->whereNotIn('external_id', $fetchedExternalIds)
             ->get();
 
-        $missing = [];
-
         foreach ($missingWebinars as $missingWebinar) {
-            if ($missingWebinar->status === 'completed') {
-                continue;
-            }
-
             $hasRegistrations = $missingWebinar->registrations()->exists();
 
-            if (
-                $missingWebinar->status === 'scheduled'
-                && ! $hasRegistrations
-            ) {
+            if (! $hasRegistrations) {
                 $missingWebinar->delete();
                 $deleted++;
 
@@ -114,7 +88,6 @@ class SyncWebinarSeriesFromProviderAction
 
             $missing[] = [
                 'title' => $missingWebinar->title,
-                'status' => $missingWebinar->status,
                 'has_registrations' => $hasRegistrations,
             ];
         }
@@ -127,14 +100,14 @@ class SyncWebinarSeriesFromProviderAction
         );
 
         if (! $hadUpcomingWebinarBeforeSync && $hasUpcomingWebinarAfterSync) {
-            // NotifyWebinarWaitlistJob::dispatch($series);
+            NotifyWebinarWaitlistJob::dispatch($series->id);
         }
 
         return [
             'created' => $created,
             'updated' => $updated,
             'deleted' => $deleted,
-            'conflicts' => $conflicts,
+            'conflicts' => [],
             'missing' => $missing,
         ];
     }

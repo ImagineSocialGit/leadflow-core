@@ -2,8 +2,10 @@
 
 namespace App\Actions\Webinars;
 
-use App\Jobs\SendWebinarScheduledWaitlistEmailJob;
-use App\Jobs\SendWebinarScheduledWaitlistSmsJob;
+use App\Jobs\Messaging\SendEmailMessageJob;
+use App\Jobs\Messaging\SendSmsMessageJob;
+use App\Messaging\Payloads\Webinars\WebinarWaitlistScheduledEmailPayload;
+use App\Messaging\Payloads\Webinars\WebinarWaitlistScheduledSmsPayload;
 use App\Models\WebinarSeries;
 use App\Models\WebinarWaitlistSignup;
 
@@ -30,11 +32,23 @@ class NotifyWebinarWaitlistAction
             ->chunkById(100, function ($signups) use ($webinar, &$notified): void {
                 foreach ($signups as $signup) {
                     if ($signup->email && $signup->email_consent_at) {
-                        SendWebinarScheduledWaitlistEmailJob::dispatch($signup->id, $webinar->id);
+                        SendEmailMessageJob::dispatch(
+                            payloadClass: WebinarWaitlistScheduledEmailPayload::class,
+                            payload: [
+                                'signup_id' => $signup->id,
+                                'webinar_id' => $webinar->id,
+                            ],
+                        )->onQueue(config('webinars.queues.notifications'));
                     }
 
                     if ($signup->phone && $signup->sms_consent_at) {
-                        SendWebinarScheduledWaitlistSmsJob::dispatch($signup->id, $webinar->id);
+                        SendSmsMessageJob::dispatch(
+                            payloadClass: WebinarWaitlistScheduledSmsPayload::class,
+                            payload: [
+                                'signup_id' => $signup->id,
+                                'webinar_id' => $webinar->id,
+                            ],
+                        )->onQueue(config('webinars.queues.notifications'));
                     }
 
                     $signup->forceFill([

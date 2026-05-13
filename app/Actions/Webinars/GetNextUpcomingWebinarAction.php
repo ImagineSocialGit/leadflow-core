@@ -55,7 +55,6 @@ class GetNextUpcomingWebinarAction
     private function queryGlobal(): ?Webinar
     {
         return Webinar::query()
-            ->where('status', 'active')
             ->whereNotNull('series_id')
             ->where('starts_at', '>', now()->subMinutes(self::LATE_JOIN_MINUTES))
             ->orderBy('starts_at')
@@ -66,7 +65,6 @@ class GetNextUpcomingWebinarAction
     {
         return Webinar::query()
             ->where('series_id', $series->id)
-            ->where('status', 'active')
             ->where('starts_at', '>', now()->subMinutes(self::LATE_JOIN_MINUTES))
             ->orderBy('starts_at')
             ->first();

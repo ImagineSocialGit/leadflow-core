@@ -19,8 +19,6 @@ return new class extends Migration
             $table->string('title');
             $table->string('slug')->unique();
 
-            $table->string('status')->default('draft')->index();
-
             $table->string('platform')->default('zoom');
             $table->string('external_id')->nullable()->index();
             $table->string('host_account_key')->nullable()->index();

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\CRM;
 
-use App\Actions\Webinars\AdvanceWebinarSeriesStatusAction;
 use App\Actions\Webinars\SyncWebinarSeriesFromProviderAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CRM\StoreWebinarSeriesRequest;
@@ -19,15 +18,10 @@ class WebinarController extends Controller
 {
     public function index(
         Request $request,
-        AdvanceWebinarSeriesStatusAction $advanceWebinarSeriesStatusAction
     ): View {
         $series = WebinarSeries::query()
             ->orderBy('title')
             ->get();
-
-        foreach ($series as $seriesItem) {
-            $advanceWebinarSeriesStatusAction->execute($seriesItem);
-        }
 
         $showArchived = $request->boolean('archived');
 

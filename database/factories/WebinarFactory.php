@@ -26,7 +26,6 @@ class WebinarFactory extends Factory
             ])->id,
             'platform' => 'zoom',
             'external_id' => (string) fake()->numerify('#########'),
-            'status' => 'scheduled',
             'starts_at' => $startsAt,
             'ends_at' => $startsAt->copy()->addHour(),
             'timezone' => 'America/Chicago',
@@ -41,7 +40,6 @@ class WebinarFactory extends Factory
             $startsAt = Carbon::now()->subHours(2);
 
             return [
-                'status' => 'completed',
                 'starts_at' => $startsAt,
                 'ends_at' => $startsAt->copy()->addHour(),
             ];

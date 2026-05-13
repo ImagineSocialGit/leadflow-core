@@ -3,6 +3,8 @@
 namespace App\Services\Messaging;
 
 use App\Data\WebinarMessageData;
+use App\Models\Webinar;
+use App\Models\WebinarWaitlistSignup;
 use Twilio\Rest\Client;
 
 class SmsMessagingService
@@ -61,6 +63,37 @@ class SmsMessagingService
             metadata: [
                 'follow_up_type' => $followUpType,
             ]
+        );
+    }
+
+    public function sendWebinarWaitlistScheduledNotification(
+        WebinarWaitlistSignup $signup,
+        Webinar $webinar,
+    ): void {
+        if (! $signup->phone) {
+            return;
+        }
+
+        $message = sprintf(
+            'A new webinar has been scheduled for %s. Register here: %s',
+            $webinar->title,
+            $webinar->registration_url
+        );
+
+        $data = WebinarMessageData::fromArray([
+            'lead_phone' => $signup->phone,
+            'lead_email' => $signup->email,
+            'webinar_title' => $webinar->title,
+            'webinar_join_url' => $webinar->join_url,
+            'webinar_registration_url' => $webinar->registration_url,
+            'starts_at' => $webinar->starts_at,
+            'timezone' => $webinar->timezone,
+        ]);
+
+        $this->send(
+            data: $data,
+            kind: 'webinar_waitlist_scheduled',
+            message: $message,
         );
     }
 

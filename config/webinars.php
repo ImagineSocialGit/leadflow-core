@@ -23,6 +23,8 @@ return [
 
         'webhooks' => env('WEBINAR_WEBHOOK_QUEUE', 'webhooks'),
 
+        'notifications' => env('WEBINAR_REMINDER_QUEUE', 'notifications'),
+        
         'reminders' => env('WEBINAR_REMINDER_QUEUE', 'notifications'),
 
         'confirmation_messages' => env('WEBINAR_CONFIRMATION_MESSAGE_QUEUE', 'notifications'),

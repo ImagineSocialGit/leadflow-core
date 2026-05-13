@@ -6,6 +6,8 @@ use App\Data\WebinarMessageData;
 use App\Mail\WebinarPostFollowUpMail;
 use App\Mail\WebinarRegistrationConfirmationMail;
 use App\Mail\WebinarReminderMail;
+use App\Models\Webinar;
+use App\Models\WebinarWaitlistSignup;
 use Illuminate\Support\Facades\Mail;
 
 class EmailMessagingService
@@ -85,6 +87,41 @@ class EmailMessagingService
 
         Mail::to($data->leadEmail)
             ->send(new WebinarPostFollowUpMail($data, $followUpType, $subject));
+    }
+
+    public function sendWebinarWaitlistScheduledNotification(
+        WebinarWaitlistSignup $signup,
+        Webinar $webinar,
+    ): void {
+        if (! $signup->email) {
+            return;
+        }
+
+        $subject = 'New webinar scheduled: '.$webinar->title;
+
+        if (app()->environment('local')) {
+            $this->devMessageSink->store('email', [
+                'kind' => 'webinar_waitlist_scheduled',
+                'email' => $signup->email,
+                'webinar_id' => $webinar->id,
+                'webinar_title' => $webinar->title,
+                'subject' => $subject,
+            ]);
+
+            return;
+        }
+
+        Mail::raw(
+            sprintf(
+                "A new webinar has been scheduled for %s.\n\nRegister here: %s",
+                $webinar->title,
+                $webinar->registration_url
+            ),
+            function ($message) use ($signup, $subject): void {
+                $message->to($signup->email)
+                    ->subject($subject);
+            }
+        );
     }
 
     protected function subjectForReminder(WebinarMessageData $data, string $messageType): ?string
