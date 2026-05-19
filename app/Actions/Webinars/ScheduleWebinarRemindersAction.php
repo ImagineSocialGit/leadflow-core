@@ -8,11 +8,16 @@ use App\Jobs\Messaging\SendSmsMessageJob;
 use App\Messaging\Payloads\Webinars\WebinarReminderEmailPayload;
 use App\Messaging\Payloads\Webinars\WebinarReminderSmsPayload;
 use App\Models\WebinarRegistration;
+use App\Services\Messaging\MessageConsentGate;
 use Carbon\CarbonInterval;
 use Illuminate\Support\Carbon;
 
 class ScheduleWebinarRemindersAction
 {
+    public function __construct(
+        protected MessageConsentGate $messageConsentGate,
+    ) {}
+
     public function handle(WebinarRegistration $registration): void
     {
         $data = WebinarMessageData::fromRegistration($registration);
@@ -31,6 +36,14 @@ class ScheduleWebinarRemindersAction
             }
 
             foreach ($channels as $channel) {
+                if (! $this->messageConsentGate->canSend(
+                    leadId: $registration->lead_id,
+                    channel: $channel,
+                    purpose: 'transactional'
+                )) {
+                    continue;
+                }
+
                 $this->dispatchReminder(
                     channel: $channel,
                     type: $type,
@@ -87,25 +100,22 @@ class ScheduleWebinarRemindersAction
             $sendAt = $this->localTestingSendAt($type);
         }
 
+        $payload = [
+            ...$data->toArray(),
+            'message_type' => $type,
+        ];
+
         match ($channel) {
             'email' => SendEmailMessageJob::dispatch(
                 payloadClass: WebinarReminderEmailPayload::class,
-                payload: [
-                    ...$payload,
-                    'message_type' => $messageType,
-                ],
-                scheduledMessageId: $scheduledMessage->id,
+                payload: $payload,
             )
                 ->delay($sendAt)
                 ->onQueue(config('webinars.queues.reminders')),
 
             'sms' => SendSmsMessageJob::dispatch(
                 payloadClass: WebinarReminderSmsPayload::class,
-                payload: [
-                    ...$payload,
-                    'message_type' => $messageType,
-                ],
-                scheduledMessageId: $scheduledMessage->id,
+                payload: $payload,
             )
                 ->delay($sendAt)
                 ->onQueue(config('webinars.queues.reminders')),

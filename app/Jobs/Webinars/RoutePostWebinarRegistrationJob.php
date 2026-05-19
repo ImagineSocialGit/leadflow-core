@@ -25,6 +25,6 @@ class RoutePostWebinarRegistrationJob implements ShouldQueue
             return;
         }
 
-        $processWebinarOutcomeAction->execute($registration);
+        $processWebinarOutcomeAction->handle($registration);
     }
 }

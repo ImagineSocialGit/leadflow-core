@@ -48,8 +48,17 @@ class CreateWebinarRegistration
                 ->first();
 
             if ($registration) {
+                $this->storeMessageConsents($validated, $request, $lead, $registration);
+
                 return $registration;
             }
+
+            $now = now();
+
+            $transactionalEmailConsented = (bool) ($validated['transactional_email_consent'] ?? false);
+            $transactionalSmsConsented = (bool) ($validated['transactional_sms_consent'] ?? false);
+            $marketingEmailConsented = (bool) ($validated['marketing_email_consent'] ?? false);
+            $marketingSmsConsented = (bool) ($validated['marketing_sms_consent'] ?? false);
 
             $registration = WebinarRegistration::query()->create([
                 'lead_id' => $lead->id,
@@ -65,15 +74,11 @@ class CreateWebinarRegistration
                 'email' => $validated['email'],
                 'phone' => $normalizedPhone,
 
-                'ip_address' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-
-                'email_consent_at' => now(),
-                'sms_consent_at' => ($validated['sms_consent'] ?? false) ? now() : null,
-
-                'registered_at' => now(),
+                'registered_at' => $now,
                 'attended_at' => null,
             ]);
+
+            $this->storeMessageConsents($validated, $request, $lead, $registration, $now);
 
             $registration->load(['lead', 'webinar']);
 
@@ -83,10 +88,50 @@ class CreateWebinarRegistration
                 WebinarMessageData::fromRegistration($registration)->toArray()
             )->onQueue(config('webinars.queues.registrations'));
 
-            $this->scheduleWebinarRemindersAction->execute($registration);
+            $this->scheduleWebinarRemindersAction->handle($registration);
 
             return $registration;
         });
+    }
+
+    private function storeMessageConsents(
+        array $validated,
+        Request $request,
+        Lead $lead,
+        WebinarRegistration $registration,
+        mixed $now = null
+    ): void {
+        $now ??= now();
+
+        $consents = [
+            'transactional_email_consent' => ['channel' => 'email', 'purpose' => 'transactional'],
+            'transactional_sms_consent' => ['channel' => 'sms', 'purpose' => 'transactional'],
+            'marketing_email_consent' => ['channel' => 'email', 'purpose' => 'marketing'],
+            'marketing_sms_consent' => ['channel' => 'sms', 'purpose' => 'marketing'],
+        ];
+
+        foreach ($consents as $field => $consent) {
+            if (! (bool) ($validated[$field] ?? false)) {
+                continue;
+            }
+
+            DB::table('message_consents')->updateOrInsert(
+                [
+                    'lead_id' => $lead->id,
+                    'channel' => $consent['channel'],
+                    'purpose' => $consent['purpose'],
+                ],
+                [
+                    'webinar_registration_id' => $registration->id,
+                    'consented_at' => $now,
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                    'source' => 'webinar_registration',
+                    'updated_at' => $now,
+                    'created_at' => $now,
+                ]
+            );
+        }
     }
 
     private function syncRegistrationToWebinarPlatform(

@@ -9,10 +9,16 @@ use App\Messaging\Payloads\Webinars\WebinarFollowUpEmailPayload;
 use App\Messaging\Payloads\Webinars\WebinarFollowUpSmsPayload;
 use App\Models\WebinarRegistration;
 use App\Models\WebinarScheduledMessage;
+use App\Services\Messaging\MessageConsentGate;
 
 class ProcessWebinarOutcomeAction
 {
-    public function execute(WebinarRegistration $registration): void
+
+    public function __construct(
+        protected MessageConsentGate $messageConsentGate,
+    ) {}
+
+    public function handle(WebinarRegistration $registration): void
     {
         $registration->loadMissing('webinar');
 
@@ -40,8 +46,21 @@ class ProcessWebinarOutcomeAction
             'meta' => $meta,
         ])->save();
 
-        $this->dispatchEmail($registration, $followUpType);
-        $this->dispatchSms($registration, $followUpType);
+        if ($this->messageConsentGate->canSend(
+            leadId: $registration->lead_id,
+            channel: 'email',
+            purpose: 'transactional',
+        )) {
+            $this->dispatchEmail($registration, $followUpType);
+        }
+
+        if ($this->messageConsentGate->canSend(
+            leadId: $registration->lead_id,
+            channel: 'sms',
+            purpose: 'transactional',
+        )) {
+            $this->dispatchSms($registration, $followUpType);
+        }
     }
 
     protected function dispatchEmail(
