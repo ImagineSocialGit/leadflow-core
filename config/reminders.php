@@ -11,6 +11,7 @@ return [
             '24_hours',
             '30_minutes',
             '10_minutes',
+            '5_minutes_after_start',
         ],
         'reminder_offsets' => [
             '10_days' => 14400,
@@ -18,6 +19,7 @@ return [
             '24_hours' => 1440,
             '30_minutes' => 30,
             '10_minutes' => 10,
+            '5_minutes_after_start' => -5,
         ],
     ],
 

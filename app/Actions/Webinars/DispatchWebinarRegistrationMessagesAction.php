@@ -145,6 +145,7 @@ class DispatchWebinarRegistrationMessagesAction
             '24_hours' => 'reminder_24h',
             '30_minutes' => 'reminder_30m',
             '10_minutes' => 'reminder_10m',
+            '5_minutes_after_start' => 'late_joiner_5m',
             default => 'webinar_reminder_'.$reminderType,
         };
     }

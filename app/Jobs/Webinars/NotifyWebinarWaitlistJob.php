@@ -17,14 +17,27 @@ class NotifyWebinarWaitlistJob implements ShouldQueue
         $this->onQueue(config('webinars.queues.notifications'));
     }
 
-    public function handle(DispatchWebinarWaitlistMessagesAction $dispatchWebinarWaitlistMessagesAction): void
-    {
-        $series = WebinarSeries::query()->find($this->seriesId);
+    public function handle(
+        DispatchWebinarWaitlistMessagesAction $dispatchWebinarWaitlistMessagesAction
+    ): void {
+        $series = WebinarSeries::query()
+            ->with([
+                'webinars' => fn ($query) => $query
+                    ->where('starts_at', '>', now())
+                    ->orderBy('starts_at'),
+            ])
+            ->find($this->seriesId);
 
         if (! $series) {
             return;
         }
 
-        $dispatchWebinarWaitlistMessagesAction->handle($series);
+        $webinar = $series->webinars->first();
+
+        if (! $webinar) {
+            return;
+        }
+
+        $dispatchWebinarWaitlistMessagesAction->handle($webinar);
     }
 }

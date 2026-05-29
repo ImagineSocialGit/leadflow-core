@@ -65,7 +65,7 @@ class DispatchWebinarWaitlistMessagesAction
             'email' => $signup->lead->email,
             'phone' => $signup->lead->phone,
             'webinar_title' => $webinar->webinarSeries?->title ?? 'Upcoming Webinar',
-            'registration_url' => $webinar->registration_url,
+            'registration_url' => route('webinar.show', $webinar->webinarSeries->slug),
             'source_ip' => $signup->ip_address,
         ];
     }

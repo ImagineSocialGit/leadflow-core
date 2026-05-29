@@ -52,7 +52,6 @@ class SyncWebinarSeriesFromProviderAction
                     externalId: $fetchedWebinar['external_id'],
                 ),
                 'join_url' => $fetchedWebinar['join_url'],
-                'registration_url' => $fetchedWebinar['registration_url'],
                 'starts_at' => $fetchedWebinar['starts_at'],
                 'ends_at' => $fetchedWebinar['ends_at'],
                 'timezone' => $fetchedWebinar['timezone'],
