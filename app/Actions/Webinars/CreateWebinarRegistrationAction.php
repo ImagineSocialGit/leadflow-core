@@ -114,16 +114,21 @@ class CreateWebinarRegistrationAction
 
             DB::table('message_consents')->updateOrInsert(
                 [
-                    'lead_id' => $lead->id,
+                    'recipient_type' => $lead->getMorphClass(),
+                    'recipient_id' => $lead->id,
                     'channel' => $consent['channel']->value,
                     'purpose' => $consent['purpose']->value,
                 ],
                 [
-                    'webinar_registration_id' => $registration->id,
                     'consented_at' => $now,
                     'ip_address' => $request->ip(),
                     'user_agent' => $request->userAgent(),
                     'source' => 'webinar_registration',
+                    'meta' => json_encode([
+                        'webinar_registration_id' => $registration->id,
+                        'webinar_id' => $registration->webinar_id,
+                        'webinar_slug' => $registration->webinar_slug,
+                    ]),
                     'updated_at' => $now,
                     'created_at' => $now,
                 ]
