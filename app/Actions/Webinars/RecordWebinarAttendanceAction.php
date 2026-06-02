@@ -24,7 +24,7 @@ class RecordWebinarAttendanceAction
         }
 
         $registrations = $webinar->registrations()
-            ->with('lead')
+            ->with('contact')
             ->get();
 
         $matchedRegistrationIds = [];
@@ -33,8 +33,8 @@ class RecordWebinarAttendanceAction
             $registrationRegistrantId = data_get($registration->meta, 'provider.data.registrant_id')
                 ?? data_get($registration->meta, 'provider.registrant_id');
 
-            $registrationEmail = filled($registration->lead?->email)
-                ? mb_strtolower(trim($registration->lead->email))
+            $registrationEmail = filled($registration->contact?->email)
+                ? mb_strtolower(trim($registration->contact->email))
                 : null;
 
             $match = $attendanceRecords->first(

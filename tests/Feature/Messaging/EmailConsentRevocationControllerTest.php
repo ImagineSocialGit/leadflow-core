@@ -5,7 +5,7 @@ namespace Tests\Feature\Messaging;
 use App\Enums\MessageChannel;
 use App\Enums\MessagePurpose;
 use App\Models\ConsentRevocation;
-use App\Models\Lead;
+use App\Models\Contact;
 use App\Services\Messaging\MessageEligibilityGate;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -18,20 +18,19 @@ class EmailConsentRevocationControllerTest extends TestCase
 
     public function test_signed_email_transactional_opt_out_revokes_transactional_email_consent(): void
     {
-        $lead = $this->leadWithConsent(MessagePurpose::Transactional);
+        $contact = $this->leadWithConsent(MessagePurpose::Transactional);
 
         $this->get(URL::temporarySignedRoute(
             name: 'messaging.email.transactional-opt-out',
             expiration: now()->addDays(7),
-            parameters: ['lead' => $lead],
+            parameters: ['contact' => $contact],
         ))
             ->assertOk()
             ->assertViewIs('messaging.transactional-opt-out-confirmed');
 
         $this->assertDatabaseHas('consent_revocations', [
-            'recipient_type' => $lead->getMorphClass(),
-            'recipient_id' => $lead->id,
-            'message_consent_id' => $this->messageConsentId($lead, MessagePurpose::Transactional),
+            'recipient_id' => $contact->id,
+            'message_consent_id' => $this->messageConsentId($contact, MessagePurpose::Transactional),
             'channel' => MessageChannel::Email->value,
             'purpose' => MessagePurpose::Transactional->value,
             'reason' => ConsentRevocation::REASON_OPT_OUT,
@@ -41,16 +40,15 @@ class EmailConsentRevocationControllerTest extends TestCase
 
     public function test_signed_email_unsubscribe_revokes_marketing_email_consent(): void
     {
-        $lead = $this->leadWithConsent(MessagePurpose::Marketing);
+        $contact = $this->leadWithConsent(MessagePurpose::Marketing);
 
-        $this->get($this->signedUnsubscribeUrl($lead))
+        $this->get($this->signedUnsubscribeUrl($contact))
             ->assertOk()
             ->assertViewIs('messaging.unsubscribe-confirmed');
 
         $this->assertDatabaseHas('consent_revocations', [
-            'recipient_type' => $lead->getMorphClass(),
-            'recipient_id' => $lead->id,
-            'message_consent_id' => $this->messageConsentId($lead, MessagePurpose::Marketing),
+            'recipient_id' => $contact->id,
+            'message_consent_id' => $this->messageConsentId($contact, MessagePurpose::Marketing),
             'channel' => MessageChannel::Email->value,
             'purpose' => MessagePurpose::Marketing->value,
             'reason' => ConsentRevocation::REASON_UNSUBSCRIBE,
@@ -60,15 +58,14 @@ class EmailConsentRevocationControllerTest extends TestCase
 
     public function test_unsigned_email_unsubscribe_url_is_rejected(): void
     {
-        $lead = $this->leadWithConsent(MessagePurpose::Marketing);
+        $contact = $this->leadWithConsent(MessagePurpose::Marketing);
 
-        $this->get(route('messaging.email.unsubscribe', ['lead' => $lead]))
+        $this->get(route('messaging.email.unsubscribe', ['contact' => $contact]))
             ->assertOk()
             ->assertViewIs('messaging.unsubscribe-invalid');
 
         $this->assertDatabaseMissing('consent_revocations', [
-            'recipient_type' => $lead->getMorphClass(),
-            'recipient_id' => $lead->id,
+            'recipient_id' => $contact->id,
             'channel' => MessageChannel::Email->value,
             'purpose' => MessagePurpose::Marketing->value,
         ]);
@@ -76,12 +73,12 @@ class EmailConsentRevocationControllerTest extends TestCase
 
     public function test_expired_email_unsubscribe_url_is_rejected(): void
     {
-        $lead = $this->leadWithConsent(MessagePurpose::Marketing);
+        $contact = $this->leadWithConsent(MessagePurpose::Marketing);
 
         $url = URL::temporarySignedRoute(
             name: 'messaging.email.unsubscribe',
             expiration: now()->subMinute(),
-            parameters: ['lead' => $lead],
+            parameters: ['contact' => $contact],
         );
 
         $this->get($url)
@@ -89,8 +86,7 @@ class EmailConsentRevocationControllerTest extends TestCase
             ->assertViewIs('messaging.unsubscribe-invalid');
 
         $this->assertDatabaseMissing('consent_revocations', [
-            'recipient_type' => $lead->getMorphClass(),
-            'recipient_id' => $lead->id,
+            'recipient_id' => $contact->id,
             'channel' => MessageChannel::Email->value,
             'purpose' => MessagePurpose::Marketing->value,
         ]);
@@ -98,8 +94,8 @@ class EmailConsentRevocationControllerTest extends TestCase
 
     public function test_email_unsubscribe_is_idempotent(): void
     {
-        $lead = $this->leadWithConsent(MessagePurpose::Marketing);
-        $url = $this->signedUnsubscribeUrl($lead);
+        $contact = $this->leadWithConsent(MessagePurpose::Marketing);
+        $url = $this->signedUnsubscribeUrl($contact);
 
         $this->get($url)->assertOk()->assertViewIs('messaging.unsubscribe-confirmed');
         $this->get($url)->assertOk()->assertViewIs('messaging.unsubscribe-already-confirmed');
@@ -109,75 +105,72 @@ class EmailConsentRevocationControllerTest extends TestCase
 
     public function test_email_marketing_eligibility_fails_after_unsubscribe(): void
     {
-        $lead = $this->leadWithConsent(MessagePurpose::Marketing);
+        $contact = $this->leadWithConsent(MessagePurpose::Marketing);
 
         $gate = app(MessageEligibilityGate::class);
 
-        $this->assertTrue($gate->canSend($lead, MessageChannel::Email, MessagePurpose::Marketing));
+        $this->assertTrue($gate->canSend($contact, MessageChannel::Email, MessagePurpose::Marketing));
 
-        $this->get($this->signedUnsubscribeUrl($lead))->assertOk();
+        $this->get($this->signedUnsubscribeUrl($contact))->assertOk();
 
-        $this->assertFalse($gate->canSend($lead->refresh(), MessageChannel::Email, MessagePurpose::Marketing));
+        $this->assertFalse($gate->canSend($contact->refresh(), MessageChannel::Email, MessagePurpose::Marketing));
     }
 
     public function test_email_unsubscribe_does_not_revoke_transactional_email_consent(): void
     {
-        $lead = $this->createLead();
+        $contact = $this->createLead();
 
-        $this->grantConsent($lead, MessagePurpose::Marketing);
-        $this->grantConsent($lead, MessagePurpose::Transactional);
+        $this->grantConsent($contact, MessagePurpose::Marketing);
+        $this->grantConsent($contact, MessagePurpose::Transactional);
 
-        $this->get($this->signedUnsubscribeUrl($lead))->assertOk();
+        $this->get($this->signedUnsubscribeUrl($contact))->assertOk();
 
         $this->assertDatabaseHas('consent_revocations', [
-            'recipient_type' => $lead->getMorphClass(),
-            'recipient_id' => $lead->id,
+            'recipient_id' => $contact->id,
             'channel' => MessageChannel::Email->value,
             'purpose' => MessagePurpose::Marketing->value,
             'reason' => ConsentRevocation::REASON_UNSUBSCRIBE,
         ]);
 
         $this->assertDatabaseMissing('consent_revocations', [
-            'recipient_type' => $lead->getMorphClass(),
-            'recipient_id' => $lead->id,
+            'recipient_id' => $contact->id,
             'channel' => MessageChannel::Email->value,
             'purpose' => MessagePurpose::Transactional->value,
         ]);
 
         $this->assertTrue(
             app(MessageEligibilityGate::class)->canSend(
-                $lead->refresh(),
+                $contact->refresh(),
                 MessageChannel::Email,
                 MessagePurpose::Transactional,
             )
         );
     }
 
-    private function leadWithConsent(MessagePurpose $purpose): Lead
+    private function contactWithConsent(MessagePurpose $purpose): Contact
     {
-        $lead = $this->createLead();
+        $contact = $this->createContact();
 
-        $this->grantConsent($lead, $purpose);
+        $this->grantConsent($contact, $purpose);
 
-        return $lead;
+        return $contact;
     }
 
-    private function createLead(): Lead
+    private function createContact(): Contact
     {
-        return Lead::query()->create([
+        return Contact::query()->create([
             'first_name' => 'Test',
-            'last_name' => 'Lead',
-            'name' => 'Test Lead',
+            'last_name' => 'Contact',
+            'name' => 'Test Contact',
             'email' => 'test@example.com',
             'phone' => '+15555555555',
         ]);
     }
 
-    private function grantConsent(Lead $lead, MessagePurpose $purpose): void
+    private function grantConsent(Contact $contact, MessagePurpose $purpose): void
     {
         DB::table('message_consents')->insert([
-            'recipient_type' => $lead->getMorphClass(),
-            'recipient_id' => $lead->id,
+            'contact_id' => $contact->id,
             'channel' => MessageChannel::Email->value,
             'purpose' => $purpose->value,
             'consented_at' => now(),
@@ -189,22 +182,21 @@ class EmailConsentRevocationControllerTest extends TestCase
         ]);
     }
 
-    private function messageConsentId(Lead $lead, MessagePurpose $purpose): int
+    private function messageConsentId(Contact $contact, MessagePurpose $purpose): int
     {
         return DB::table('message_consents')
-            ->where('recipient_type', $lead->getMorphClass())
-            ->where('recipient_id', $lead->id)
+            ->where('contact_id', $contact->id)
             ->where('channel', MessageChannel::Email->value)
             ->where('purpose', $purpose->value)
             ->value('id');
     }
 
-    private function signedUnsubscribeUrl(Lead $lead): string
+    private function signedUnsubscribeUrl(Contact $contact): string
     {
         return URL::temporarySignedRoute(
             name: 'messaging.email.unsubscribe',
             expiration: now()->addDays(7),
-            parameters: ['lead' => $lead],
+            parameters: ['contact' => $contact],
         );
     }
 }

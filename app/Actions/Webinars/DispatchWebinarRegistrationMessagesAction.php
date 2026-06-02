@@ -21,9 +21,9 @@ class DispatchWebinarRegistrationMessagesAction
 
     public function handle(WebinarRegistration $registration): void
     {
-        $registration->loadMissing(['lead', 'webinar']);
+        $registration->loadMissing(['contact', 'webinar']);
 
-        if (! $registration->lead) {
+        if (! $registration->contact) {
             return;
         }
 
@@ -122,7 +122,7 @@ class DispatchWebinarRegistrationMessagesAction
         ?string $queue,
     ): void {
         $this->dispatchMessageAction->handle(
-            recipient: $registration->lead,
+            contact: $registration->contact,
             channel: $channel,
             messageType: $messageType,
             purpose: MessagePurpose::Transactional->value,
@@ -154,8 +154,7 @@ class DispatchWebinarRegistrationMessagesAction
     {
         return implode(':', [
             'scheduled-message',
-            $registration->lead->getMorphClass(),
-            $registration->lead->getKey(),
+            $registration->contact->getKey(),
             $registration->getMorphClass(),
             $registration->getKey(),
             $channel,

@@ -2,12 +2,12 @@
 
 namespace App\Support\Messaging;
 
-use App\Models\Lead;
+use App\Models\Contact;
 use Illuminate\Support\Facades\URL;
 
 class EmailConsentRevocationLinkGenerator
 {
-    public function marketingUnsubscribeUrl(Lead $lead): string
+    public function marketingUnsubscribeUrl(Contact $contact): string
     {
         return URL::temporarySignedRoute(
             name: 'messaging.email.unsubscribe',
@@ -15,12 +15,12 @@ class EmailConsentRevocationLinkGenerator
                 config('messaging.email.unsubscribe.signed_url_expiration_days', 30)
             ),
             parameters: [
-                'lead' => $lead,
+                'contact' => $contact,
             ],
         );
     }
 
-    public function transactionalOptOutUrl(Lead $lead): string
+    public function transactionalOptOutUrl(Contact $contact): string
     {
         return URL::temporarySignedRoute(
             name: 'messaging.email.transactional-opt-out',
@@ -28,7 +28,7 @@ class EmailConsentRevocationLinkGenerator
                 config('messaging.email.transactional_opt_out.signed_url_expiration_days', 30)
             ),
             parameters: [
-                'lead' => $lead,
+                'contact' => $contact,
             ],
         );
     }

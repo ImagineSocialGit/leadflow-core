@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Lead;
+use App\Models\Contact;
 use App\Models\WebinarSeries;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -13,7 +13,7 @@ return new class extends Migration
         Schema::create('webinar_waitlist_signups', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignIdFor(Lead::class)
+            $table->foreignIdFor(Contact::class)
                 ->constrained()
                 ->cascadeOnDelete();
 
@@ -30,7 +30,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['webinar_series_id', 'notified_at']);
-            $table->index('lead_id');
+            $table->index('contact_id');
         });
     }
 

@@ -4,7 +4,7 @@ namespace Tests\Feature\Public;
 
 use App\Enums\MessageChannel;
 use App\Enums\MessagePurpose;
-use App\Models\Lead;
+use App\Models\Contact;
 use App\Models\WebinarSeries;
 use App\Models\WebinarWaitlistSignup;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -31,18 +31,17 @@ class WebinarWaitlistSignupControllerTest extends TestCase
 
         $response->assertRedirect(route('webinar.show', $series->slug));
 
-        $lead = Lead::query()->where('email', 'jeff@gmail.com')->first();
+        $contact = Contact::query()->where('email', 'jeff@gmail.com')->first();
 
-        $this->assertNotNull($lead);
+        $this->assertNotNull($contact);
 
         $this->assertDatabaseHas('webinar_waitlist_signups', [
-            'lead_id' => $lead->id,
+            'contact_id' => $contact->id,
             'webinar_series_id' => $series->id,
         ]);
 
         $this->assertDatabaseHas('message_consents', [
-            'recipient_type' => $lead->getMorphClass(),
-            'recipient_id' => $lead->id,
+            'recipient_id' => $contact->id,
             'channel' => MessageChannel::Email->value,
             'purpose' => MessagePurpose::Transactional->value,
             'source' => 'webinar_waitlist',
@@ -55,7 +54,7 @@ class WebinarWaitlistSignupControllerTest extends TestCase
             'status' => 'active',
         ]);
 
-        $lead = Lead::query()->create([
+        $contact = Contact::query()->create([
             'first_name' => 'Old',
             'last_name' => 'Name',
             'email' => 'jeff@gmail.com',
@@ -64,7 +63,7 @@ class WebinarWaitlistSignupControllerTest extends TestCase
         ]);
 
         $signup = WebinarWaitlistSignup::factory()->create([
-            'lead_id' => $lead->id,
+            'contact_id' => $contact->id,
             'webinar_series_id' => $series->id,
         ]);
 
@@ -80,7 +79,7 @@ class WebinarWaitlistSignupControllerTest extends TestCase
 
         $signup->refresh();
 
-        $this->assertSame($lead->id, $signup->lead_id);
+        $this->assertSame($contact->id, $signup->contact_id);
     }
 
     public function test_waitlist_signup_requires_at_least_one_transactional_channel(): void
@@ -121,21 +120,19 @@ class WebinarWaitlistSignupControllerTest extends TestCase
             'transactional_sms_consent' => true,
         ])->assertRedirect(route('webinar.show', $series->slug));
 
-        $lead = Lead::query()->where('email', 'jeff@gmail.com')->first();
+        $contact = Contact::query()->where('email', 'jeff@gmail.com')->first();
 
-        $this->assertNotNull($lead);
+        $this->assertNotNull($contact);
 
         $this->assertDatabaseHas('message_consents', [
-            'recipient_type' => $lead->getMorphClass(),
-            'recipient_id' => $lead->id,
+            'recipient_id' => $contact->id,
             'channel' => MessageChannel::Sms->value,
             'purpose' => MessagePurpose::Transactional->value,
             'source' => 'webinar_waitlist',
         ]);
 
         $this->assertDatabaseMissing('message_consents', [
-            'recipient_type' => $lead->getMorphClass(),
-            'recipient_id' => $lead->id,
+            'recipient_id' => $contact->id,
             'channel' => MessageChannel::Email->value,
             'purpose' => MessagePurpose::Transactional->value,
         ]);
@@ -156,21 +153,19 @@ class WebinarWaitlistSignupControllerTest extends TestCase
             'transactional_sms_consent' => true,
         ])->assertRedirect(route('webinar.show', $series->slug));
 
-        $lead = Lead::query()->where('email', 'jeff@gmail.com')->first();
+        $contact = Contact::query()->where('email', 'jeff@gmail.com')->first();
 
-        $this->assertNotNull($lead);
+        $this->assertNotNull($contact);
 
         $this->assertDatabaseHas('message_consents', [
-            'recipient_type' => $lead->getMorphClass(),
-            'recipient_id' => $lead->id,
+            'recipient_id' => $contact->id,
             'channel' => MessageChannel::Email->value,
             'purpose' => MessagePurpose::Transactional->value,
             'source' => 'webinar_waitlist',
         ]);
 
         $this->assertDatabaseHas('message_consents', [
-            'recipient_type' => $lead->getMorphClass(),
-            'recipient_id' => $lead->id,
+            'recipient_id' => $contact->id,
             'channel' => MessageChannel::Sms->value,
             'purpose' => MessagePurpose::Transactional->value,
             'source' => 'webinar_waitlist',

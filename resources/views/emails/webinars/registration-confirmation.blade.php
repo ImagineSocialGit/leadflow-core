@@ -5,7 +5,7 @@
     <title>You’re registered</title>
 </head>
 <body>
-    <p>Hey {{ $data->leadFirstName }},</p>
+    <p>Hey {{ $data->contactFirstName }},</p>
 
     <p>You’re confirmed for <strong>{{ $data->webinarTitle }}</strong>.</p>
 

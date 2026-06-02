@@ -21,13 +21,13 @@ class DispatchWebinarWaitlistMessagesAction
         $webinar->loadMissing('webinarSeries');
 
         $signups = WebinarWaitlistSignup::query()
-            ->with('lead')
+            ->with('contact')
             ->where('webinar_series_id', $webinar->webinar_series_id)
             ->whereNull('notified_at')
             ->get();
 
         foreach ($signups as $signup) {
-            if (! $signup->lead) {
+            if (! $signup->contact) {
                 continue;
             }
 
@@ -62,8 +62,8 @@ class DispatchWebinarWaitlistMessagesAction
         return [
             'signup_id' => $signup->id,
             'webinar_id' => $webinar->id,
-            'email' => $signup->lead->email,
-            'phone' => $signup->lead->phone,
+            'email' => $signup->contact->email,
+            'phone' => $signup->contact->phone,
             'webinar_title' => $webinar->webinarSeries?->title ?? 'Upcoming Webinar',
             'registration_url' => route('webinar.show', $webinar->webinarSeries->slug),
             'source_ip' => $signup->ip_address,
@@ -79,7 +79,7 @@ class DispatchWebinarWaitlistMessagesAction
         array $payload,
     ): void {
         $this->dispatchMessageAction->handle(
-            recipient: $signup->lead,
+            contact: $signup->contact,
             channel: $channel,
             messageType: $messageType,
             purpose: MessagePurpose::Transactional->value,
@@ -99,8 +99,7 @@ class DispatchWebinarWaitlistMessagesAction
     {
         return implode(':', [
             'scheduled-message',
-            $signup->lead->getMorphClass(),
-            $signup->lead->getKey(),
+            $signup->contact->getKey(),
             $signup->getMorphClass(),
             $signup->getKey(),
             $channel,

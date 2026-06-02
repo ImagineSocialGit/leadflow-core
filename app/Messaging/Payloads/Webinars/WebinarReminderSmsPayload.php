@@ -23,7 +23,7 @@ class WebinarReminderSmsPayload implements SmsMessagePayload
 
     public function to(): string
     {
-        return $this->data->leadPhone;
+        return $this->data->contactPhone;
     }
 
     public function message(): string
@@ -31,7 +31,6 @@ class WebinarReminderSmsPayload implements SmsMessagePayload
         return match ($this->messageType) {
             'reminder_10d' => sprintf(
                 '%s is 10 days away on %s. Join here: %s',
-                $this->data->webinarTitle,
                 $this->data->webinarTitle,
                 $this->data->formattedStart('M j g:i A'),
                 $this->data->webinarJoinUrl

@@ -8,12 +8,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Note extends Model
 {
     protected $fillable = [
-        'lead_id',
+        'contact_id',
         'content',
     ];
 
-    public function lead(): BelongsTo
+    public function contact(): BelongsTo
     {
-        return $this->belongsTo(Lead::class);
+        return $this->belongsTo(Contact::class);
     }
 }

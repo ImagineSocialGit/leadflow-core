@@ -4,7 +4,7 @@ namespace App\Actions\Messaging;
 
 use App\Models\MessageConsent;
 use App\Rules\Messaging\MessageConsentRules;
-use Illuminate\Database\Eloquent\Model;
+use App\Models\Contact;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -13,14 +13,13 @@ class GrantMessageConsentAction
     /**
      * @throws ValidationException
      */
-    public function handle(Model $recipient, array $data): MessageConsent
+    public function handle(Contact $contact, array $data): MessageConsent
     {
         $validated = Validator::make($data, MessageConsentRules::rules())->validate();
 
         return MessageConsent::query()->updateOrCreate(
             [
-                'recipient_type' => $recipient->getMorphClass(),
-                'recipient_id' => $recipient->getKey(),
+                'contact_id' => $contact->getKey(),
                 'channel' => $validated['channel'],
                 'purpose' => $validated['purpose'],
             ],

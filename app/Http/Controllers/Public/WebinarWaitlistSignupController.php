@@ -7,7 +7,7 @@ use App\Actions\Webinars\GetActiveWebinarSeriesAction;
 use App\Enums\MessageChannel;
 use App\Enums\MessagePurpose;
 use App\Http\Controllers\Controller;
-use App\Models\Lead;
+use App\Models\Contact;
 use App\Models\WebinarWaitlistSignup;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -59,7 +59,7 @@ class WebinarWaitlistSignupController extends Controller
             ? preg_replace('/[^\d+]/', '', $validated['phone'])
             : null;
 
-        $lead = Lead::query()->updateOrCreate(
+        $contact = Contact::query()->updateOrCreate(
             ['email' => $email],
             [
                 'first_name' => $validated['first_name'],
@@ -72,7 +72,7 @@ class WebinarWaitlistSignupController extends Controller
         WebinarWaitlistSignup::query()->updateOrCreate(
             [
                 'webinar_series_id' => $series->id,
-                'lead_id' => $lead->id,
+                'contact_id' => $contact->id,
             ],
             [
                 'first_name' => $validated['first_name'],
@@ -88,7 +88,7 @@ class WebinarWaitlistSignupController extends Controller
         );
 
         if ($validated['transactional_email_consent']) {
-            $grantMessageConsentAction->handle($lead, [
+            $grantMessageConsentAction->handle($contact, [
                 'channel' => MessageChannel::Email->value,
                 'purpose' => MessagePurpose::Transactional->value,
                 'consented_at' => now(),
@@ -99,7 +99,7 @@ class WebinarWaitlistSignupController extends Controller
         }
 
         if ($validated['transactional_sms_consent'] && $phone) {
-            $grantMessageConsentAction->handle($lead, [
+            $grantMessageConsentAction->handle($contact, [
                 'channel' => MessageChannel::Sms->value,
                 'purpose' => MessagePurpose::Transactional->value,
                 'consented_at' => now(),

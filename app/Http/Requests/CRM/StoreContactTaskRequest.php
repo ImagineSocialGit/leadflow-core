@@ -4,7 +4,7 @@ namespace App\Http\Requests\CRM;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreLeadTaskRequest extends FormRequest
+class StoreContactTaskRequest extends FormRequest
 {
     public function authorize(): bool
     {

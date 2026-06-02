@@ -2,7 +2,7 @@
 
 namespace App\Data;
 
-use App\Models\Lead;
+use App\Models\Contact;
 use App\Models\WebinarRegistration;
 use App\Support\Webinars\WebinarJoinLinkGenerator;
 use Carbon\Carbon;
@@ -12,11 +12,11 @@ readonly class WebinarMessageData
 {
     public function __construct(
         public int $registrationId,
-        public int $leadId,
-        public string $leadFirstName,
-        public ?string $leadLastName,
-        public ?string $leadEmail,
-        public ?string $leadPhone,
+        public int $contactId,
+        public string $contactFirstName,
+        public ?string $contactLastName,
+        public ?string $contactEmail,
+        public ?string $contactPhone,
         public int $webinarId,
         public string $webinarSlug,
         public string $webinarTitle,
@@ -29,19 +29,19 @@ readonly class WebinarMessageData
 
     public static function fromRegistration(WebinarRegistration $registration): self
     {
-        $registration->loadMissing(['lead', 'webinar']);
+        $registration->loadMissing(['contact', 'webinar']);
 
-        $lead = $registration->lead;
+        $contact = $registration->contact;
         $webinar = $registration->webinar;
         $joinLinkGenerator = app(WebinarJoinLinkGenerator::class);
 
         return new self(
             registrationId: $registration->id,
-            leadId: $lead->id,
-            leadFirstName: $lead->first_name ?? 'there',
-            leadLastName: $lead->last_name,
-            leadEmail: $lead->email,
-            leadPhone: $lead->phone,
+            contactId: $contact->id,
+            contactFirstName: $contact->first_name ?? 'there',
+            contactLastName: $contact->last_name,
+            contactEmail: $contact->email,
+            contactPhone: $contact->phone,
             webinarId: $webinar->id,
             webinarSlug: $webinar->slug,
             webinarTitle: $webinar->title,
@@ -59,11 +59,11 @@ readonly class WebinarMessageData
     {
         return [
             'registration_id' => $this->registrationId,
-            'lead_id' => $this->leadId,
-            'lead_first_name' => $this->leadFirstName,
-            'lead_last_name' => $this->leadLastName,
-            'lead_email' => $this->leadEmail,
-            'lead_phone' => $this->leadPhone,
+            'contact_id' => $this->contactId,
+            'contact_first_name' => $this->contactFirstName,
+            'contact_last_name' => $this->contactLastName,
+            'contact_email' => $this->contactEmail,
+            'contact_phone' => $this->contactPhone,
             'webinar_id' => $this->webinarId,
             'webinar_slug' => $this->webinarSlug,
             'webinar_title' => $this->webinarTitle,
@@ -79,11 +79,11 @@ readonly class WebinarMessageData
     {
         return new self(
             registrationId: $data['registration_id'],
-            leadId: $data['lead_id'],
-            leadFirstName: $data['lead_first_name'],
-            leadLastName: $data['lead_last_name'] ?? null,
-            leadEmail: $data['lead_email'],
-            leadPhone: $data['lead_phone'],
+            contactId: $data['contact_id'],
+            contactFirstName: $data['contact_first_name'],
+            contactLastName: $data['contact_last_name'] ?? null,
+            contactEmail: $data['contact_email'],
+            contactPhone: $data['contact_phone'],
             webinarId: $data['webinar_id'],
             webinarSlug: $data['webinar_slug'],
             webinarTitle: $data['webinar_title'],
@@ -103,8 +103,8 @@ readonly class WebinarMessageData
             ->format($format);
     }
 
-    public function lead(): Lead
+    public function contact(): Contact
     {
-        return Lead::query()->findOrFail($this->leadId);
+        return Contact::query()->findOrFail($this->contactId);
     }
 }

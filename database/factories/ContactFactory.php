@@ -2,15 +2,15 @@
 
 namespace Database\Factories;
 
-use App\Models\Lead;
+use App\Models\Contact;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<Lead>
+ * @extends Factory<Contact>
  */
-class LeadFactory extends Factory
+class ContactFactory extends Factory
 {
-    protected $model = Lead::class;
+    protected $model = Contact::class;
 
     public function definition(): array
     {

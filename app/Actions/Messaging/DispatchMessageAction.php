@@ -4,13 +4,14 @@ namespace App\Actions\Messaging;
 
 use App\Jobs\Messaging\SendScheduledMessageJob;
 use App\Models\ScheduledMessage;
+use App\Models\Contact;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
 class DispatchMessageAction
 {
     public function handle(
-        Model $recipient,
+        Contact $contact,
         string $channel,
         string $messageType,
         string $purpose,
@@ -24,8 +25,7 @@ class DispatchMessageAction
         $sendAt = $sendAt ? Carbon::parse($sendAt) : now();
 
         $attributes = [
-            'recipient_type' => $recipient->getMorphClass(),
-            'recipient_id' => $recipient->getKey(),
+            'contact_id' => $contact->getKey(),
             'channel' => $channel,
             'message_type' => $messageType,
             'purpose' => $purpose,

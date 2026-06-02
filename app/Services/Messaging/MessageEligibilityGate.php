@@ -4,9 +4,9 @@ namespace App\Services\Messaging;
 
 use App\Enums\MessageChannel;
 use App\Enums\MessagePurpose;
-use App\Models\MessageConsent;
 use App\Models\ConsentRevocation;
-use Illuminate\Database\Eloquent\Model;
+use App\Models\Contact;
+use App\Models\MessageConsent;
 
 class MessageEligibilityGate
 {
@@ -14,28 +14,28 @@ class MessageEligibilityGate
         private readonly MessageSuppressionService $messageSuppressionService,
     ) {}
 
-    public function canSend(Model $recipient, MessageChannel|string $channel, MessagePurpose|string $purpose): bool
+    public function canSend(Contact $contact, MessageChannel|string $channel, MessagePurpose|string $purpose): bool
     {
         $channel = $this->normalizeChannel($channel);
         $purpose = $this->normalizePurpose($purpose);
 
-        $destination = $this->destinationFor($recipient, $channel);
+        $destination = $this->destinationFor($contact, $channel);
 
         if (! $destination) {
             return false;
         }
 
-        if (! $this->hasActiveConsent($recipient, $channel, $purpose)) {
+        if (! $this->hasActiveConsent($contact, $channel, $purpose)) {
             return false;
         }
 
         return ! $this->messageSuppressionService->isSuppressed($channel, $destination);
     }
 
-    private function hasActiveConsent(Model $recipient, string $channel, string $purpose): bool
+    private function hasActiveConsent(Contact $contact, string $channel, string $purpose): bool
     {
         $latestConsent = MessageConsent::query()
-            ->whereMorphedTo('recipient', $recipient)
+            ->where('contact_id', $contact->getKey())
             ->where('channel', $channel)
             ->where('purpose', $purpose)
             ->latest('consented_at')
@@ -46,18 +46,18 @@ class MessageEligibilityGate
         }
 
         return ! ConsentRevocation::query()
-            ->whereMorphedTo('recipient', $recipient)
+            ->where('contact_id', $contact->getKey())
             ->where('channel', $channel)
             ->where('purpose', $purpose)
             ->where('revoked_at', '>=', $latestConsent->consented_at)
             ->exists();
     }
 
-    private function destinationFor(Model $recipient, string $channel): ?string
+    private function destinationFor(Contact $contact, string $channel): ?string
     {
         return match ($channel) {
-            MessageChannel::Sms->value => $recipient->phone ?? null,
-            MessageChannel::Email->value => $recipient->email ?? null,
+            MessageChannel::Sms->value => $contact->phone ?? null,
+            MessageChannel::Email->value => $contact->email ?? null,
             default => null,
         };
     }

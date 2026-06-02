@@ -11,7 +11,7 @@ class WebinarWaitlistSignup extends Model
     use HasFactory;
 
     protected $fillable = [
-        'lead_id',
+        'contact_id',
         'webinar_series_id',
         'notified_at',
         'source_page',
@@ -23,9 +23,9 @@ class WebinarWaitlistSignup extends Model
         'meta' => 'array',
     ];
 
-    public function lead(): BelongsTo
+    public function contact(): BelongsTo
     {
-        return $this->belongsTo(Lead::class);
+        return $this->belongsTo(Contact::class);
     }
 
     public function series(): BelongsTo

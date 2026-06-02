@@ -8,7 +8,7 @@ use App\Enums\MessagePurpose;
 use App\Jobs\Messaging\SendScheduledMessageJob;
 use App\Messaging\Payloads\Webinars\WebinarFollowUpEmailPayload;
 use App\Messaging\Payloads\Webinars\WebinarFollowUpSmsPayload;
-use App\Models\Lead;
+use App\Models\Contact;
 use App\Models\ScheduledMessage;
 use App\Models\Webinar;
 use App\Models\WebinarRegistration;
@@ -25,16 +25,16 @@ class DispatchWebinarOutcomeMessagesActionTest extends TestCase
         Queue::fake();
 
         $webinar = Webinar::factory()->create();
-        $lead = $this->createLead();
+        $contact = $this->createContact();
 
         $registration = WebinarRegistration::query()->create([
-            'lead_id' => $lead->id,
+            'contact_id' => $contact->id,
             'webinar_id' => $webinar->id,
             'webinar_slug' => $webinar->slug,
             'status' => 'registered',
             'source' => 'webinar_subdomain',
-            'email' => $lead->email,
-            'phone' => $lead->phone,
+            'email' => $contact->email,
+            'phone' => $contact->phone,
             'registered_at' => now(),
             'attended_at' => now(),
         ]);
@@ -65,16 +65,16 @@ class DispatchWebinarOutcomeMessagesActionTest extends TestCase
         Queue::fake();
 
         $webinar = Webinar::factory()->create();
-        $lead = $this->createLead();
+        $contact = $this->createContact();
 
         $registration = WebinarRegistration::query()->create([
-            'lead_id' => $lead->id,
+            'contact_id' => $contact->id,
             'webinar_id' => $webinar->id,
             'webinar_slug' => $webinar->slug,
             'status' => 'registered',
             'source' => 'webinar_subdomain',
-            'email' => $lead->email,
-            'phone' => $lead->phone,
+            'email' => $contact->email,
+            'phone' => $contact->phone,
             'registered_at' => now(),
             'attended_at' => null,
         ]);
@@ -100,9 +100,9 @@ class DispatchWebinarOutcomeMessagesActionTest extends TestCase
         Queue::assertPushed(SendScheduledMessageJob::class, 2);
     }
 
-    private function createLead(): Lead
+    private function createContact(): Contact
     {
-        return Lead::query()->create([
+        return Contact::query()->create([
             'first_name' => 'Jeff',
             'last_name' => 'Yarnall',
             'name' => 'Jeff Yarnall',
@@ -121,7 +121,7 @@ class DispatchWebinarOutcomeMessagesActionTest extends TestCase
         string $followUpType,
     ): void {
         $scheduledMessage = ScheduledMessage::query()
-            ->whereMorphedTo('recipient', $registration->lead)
+            ->where('contact', $contact->getKey())
             ->whereMorphedTo('context', $registration)
             ->where('channel', $channel)
             ->where('message_type', $messageType)

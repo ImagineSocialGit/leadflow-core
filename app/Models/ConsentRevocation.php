@@ -6,7 +6,6 @@ use App\Enums\MessageChannel;
 use App\Enums\MessagePurpose;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class ConsentRevocation extends Model
 {
@@ -18,8 +17,7 @@ class ConsentRevocation extends Model
     public const REASON_PROVIDER_UNSUBSCRIBE = 'provider_unsubscribe';
 
     protected $fillable = [
-        'recipient_type',
-        'recipient_id',
+        'contact_id',
         'message_consent_id',
         'channel',
         'purpose',
@@ -36,7 +34,7 @@ class ConsentRevocation extends Model
         return [
             'channel' => MessageChannel::class,
             'purpose' => MessagePurpose::class,
-            'recipient_id' => 'integer',
+            'contact_id' => 'integer',
             'message_consent_id' => 'integer',
             'revoked_at' => 'datetime',
             'meta' => 'array',
@@ -55,9 +53,9 @@ class ConsentRevocation extends Model
         ];
     }
 
-    public function recipient(): MorphTo
+    public function contact(): BelongsTo
     {
-        return $this->morphTo();
+        return $this->belongsTo(Contact::class);
     }
 
     public function messageConsent(): BelongsTo

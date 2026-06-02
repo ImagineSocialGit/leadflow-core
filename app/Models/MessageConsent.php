@@ -3,13 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MessageConsent extends Model
 {
     protected $fillable = [
-        'recipient_type',
-        'recipient_id',
+        'contact_id',
         'channel',
         'purpose',
         'consented_at',
@@ -22,14 +21,14 @@ class MessageConsent extends Model
     protected function casts(): array
     {
         return [
-            'recipient_id' => 'integer',
+            'contact_id' => 'integer',
             'consented_at' => 'datetime',
             'meta' => 'array',
         ];
     }
 
-    public function recipient(): MorphTo
+    public function contact(): BelongsTo
     {
-        return $this->morphTo();
+        return $this->belongsTo(Contact::class);
     }
 }

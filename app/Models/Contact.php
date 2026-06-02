@@ -5,9 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 
-class Lead extends Model
+class Contact extends Model
 {
     use HasFactory;
 
@@ -47,16 +46,16 @@ class Lead extends Model
 
     public function tags(): HasMany
     {
-        return $this->hasMany(LeadTag::class);
+        return $this->hasMany(ContactTag::class);
     }
 
-    public function messageConsents(): MorphMany
+    public function messageConsents(): HasMany
     {
-        return $this->morphMany(MessageConsent::class, 'recipient');
+        return $this->hasMany(MessageConsent::class);
     }
 
-    public function consentRevocations(): MorphMany
+    public function consentRevocations(): HasMany
     {
-        return $this->morphMany(ConsentRevocation::class, 'recipient');
+        return $this->hasMany(ConsentRevocation::class);
     }
 }

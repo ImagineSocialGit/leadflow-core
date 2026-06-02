@@ -1,8 +1,15 @@
 <?php
 
-// config/leads.php
-
 return [
+
+    'labels' => [
+        'singular' => 'lead',
+        'plural' => 'leads',
+    ],
+
+    'routes' => [
+        'plural' => 'leads',
+    ],
 
     'sources' => [
 

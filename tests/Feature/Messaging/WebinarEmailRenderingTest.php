@@ -60,11 +60,11 @@ class WebinarEmailRenderingTest extends TestCase
     {
         return WebinarMessageData::fromArray([
             'registration_id' => 1,
-            'lead_id' => 1,
-            'lead_first_name' => 'Test',
-            'lead_last_name' => 'Lead',
-            'lead_email' => 'test@example.com',
-            'lead_phone' => '+15555555555',
+            'contact_id' => 1,
+            'contact_first_name' => 'Test',
+            'contact_last_name' => 'Contact',
+            'contact_email' => 'test@example.com',
+            'contact_phone' => '+15555555555',
             'webinar_id' => 1,
             'webinar_slug' => 'test-webinar',
             'webinar_title' => 'Test Webinar',

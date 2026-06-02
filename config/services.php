@@ -16,6 +16,8 @@ return [
 
     'resend' => [
         'key' => env('RESEND_API_KEY'),
+        'webhook_secret' => env('RESEND_WEBHOOK_SECRET'),
+        'webhook_timestamp_drift_seconds' => env('RESEND_WEBHOOK_TIMESTAMP_DRIFT_SECONDS', 300),
     ],
 
     'twilio' => [

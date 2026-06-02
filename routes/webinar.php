@@ -12,12 +12,12 @@ Route::get('/', [WebinarRegistrationController::class, 'index'])
 Route::get('/j/{token}', WebinarJoinRedirectController::class)
     ->name('webinar.join.redirect');
 
-Route::get('/unsubscribe/{lead}', [ConsentRevocationController::class, 'emailMarketingUnsubscribe'])
+Route::get('/unsubscribe/{contact}', [ConsentRevocationController::class, 'emailMarketingUnsubscribe'])
     ->middleware(['throttle:6,1'])
     ->name('messaging.email.unsubscribe');
 
 
-Route::get('/email-preferences/transactional/opt-out/{lead}', [ConsentRevocationController::class, 'emailTransactionalOptOut'])
+Route::get('/email-preferences/transactional/opt-out/{contact}', [ConsentRevocationController::class, 'emailTransactionalOptOut'])
     ->middleware(['throttle:6,1'])
     ->name('messaging.email.transactional-opt-out');
 

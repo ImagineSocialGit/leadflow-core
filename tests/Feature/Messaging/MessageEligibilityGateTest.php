@@ -1,0 +1,49 @@
+<?php
+
+namespace Tests\Feature\Messaging;
+
+use App\Enums\MessageChannel;
+use App\Enums\MessagePurpose;
+use App\Models\Contact;
+use App\Models\MessageConsent;
+use App\Models\MessageSuppression;
+use App\Services\Messaging\MessageEligibilityGate;
+use App\Services\Messaging\MessageSuppressionService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class MessageEligibilityGateTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_active_email_suppression_blocks_otherwise_eligible_recipient(): void
+    {
+        $contact = Contact::factory()->create([
+            'email' => 'person@example.com',
+        ]);
+
+        MessageConsent::query()->create([
+            'recipient_id' => $contact->id,
+            'channel' => MessageChannel::Email->value,
+            'purpose' => MessagePurpose::Transactional->value,
+            'consented_at' => now(),
+            'source' => 'test',
+        ]);
+
+        app(MessageSuppressionService::class)->suppress(
+            channel: MessageChannel::Email,
+            destination: 'person@example.com',
+            reason: MessageSuppression::REASON_BOUNCE,
+            provider: MessageSuppression::PROVIDER_RESEND,
+            sourceEventId: 'evt_bounce_1',
+        );
+
+        $this->assertFalse(
+            app(MessageEligibilityGate::class)->canSend(
+                recipient: $contact,
+                channel: MessageChannel::Email,
+                purpose: MessagePurpose::Transactional,
+            )
+        );
+    }
+}

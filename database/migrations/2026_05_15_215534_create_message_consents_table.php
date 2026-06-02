@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Contact;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -11,7 +12,7 @@ return new class extends Migration
         Schema::create('message_consents', function (Blueprint $table) {
             $table->id();
 
-            $table->morphs('recipient');
+            $table->foreignIdFor(Contact::class)->constrained()->cascadeOnDelete();
 
             $table->string('channel');
             $table->string('purpose');
@@ -26,11 +27,9 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique([
-                'recipient_type',
-                'recipient_id',
                 'channel',
                 'purpose',
-            ], 'message_consents_recipient_channel_purpose_unique');
+            ], 'message_consents_channel_purpose_unique');
 
             $table->index(['channel', 'purpose']);
             $table->index('consented_at');

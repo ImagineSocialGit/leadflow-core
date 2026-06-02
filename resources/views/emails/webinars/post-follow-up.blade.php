@@ -5,7 +5,7 @@
     <title>{{ $subjectLine }}</title>
 </head>
 <body>
-    <p>Hey {{ $data->leadFirstName }},</p>
+    <p>Hey {{ $data->contactFirstName }},</p>
 
     @if($followUpType === 'missed')
         <p>Sorry we missed you for <strong>{{ $data->webinarTitle }}</strong>.</p>

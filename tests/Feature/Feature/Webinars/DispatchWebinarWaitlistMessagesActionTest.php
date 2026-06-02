@@ -6,7 +6,7 @@ use App\Actions\Webinars\DispatchWebinarWaitlistMessagesAction;
 use App\Enums\MessageChannel;
 use App\Enums\MessagePurpose;
 use App\Jobs\Messaging\SendScheduledMessageJob;
-use App\Models\Lead;
+use App\Models\Contact;
 use App\Models\ScheduledMessage;
 use App\Models\Webinar;
 use App\Models\WebinarSeries;
@@ -26,10 +26,10 @@ class DispatchWebinarWaitlistMessagesActionTest extends TestCase
 
         $series = $this->createSeries();
         $webinar = $this->createWebinar($series);
-        $lead = $this->createLead();
+        $contact = $this->createLead();
 
         $signup = WebinarWaitlistSignup::query()->create([
-            'lead_id' => $lead->id,
+            'contact_id' => $contact->id,
             'webinar_series_id' => $series->id,
             'first_name' => 'Jeff',
             'last_name' => 'Yarnall',
@@ -37,8 +37,8 @@ class DispatchWebinarWaitlistMessagesActionTest extends TestCase
             'phone' => '+15555555555',
         ]);
 
-        $this->grantConsent($lead, MessageChannel::Email);
-        $this->grantConsent($lead, MessageChannel::Sms);
+        $this->grantConsent($contact, MessageChannel::Email);
+        $this->grantConsent($contact, MessageChannel::Sms);
 
         app(DispatchWebinarWaitlistMessagesAction::class)->handle($webinar);
 
@@ -47,8 +47,7 @@ class DispatchWebinarWaitlistMessagesActionTest extends TestCase
         $this->assertSame(2, ScheduledMessage::query()->count());
 
         $this->assertDatabaseHas('scheduled_messages', [
-            'recipient_type' => $lead->getMorphClass(),
-            'recipient_id' => $lead->id,
+            'recipient_id' => $contact->id,
             'context_type' => $signup->getMorphClass(),
             'context_id' => $signup->id,
             'channel' => MessageChannel::Email->value,
@@ -58,8 +57,7 @@ class DispatchWebinarWaitlistMessagesActionTest extends TestCase
         ]);
 
         $this->assertDatabaseHas('scheduled_messages', [
-            'recipient_type' => $lead->getMorphClass(),
-            'recipient_id' => $lead->id,
+            'recipient_id' => $contact->id,
             'context_type' => $signup->getMorphClass(),
             'context_id' => $signup->id,
             'channel' => MessageChannel::Sms->value,
@@ -79,10 +77,10 @@ class DispatchWebinarWaitlistMessagesActionTest extends TestCase
 
         $series = $this->createSeries();
         $webinar = $this->createWebinar($series);
-        $lead = $this->createLead();
+        $contact = $this->createLead();
 
         WebinarWaitlistSignup::query()->create([
-            'lead_id' => $lead->id,
+            'contact_id' => $contact->id,
             'webinar_series_id' => $series->id,
             'first_name' => 'Jeff',
             'email' => 'jeff@example.com',
@@ -90,8 +88,8 @@ class DispatchWebinarWaitlistMessagesActionTest extends TestCase
             'notified_at' => now(),
         ]);
 
-        $this->grantConsent($lead, MessageChannel::Email);
-        $this->grantConsent($lead, MessageChannel::Sms);
+        $this->grantConsent($contact, MessageChannel::Email);
+        $this->grantConsent($contact, MessageChannel::Sms);
 
         app(DispatchWebinarWaitlistMessagesAction::class)->handle($webinar);
 
@@ -125,9 +123,9 @@ class DispatchWebinarWaitlistMessagesActionTest extends TestCase
         ]);
     }
 
-    private function createLead(): Lead
+    private function createContact(): Contact
     {
-        return Lead::query()->create([
+        return Contact::query()->create([
             'first_name' => 'Jeff',
             'last_name' => 'Yarnall',
             'email' => 'jeff@example.com',
@@ -137,11 +135,10 @@ class DispatchWebinarWaitlistMessagesActionTest extends TestCase
         ]);
     }
 
-    private function grantConsent(Lead $lead, MessageChannel $channel): void
+    private function grantConsent(Contact $contact, MessageChannel $channel): void
     {
         DB::table('message_consents')->insert([
-            'recipient_type' => $lead->getMorphClass(),
-            'recipient_id' => $lead->id,
+            'recipient_id' => $contact->id,
             'channel' => $channel->value,
             'purpose' => MessagePurpose::Transactional->value,
             'consented_at' => now(),

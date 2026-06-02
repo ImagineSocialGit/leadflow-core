@@ -1,15 +1,13 @@
 <?php
 
-use App\Http\Controllers\CRM\LeadController;
-use App\Http\Controllers\CRM\LeadNoteController;
-use App\Http\Controllers\CRM\LeadTaskController;
+use App\Http\Controllers\CRM\ContactController;
+use App\Http\Controllers\CRM\ContactNoteController;
+use App\Http\Controllers\CRM\ContactTaskController;
 use App\Http\Controllers\CRM\WebinarController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
-    Route::get('/', [LeadController::class, 'index'])->name('crm.index');
-    Route::get('/leads', [LeadController::class, 'index'])->name('crm.leads.index');
-    Route::get('/leads/{lead}', [LeadController::class, 'show'])->name('crm.leads.show');
+    Route::get('/', [ContactController::class, 'index'])->name('crm.index');
 
     Route::get('/webinars', [WebinarController::class, 'index'])
         ->name('crm.webinar-series.index');
@@ -23,14 +21,42 @@ Route::middleware('auth')->group(function () {
     Route::post('/webinar-series/{series}/fix-active', [WebinarController::class, 'fixActive'])
         ->name('crm.webinar-series.fix-active');
 
-    Route::post('/leads/{lead}/notes', [LeadNoteController::class, 'store'])->name('crm.leads.notes.store');
-    Route::post('/leads/{lead}/tasks', [LeadTaskController::class, 'store'])->name('crm.leads.tasks.store');
+    Route::prefix(config('contacts.routes.plural'))
+        ->name('crm.contacts.')
+        ->group(function () {
 
-    Route::patch('/leads/{lead}/tasks/{task}/complete', [LeadTaskController::class, 'complete'])->name('crm.leads.tasks.complete');
-    Route::patch('/leads/{lead}/tasks/{task}/reopen', [LeadTaskController::class, 'reopen'])->name('crm.leads.tasks.reopen');
+        Route::get('/', [ContactController::class, 'index'])
+            ->name('index');
 
-    Route::patch(
-        '/leads/{lead}/registrations/{registration}/convert',
-        [LeadController::class, 'markConverted']
-    )->name('crm.leads.registrations.convert');
+        Route::get('/{contact}', [ContactController::class, 'show'])
+            ->name('show');
+
+        Route::post('/{contact}/notes', [ContactNoteController::class, 'store'])
+            ->name('notes.store');
+
+        Route::post('/{contact}/tasks', [ContactTaskController::class, 'store'])
+            ->name('tasks.store');
+
+        Route::patch('/{contact}/notes/{note}', [ContactNoteController::class, 'update'])
+            ->name('notes.update');
+
+        Route::delete('/{contact}/notes/{note}', [ContactNoteController::class, 'destroy'])
+            ->name('notes.destroy');
+
+        Route::patch(
+            '/{contact}/tasks/{task}/complete',
+            [ContactTaskController::class, 'complete']
+        )->name('tasks.complete');
+
+        Route::patch(
+            '/{contact}/tasks/{task}/reopen',
+            [ContactTaskController::class, 'reopen']
+        )->name('tasks.reopen');
+
+        Route::patch(
+            '/{contact}/registrations/{registration}/convert',
+            [ContactController::class, 'markConverted']
+        )->name('registrations.convert');
+    });
+
 });

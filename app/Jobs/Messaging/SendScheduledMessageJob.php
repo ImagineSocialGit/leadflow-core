@@ -28,7 +28,7 @@ class SendScheduledMessageJob implements ShouldQueue
         SmsMessagingService $smsMessagingService,
     ): void {
         $scheduledMessage = ScheduledMessage::query()
-            ->with('recipient')
+            ->with('contact')
             ->find($this->scheduledMessageId);
 
         if (! $scheduledMessage) {
@@ -39,20 +39,20 @@ class SendScheduledMessageJob implements ShouldQueue
             return;
         }
 
-        $recipient = $scheduledMessage->recipient;
+        $contact = $scheduledMessage->contact;
 
-        if (! $recipient) {
-            $this->markSkipped($scheduledMessage, 'Recipient not found.');
+        if (! $contact) {
+            $this->markSkipped($scheduledMessage, 'Contact not found.');
 
             return;
         }
 
         if (! $messageEligibilityGate->canSend(
-            recipient: $recipient,
+            contact: $contact,
             channel: $scheduledMessage->channel,
             purpose: $scheduledMessage->purpose,
         )) {
-            $this->markSkipped($scheduledMessage, 'Recipient is not eligible for this message.');
+            $this->markSkipped($scheduledMessage, 'Contact is not eligible for this message.');
 
             return;
         }

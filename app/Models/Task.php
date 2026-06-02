@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Task extends Model
 {
     protected $fillable = [
-        'lead_id',
+        'contact_id',
         'title',
         'description',
         'status',
@@ -21,8 +21,8 @@ class Task extends Model
         'completed_at' => 'datetime',
     ];
 
-    public function lead(): BelongsTo
+    public function contact(): BelongsTo
     {
-        return $this->belongsTo(Lead::class);
+        return $this->belongsTo(Contact::class);
     }
 }

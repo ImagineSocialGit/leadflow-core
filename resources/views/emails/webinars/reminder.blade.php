@@ -5,15 +5,15 @@
     <title>{{ $subjectLine }}</title>
 </head>
 <body>
-    <p>Hey {{ $data->leadFirstName }},</p>
+    <p>Hey {{ $data->contactFirstName }},</p>
 
     @switch($messageType)
         @case('reminder_10d')
-            <p>Your webinar <strong>{{ $data->webinarTitle }}</strong> is coming up in 10 days.</p>
+            <p>Your webinar, <strong>{{ $data->webinarTitle }}</strong>, is coming up in 10 days.</p>
             @break
 
         @case('reminder_7d')
-            <p>Your webinar <strong>{{ $data->webinarTitle }}</strong> is one week away.</p>
+            <p>Your webinar, <strong>{{ $data->webinarTitle }}</strong>, is one week away.</p>
             @break
 
         @case('reminder_24h')

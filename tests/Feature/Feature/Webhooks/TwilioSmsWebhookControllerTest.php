@@ -5,7 +5,7 @@ namespace Tests\Feature\Webhooks;
 use App\Enums\MessageChannel;
 use App\Enums\MessagePurpose;
 use App\Models\ConsentRevocation;
-use App\Models\Lead;
+use App\Models\Contact;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -28,7 +28,7 @@ class TwilioSmsWebhookControllerTest extends TestCase
         config(['services.twilio.token' => 'test-token']);
         config(['sms.webhooks.twilio.stop_response' => 'You have been opted out of SMS messages. Reply START to resubscribe.']);
 
-        $lead = Lead::factory()->create([
+        $contact = Contact::factory()->create([
             'phone' => '+15555550123',
         ]);
 
@@ -43,8 +43,7 @@ class TwilioSmsWebhookControllerTest extends TestCase
             ->assertSee('<Response><Message>You have been opted out of SMS messages. Reply START to resubscribe.</Message></Response>', false);
 
         $this->assertDatabaseHas('consent_revocations', [
-            'recipient_type' => $lead->getMorphClass(),
-            'recipient_id' => $lead->id,
+            'recipient_id' => $contact->id,
             'channel' => MessageChannel::Sms->value,
             'purpose' => MessagePurpose::Transactional->value,
             'reason' => ConsentRevocation::REASON_STOP,
@@ -52,8 +51,7 @@ class TwilioSmsWebhookControllerTest extends TestCase
         ]);
 
         $this->assertDatabaseHas('consent_revocations', [
-            'recipient_type' => $lead->getMorphClass(),
-            'recipient_id' => $lead->id,
+            'recipient_id' => $contact->id,
             'channel' => MessageChannel::Sms->value,
             'purpose' => MessagePurpose::Marketing->value,
             'reason' => ConsentRevocation::REASON_STOP,
@@ -68,7 +66,7 @@ class TwilioSmsWebhookControllerTest extends TestCase
         config(['services.twilio.token' => 'test-token']);
         config(['sms.webhooks.twilio.help_response' => 'Reply STOP to opt out of SMS messages. Message and data rates may apply.']);
 
-        Lead::factory()->create([
+        Contact::factory()->create([
             'phone' => '+15555550123',
         ]);
 
@@ -89,7 +87,7 @@ class TwilioSmsWebhookControllerTest extends TestCase
     {
         config(['services.twilio.token' => 'test-token']);
 
-        Lead::factory()->create([
+        Contact::factory()->create([
             'phone' => '+15555550123',
         ]);
 

@@ -3,6 +3,8 @@
 │   ├── Actions
 │   │   ├── Caching
 │   │   │   └── FlushWebinarCachesAction.php
+│   │   ├── Email
+│   │   │   └── HandleResendWebhookAction.php
 │   │   ├── Leads
 │   │   ├── Messaging
 │   │   │   ├── DispatchMessageAction.php
@@ -44,7 +46,7 @@
 │   │   │   │   └── LoginController.php
 │   │   │   ├── Controller.php
 │   │   │   ├── CRM
-│   │   │   │   ├── LeadController.php
+│   │   │   │   ├── ContactController.php
 │   │   │   │   ├── LeadNoteController.php
 │   │   │   │   ├── LeadTaskController.php
 │   │   │   │   └── WebinarController.php
@@ -54,6 +56,7 @@
 │   │   │   │   ├── WebinarRegistrationController.php
 │   │   │   │   └── WebinarWaitlistSignupController.php
 │   │   │   └── Webhooks
+│   │   │       ├── ResendWebhookController.php
 │   │   │       ├── TwilioSmsWebhookController.php
 │   │   │       └── WebinarWebhookController.php
 │   │   ├── Middleware
@@ -118,9 +121,11 @@
 │   │   ├── Messaging
 │   │   │   ├── DevMessageSink.php
 │   │   │   ├── EmailMessagingService.php
+│   │   │   ├── EmailRecipientResolver.php
 │   │   │   ├── MessageEligibilityGate.php
 │   │   │   ├── MessageSuppressionService.php
 │   │   │   ├── PhoneNumberNormalizer.php
+│   │   │   ├── ResendWebhookVerifier.php
 │   │   │   ├── SmsMessagingService.php
 │   │   │   ├── SmsSendGuard.php
 │   │   │   └── TwilioWebhookVerifier.php
@@ -322,6 +327,8 @@
 │   │   │   └── LoginThrottlingTest.php
 │   │   ├── CRM
 │   │   │   └── WebinarSyncTest.php
+│   │   ├── Email
+│   │   │   └── HandleResendWebhookActionTest.php
 │   │   ├── Feature
 │   │   │   ├── Public
 │   │   │   │   └── WebinarWaitlistSignupControllerTest.php
@@ -331,6 +338,7 @@
 │   │   │       └── DispatchWebinarWaitlistMessagesActionTest.php
 │   │   ├── Messaging
 │   │   │   ├── EmailConsentRevocationControllerTest.php
+│   │   │   ├── MessageEligibilityGateTest.php
 │   │   │   ├── MessageSuppressionServiceTest.php
 │   │   │   ├── SmsSendGuardTest.php
 │   │   │   └── WebinarEmailRenderingTest.php
@@ -340,9 +348,10 @@
 │   │   │           └── WebinarRegistrationControllerTest.php
 │   │   └── Webhooks
 │   │       ├── DispatchWebinarOutcomeMessagesActionTest.php
+│   │       ├── ResendWebhookControllerTest.php
 │   │       └── ZoomWebhookTest.php
 │   ├── TestCase.php
 │   └── Unit
 └── vite.config.js
 
-104 directories, 242 files
+106 directories, 249 files

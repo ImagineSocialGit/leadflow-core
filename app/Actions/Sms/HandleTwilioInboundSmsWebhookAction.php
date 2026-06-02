@@ -6,7 +6,7 @@ use App\Actions\Messaging\RevokeMessageConsentAction;
 use App\Enums\MessageChannel;
 use App\Enums\MessagePurpose;
 use App\Models\ConsentRevocation;
-use App\Models\Lead;
+use App\Models\Contact;
 use Illuminate\Http\Request;
 
 class HandleTwilioInboundSmsWebhookAction
@@ -63,16 +63,16 @@ class HandleTwilioInboundSmsWebhookAction
 
     private function revokeSmsConsent(Request $request, string $from): void
     {
-        $lead = Lead::query()
+        $contact = Contact::query()
             ->where('phone', $from)
             ->first();
 
-        if (! $lead) {
+        if (! $contact) {
             return;
         }
 
         foreach ([MessagePurpose::Transactional, MessagePurpose::Marketing] as $purpose) {
-            $this->revokeMessageConsentAction->handle($lead, [
+            $this->revokeMessageConsentAction->handle($contact, [
                 'channel' => MessageChannel::Sms->value,
                 'purpose' => $purpose->value,
                 'reason' => ConsentRevocation::REASON_STOP,

@@ -3,9 +3,9 @@
 namespace App\Actions\Messaging;
 
 use App\Models\ConsentRevocation;
+use App\Models\Contact;
 use App\Models\MessageConsent;
 use App\Rules\Messaging\ConsentRevocationRules;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -17,23 +17,23 @@ class RevokeMessageConsentAction
      *
      * @throws ValidationException
      */
-    public function handle(Model $recipient, array $data): array
+    public function handle(Contact $contact, array $data): array
     {
         $validated = Validator::make($data, ConsentRevocationRules::rules())->validate();
 
-        return DB::transaction(function () use ($recipient, $validated): array {
+        return DB::transaction(function () use ($contact, $validated): array {
             $now = now();
             $revokedAt = $validated['revoked_at'] ?? $now;
 
             $latestConsent = MessageConsent::query()
-                ->whereMorphedTo('recipient', $recipient)
+                ->where('contact_id', $contact->getKey())
                 ->where('channel', $validated['channel'])
                 ->where('purpose', $validated['purpose'])
                 ->latest('consented_at')
                 ->first();
 
             $existingRevocation = ConsentRevocation::query()
-                ->whereMorphedTo('recipient', $recipient)
+                ->where('contact_id', $contact->getKey())
                 ->where('channel', $validated['channel'])
                 ->where('purpose', $validated['purpose'])
                 ->when($latestConsent, function ($query) use ($latestConsent) {
@@ -51,8 +51,7 @@ class RevokeMessageConsentAction
 
             return [
                 'revocation' => ConsentRevocation::query()->create([
-                    'recipient_type' => $recipient->getMorphClass(),
-                    'recipient_id' => $recipient->getKey(),
+                    'contact_id' => $contact->getKey(),
                     'message_consent_id' => $validated['message_consent_id'] ?? $latestConsent?->id,
                     'channel' => $validated['channel'],
                     'purpose' => $validated['purpose'],

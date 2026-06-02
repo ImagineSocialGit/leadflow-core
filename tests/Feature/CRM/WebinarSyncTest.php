@@ -4,7 +4,7 @@ namespace Tests\Feature\CRM;
 
 use App\Actions\Caching\FlushWebinarCachesAction;
 use App\Jobs\Webinars\NotifyWebinarWaitlistJob;
-use App\Models\Lead;
+use App\Models\Contact;
 use App\Models\User;
 use App\Models\Webinar;
 use App\Models\WebinarSeries;
@@ -40,7 +40,6 @@ class WebinarSyncTest extends TestCase
                     'external_id' => 'zoom-1001',
                     'title' => 'Home Buyer Game Plan',
                     'join_url' => 'https://example.com/join-1001',
-                    'registration_url' => 'https://example.com/register-1001',
                     'starts_at' => Carbon::parse('2026-05-01 19:00:00', 'America/Chicago')->utc(),
                     'ends_at' => Carbon::parse('2026-05-01 20:00:00', 'America/Chicago')->utc(),
                     'timezone' => 'America/Chicago',
@@ -53,7 +52,6 @@ class WebinarSyncTest extends TestCase
                     'external_id' => 'zoom-1002',
                     'title' => 'Home Buyer Game Plan',
                     'join_url' => 'https://example.com/join-1002',
-                    'registration_url' => 'https://example.com/register-1002',
                     'starts_at' => Carbon::parse('2026-05-08 19:00:00', 'America/Chicago')->utc(),
                     'ends_at' => Carbon::parse('2026-05-08 20:00:00', 'America/Chicago')->utc(),
                     'timezone' => 'America/Chicago',
@@ -82,7 +80,7 @@ class WebinarSyncTest extends TestCase
             'title' => 'Home Buyer Game Plan',
             'timezone' => 'America/Chicago',
             'join_url' => 'https://example.com/join-1001',
-            'registration_url' => 'https://example.com/register-1001',
+            'registration_url' => null,
             'description' => 'First webinar',
         ]);
 
@@ -93,7 +91,7 @@ class WebinarSyncTest extends TestCase
             'title' => 'Home Buyer Game Plan',
             'timezone' => 'America/Chicago',
             'join_url' => 'https://example.com/join-1002',
-            'registration_url' => 'https://example.com/register-1002',
+            'registration_url' => null,
             'description' => 'Second webinar',
         ]);
 
@@ -110,7 +108,7 @@ class WebinarSyncTest extends TestCase
         Carbon::setTestNow();
     }
 
-    public function test_sync_updates_zoom_owned_fields(): void
+    public function test_sync_updates_zoom_owned_fields_and_preserves_app_owned_registration_url(): void
     {
         $this->freezeTime();
 
@@ -170,7 +168,7 @@ class WebinarSyncTest extends TestCase
 
         $this->assertSame('Home Buyer Game Plan', $webinar->title);
         $this->assertSame('https://example.com/new-join', $webinar->join_url);
-        $this->assertSame('https://example.com/new-register', $webinar->registration_url);
+        $this->assertSame('https://example.com/old-register', $webinar->registration_url);
         $this->assertSame('America/Chicago', $webinar->timezone);
         $this->assertSame('Updated description', $webinar->description);
         $this->assertSame(['zoom_uuid' => 'new-uuid'], $webinar->meta);
@@ -256,7 +254,7 @@ class WebinarSyncTest extends TestCase
             ],
         ]);
 
-        $lead = Lead::query()->create([
+        $contact = Contact::query()->create([
             'first_name' => 'Test',
             'last_name' => 'Registrant',
             'email' => 'registered@example.com',
@@ -265,7 +263,7 @@ class WebinarSyncTest extends TestCase
         ]);
 
         $missingWebinar->registrations()->create([
-            'lead_id' => $lead->id,
+            'contact_id' => $contact->id,
             'webinar_slug' => $missingWebinar->slug,
             'status' => 'registered',
             'source' => 'webinar_subdomain',

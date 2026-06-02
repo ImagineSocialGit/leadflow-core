@@ -4,25 +4,29 @@ return [
 
     'email' => [
 
-    'unsubscribe' => [
+        'recipient_models' => [
+            App\Models\Contact::class,
+        ],
 
-        'signed_url_expiration_days' => env(
-            'EMAIL_UNSUBSCRIBE_SIGNED_URL_EXPIRATION_DAYS',
-            30
-        ),
+        'unsubscribe' => [
+
+            'signed_url_expiration_days' => env(
+                'EMAIL_UNSUBSCRIBE_SIGNED_URL_EXPIRATION_DAYS',
+                30
+            ),
+
+        ],
+
+        'transactional_opt_out' => [
+
+            'signed_url_expiration_days' => env(
+                'EMAIL_TRANSACTIONAL_OPT_OUT_SIGNED_URL_EXPIRATION_DAYS',
+                30
+            ),
+
+        ],
 
     ],
-
-    'transactional_opt_out' => [
-
-        'signed_url_expiration_days' => env(
-            'EMAIL_TRANSACTIONAL_OPT_OUT_SIGNED_URL_EXPIRATION_DAYS',
-            30
-        ),
-
-    ],
-
-],
 
     'sms' => [
 
@@ -61,23 +65,6 @@ return [
                 'help_keywords' => [
                     'help',
                     'info',
-                ],
-
-            ],
-
-        ],
-
-        'email' => [
-
-            'resend' => [
-
-                'suppression_events' => [
-                    'email.bounced',
-                    'email.complained',
-                ],
-
-                'revocation_events' => [
-                    'email.unsubscribed',
                 ],
 
             ],

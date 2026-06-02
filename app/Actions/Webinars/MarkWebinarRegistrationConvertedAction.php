@@ -8,13 +8,13 @@ use Carbon\CarbonInterface;
 class MarkWebinarRegistrationConvertedAction
 {
     public function execute(
-        int $leadId,
+        int $contactId,
         ?CarbonInterface $convertedAt = null
     ): ?WebinarRegistration {
         $convertedAt ??= now();
 
         $registration = WebinarRegistration::query()
-            ->where('lead_id', $leadId)
+            ->where('contact_id', $contactId)
             ->whereNull('converted_at')
             ->orderByDesc('registered_at')
             ->first();

@@ -7,7 +7,7 @@ use App\Enums\MessageChannel;
 use App\Enums\MessagePurpose;
 use App\Http\Controllers\Controller;
 use App\Models\ConsentRevocation;
-use App\Models\Lead;
+use App\Models\Contact;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -15,7 +15,7 @@ class ConsentRevocationController extends Controller
 {
     public function emailMarketingUnsubscribe(
         Request $request,
-        Lead $lead,
+        Contact $contact,
         RevokeMessageConsentAction $revokeMessageConsentAction
     ): View {
 
@@ -25,7 +25,7 @@ class ConsentRevocationController extends Controller
 
         $result = $this->revokeEmailConsent(
             request: $request,
-            lead: $lead,
+            contact: $contact,
             reason: ConsentRevocation::REASON_UNSUBSCRIBE,
             purpose: MessagePurpose::Marketing,
             revokeMessageConsentAction: $revokeMessageConsentAction,
@@ -39,7 +39,7 @@ class ConsentRevocationController extends Controller
 
     public function emailTransactionalOptOut(
         Request $request,
-        Lead $lead,
+        Contact $contact,
         RevokeMessageConsentAction $revokeMessageConsentAction
     ): View {
 
@@ -49,7 +49,7 @@ class ConsentRevocationController extends Controller
 
         $result = $this->revokeEmailConsent(
             request: $request,
-            lead: $lead,
+            contact: $contact,
             purpose: MessagePurpose::Transactional,
             reason: ConsentRevocation::REASON_OPT_OUT,
             revokeMessageConsentAction: $revokeMessageConsentAction,
@@ -63,12 +63,12 @@ class ConsentRevocationController extends Controller
 
     private function revokeEmailConsent(
         Request $request,
-        Lead $lead,
+        Contact $contact,
         MessagePurpose $purpose,
         string $reason,
         RevokeMessageConsentAction $revokeMessageConsentAction
     ): array {
-        return $revokeMessageConsentAction->handle($lead, [
+        return $revokeMessageConsentAction->handle($contact, [
             'channel' => MessageChannel::Email->value,
             'purpose' => $purpose->value,
             'reason' => $reason,

@@ -4,7 +4,7 @@ namespace App\Http\Requests\CRM;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreLeadNoteRequest extends FormRequest
+class StoreContactNoteRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -14,7 +14,7 @@ class StoreLeadNoteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'body' => ['required', 'string', 'max:5000'],
+            'content' => ['required', 'string', 'max:5000'],
         ];
     }
 }

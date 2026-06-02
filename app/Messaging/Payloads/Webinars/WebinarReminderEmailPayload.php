@@ -28,7 +28,7 @@ class WebinarReminderEmailPayload implements EmailMessagePayload
 
     public function to(): string
     {
-        return $this->data->leadEmail;
+        return $this->data->contactEmail;
     }
 
     public function mailable(): Mailable
@@ -68,6 +68,6 @@ class WebinarReminderEmailPayload implements EmailMessagePayload
     private function resolveTransactionalOptOutUrl(): string
     {
         return $this->transactionalOptOutUrl
-            ?? app(EmailConsentRevocationLinkGenerator::class)->transactionalOptOutUrl($this->data->lead());
+            ?? app(EmailConsentRevocationLinkGenerator::class)->transactionalOptOutUrl($this->data->contact());
     }
 }

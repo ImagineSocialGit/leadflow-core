@@ -4,7 +4,7 @@ namespace App\Actions\Webinars;
 
 use App\Enums\MessageChannel;
 use App\Enums\MessagePurpose;
-use App\Models\Lead;
+use App\Models\Contact;
 use App\Models\Webinar;
 use App\Models\WebinarRegistration;
 use App\Services\Messaging\PhoneNumberNormalizer;
@@ -30,7 +30,7 @@ class CreateWebinarRegistrationAction
                 $validated['phone'] ?? null
             );
 
-            $lead = Lead::query()->updateOrCreate(
+            $contact = Contact::query()->updateOrCreate(
                 ['email' => $validated['email']],
                 [
                     'first_name' => $validated['first_name'],
@@ -43,12 +43,12 @@ class CreateWebinarRegistrationAction
             );
 
             $registration = WebinarRegistration::query()
-                ->where('lead_id', $lead->id)
+                ->where('contact_id', $contact->id)
                 ->where('webinar_id', $webinar->id)
                 ->first();
 
             if ($registration) {
-                $this->storeMessageConsents($validated, $request, $lead, $registration);
+                $this->storeMessageConsents($validated, $request, $contact, $registration);
 
                 return $registration;
             }
@@ -56,7 +56,7 @@ class CreateWebinarRegistrationAction
             $now = now();
 
             $registration = WebinarRegistration::query()->create([
-                'lead_id' => $lead->id,
+                'contact_id' => $contact->id,
                 'webinar_id' => $webinar->id,
                 'webinar_slug' => $webinar->slug,
                 'status' => 'pending',
@@ -65,9 +65,9 @@ class CreateWebinarRegistrationAction
                 'attended_at' => null,
             ]);
 
-            $this->storeMessageConsents($validated, $request, $lead, $registration, $now);
+            $this->storeMessageConsents($validated, $request, $contact, $registration, $now);
 
-            $registration->load(['lead', 'webinar']);
+            $registration->load(['contact', 'webinar']);
 
             $this->syncRegistrationToWebinarPlatform($registration, $webinar);
 
@@ -82,7 +82,7 @@ class CreateWebinarRegistrationAction
     private function storeMessageConsents(
         array $validated,
         Request $request,
-        Lead $lead,
+        Contact $contact,
         WebinarRegistration $registration,
         mixed $now = null
     ): void {
@@ -114,8 +114,7 @@ class CreateWebinarRegistrationAction
 
             DB::table('message_consents')->updateOrInsert(
                 [
-                    'recipient_type' => $lead->getMorphClass(),
-                    'recipient_id' => $lead->id,
+                    'contact_id' => $contact->id,
                     'channel' => $consent['channel']->value,
                     'purpose' => $consent['purpose']->value,
                 ],

@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 class WebinarRegistration extends Model
 {
     protected $fillable = [
-        'lead_id',
+        'contact_id',
         'webinar_id',
         'join_token',
         'webinar_slug',
@@ -30,9 +30,9 @@ class WebinarRegistration extends Model
         'attended_at' => 'datetime',
     ];
 
-    public function lead(): BelongsTo
+    public function contact(): BelongsTo
     {
-        return $this->belongsTo(Lead::class);
+        return $this->belongsTo(Contact::class);
     }
 
     public function webinar(): BelongsTo

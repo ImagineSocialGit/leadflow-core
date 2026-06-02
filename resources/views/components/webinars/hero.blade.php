@@ -116,7 +116,7 @@
             <div class="{{ $style['primary_cta']['wrapper'] ?? 'mt-10 flex flex-col gap-4 text-left' }}">
 
                 @if (($page['webinar_title']['enabled'] ?? false))
-                    <span class="{{ $style['webinar_title']['lead'] ?? 'text-xl text-white/85' }}">
+                    <span class="{{ $style['webinar_title']['contact'] ?? 'text-xl text-white/85' }}">
                         Seminar Details for the
                     </span>
                     <h1 class="{{ $style['webinar_title']['title'] }}">

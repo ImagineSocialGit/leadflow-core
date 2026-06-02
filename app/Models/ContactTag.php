@@ -5,15 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class LeadTag extends Model
+class ContactTag extends Model
 {
     protected $fillable = [
-        'lead_id',
+        'contact_id',
         'tag',
     ];
 
-    public function lead(): BelongsTo
+    public function contact(): BelongsTo
     {
-        return $this->belongsTo(Lead::class);
+        return $this->belongsTo(Contact::class);
     }
 }

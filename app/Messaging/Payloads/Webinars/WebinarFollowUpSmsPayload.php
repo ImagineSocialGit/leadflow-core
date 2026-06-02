@@ -23,7 +23,7 @@ class WebinarFollowUpSmsPayload implements SmsMessagePayload
 
     public function to(): string
     {
-        return $this->data->leadPhone;
+        return $this->data->contactPhone;
     }
 
     public function message(): string

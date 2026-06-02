@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Contact;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -11,16 +12,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('lead_tags', function (Blueprint $table) {
+        Schema::create('contact_tags', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('lead_id')->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(Contact::class)->constrained()->cascadeOnDelete();
 
             $table->string('tag')->index();
 
             $table->timestamps();
 
-            $table->unique(['lead_id', 'tag']);
+            $table->unique(['contact_id', 'tag']);
         });
     }
 
@@ -29,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('lead_tags');
+        Schema::dropIfExists('contact_tags');
     }
 };

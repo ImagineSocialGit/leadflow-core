@@ -15,8 +15,11 @@
                     <a href="/" class="block rounded-lg px-3 py-2 font-medium text-slate-700 transition hover:bg-slate-100">
                         Dashboard
                     </a>
-                    <a href="/leads" class="block rounded-lg px-3 py-2 font-medium text-slate-700 transition hover:bg-slate-100">
-                        Leads
+                    <a
+                        href="{{ route('crm.contacts.index') }}"
+                        class="block rounded-lg px-3 py-2 font-medium text-slate-700 transition hover:bg-slate-100 capitalize"
+                    >
+                        {{ config('contacts.labels.plural') }}
                     </a>
                     <a href="/webinars" class="block rounded-lg px-3 py-2 font-medium text-slate-700 transition hover:bg-slate-100">
                         Webinars
@@ -39,12 +42,12 @@
                 <header class="border-b border-slate-200 bg-white">
                     <div class="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
                         <div>
-                            <h1 class="text-lg font-semibold tracking-tight">
+                            <h1 class="text-lg font-semibold tracking-tight capitalize">
                                 {{ $heading ?? ($title ?? 'CRM') }}
                             </h1>
 
                             @if(!empty($subheading ?? null))
-                                <p class="mt-1 text-sm text-slate-500">
+                                <p class="mt-1 text-sm text-slate-500 capitalize">
                                     {{ $subheading }}
                                 </p>
                             @endif
