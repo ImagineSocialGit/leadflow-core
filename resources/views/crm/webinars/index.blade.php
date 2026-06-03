@@ -270,18 +270,24 @@
                 </div>
 
                 @if($series->isNotEmpty())
-                    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                        <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                            Existing Series
-                        </h3>
+                    <div class="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                        <span>{{ $seriesItem->title }}</span>
 
-                        <div class="mt-3 space-y-2">
-                            @foreach($series as $seriesItem)
-                                <div class="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
-                                    {{ $seriesItem->title }}
-                                </div>
-                            @endforeach
-                        </div>
+                        <form
+                            method="POST"
+                            action="{{ route('crm.webinar-series.destroy', $seriesItem) }}"
+                            onsubmit="return confirm('Delete this webinar series? This cannot be undone.');"
+                        >
+                            @csrf
+                            @method('DELETE')
+
+                            <button
+                                type="submit"
+                                class="text-xs font-semibold text-red-600 hover:text-red-800"
+                            >
+                                Delete
+                            </button>
+                        </form>
                     </div>
                 @endif
             </div>

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Contact;
+use App\Models\MortgageStage;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -16,7 +17,7 @@ return new class extends Migration
                 ->constrained()
                 ->cascadeOnDelete();
 
-            $table->foreignId('mortgage_stage_id')
+            $table->foreignIdFor(MortgageStage::class)
                 ->nullable()
                 ->constrained()
                 ->nullOnDelete();

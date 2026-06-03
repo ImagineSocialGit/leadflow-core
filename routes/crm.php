@@ -21,6 +21,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/webinar-series/{series}/fix-active', [WebinarController::class, 'fixActive'])
         ->name('crm.webinar-series.fix-active');
 
+    Route::delete('/webinar-series/{series}', [WebinarController::class, 'destroySeries'])
+        ->name('crm.webinar-series.destroy');
+
     Route::prefix(config('contacts.routes.plural'))
         ->name('crm.contacts.')
         ->group(function () {

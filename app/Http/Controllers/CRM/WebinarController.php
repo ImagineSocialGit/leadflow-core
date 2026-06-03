@@ -116,4 +116,23 @@ class WebinarController extends Controller
             ->route('crm.webinar-series.index')
             ->with('success', 'Upcoming webinar cache refreshed.');
     }
+
+    public function destroySeries(WebinarSeries $series): RedirectResponse
+    {
+        if (Webinar::query()->where('webinar_series_id', $series->id)->exists()) {
+            return redirect()
+                ->route('crm.webinar-series.index')
+                ->with('error', 'Cannot delete a series that has webinars.');
+        }
+
+        $seriesSlug = $series->slug;
+
+        $series->delete();
+
+        $this->flushWebinarCachesAction->handle(seriesSlug: $seriesSlug);
+
+        return redirect()
+            ->route('crm.webinar-series.index')
+            ->with('success', 'Webinar series deleted.');
+    }
 }
