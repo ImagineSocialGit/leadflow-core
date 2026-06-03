@@ -273,7 +273,7 @@
                             >
 
                             <span class="{{ $checkbox['label'] ?? 'text-sm leading-6 text-slate-700' }}">
-                                I agree to receive occasional marketing text messages from Rob The Mortgage Coach. Message and data rates may apply. Reply STOP to opt out.
+                                I agree to receive occasional marketing text messages from Slam Dunk Home Loans. Message and data rates may apply. Reply STOP to opt out.
                             </span>
                         </label>
 
