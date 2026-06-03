@@ -27,8 +27,14 @@ return new class extends Migration
 
             $table->string('crm_status')->default('new')->index();
             $table->timestamp('converted_at')->nullable()->index();
+            $table->timestamp('closed_at')->nullable()->index();
 
-            $table->timestamp('last_contacted_at')->nullable();
+            $table->timestamp('last_contacted_at')->nullable()->index();
+            $table->timestamp('last_activity_at')->nullable()->index();
+
+            $table->string('assigned_to')->nullable()->index();
+
+            $table->json('meta')->nullable();
 
             $table->timestamps();
         });

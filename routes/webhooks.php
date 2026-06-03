@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Webhooks\SmsWebhookController;
 use App\Http\Controllers\Webhooks\ResendWebhookController;
 use App\Http\Controllers\Webhooks\TwilioSmsWebhookController;
 use App\Http\Controllers\Webhooks\WebinarWebhookController;
@@ -10,6 +11,9 @@ Route::post('/webhooks/zoom', WebinarWebhookController::class)
 
 Route::post('/webhooks/twilio/sms', TwilioSmsWebhookController::class)
     ->name('webhooks.twilio.sms');
+
+Route::post('/sms', SmsWebhookController::class)
+    ->name('webhooks.sms');
 
 Route::post('/webhooks/resend', ResendWebhookController::class)
     ->name('webhooks.resend');

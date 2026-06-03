@@ -21,12 +21,19 @@ class Contact extends Model
         'subsource',
         'crm_status',
         'converted_at',
+        'closed_at',
         'last_contacted_at',
+        'last_activity_at',
+        'assigned_to',
+        'meta',
     ];
 
     protected $casts = [
         'converted_at' => 'datetime',
+        'closed_at' => 'datetime',
         'last_contacted_at' => 'datetime',
+        'last_activity_at' => 'datetime',
+        'meta' => 'array',
     ];
 
     public function registrations(): HasMany
@@ -47,6 +54,11 @@ class Contact extends Model
     public function tags(): HasMany
     {
         return $this->hasMany(ContactTag::class);
+    }
+
+    public function mortgageProfiles(): HasMany
+    {
+        return $this->hasMany(ContactMortgageProfile::class);
     }
 
     public function messageConsents(): HasMany

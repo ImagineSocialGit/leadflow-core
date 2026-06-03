@@ -28,6 +28,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [ContactController::class, 'index'])
             ->name('index');
 
+        Route::get('/import', [ContactController::class, 'import'])
+            ->name('import');
+
+        Route::post('/import/preview', [ContactController::class, 'previewImport'])
+            ->name('import.preview');
+
+        Route::post('/import', [ContactController::class, 'processImport'])
+            ->name('import.process');
+
         Route::get('/{contact}', [ContactController::class, 'show'])
             ->name('show');
 

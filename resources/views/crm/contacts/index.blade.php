@@ -4,13 +4,45 @@
     :subheading="config('contacts.labels.singular').' list'"
 >
     <div class="space-y-6">
-        <div class="flex items-center justify-between">
+
+        <div class="flex items-center justify-between gap-4">
             <div>
                 <h2 class="text-xl font-semibold tracking-tight capitalize">
                     All {{ config('contacts.labels.plural') }}
                 </h2>
             </div>
+
+            <form
+                method="POST"
+                action="{{ route('crm.contacts.import.preview') }}"
+                enctype="multipart/form-data"
+                class="flex items-center gap-3"
+            >
+                @csrf
+
+                <label class="block">
+                    <span class="sr-only">Choose CSV file</span>
+
+                    <input
+                        type="file"
+                        name="csv"
+                        accept=".csv,text/csv"
+                        required
+                        class="block w-full text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-700"
+                    />
+                </label>
+
+                <x-ui.button type="submit">
+                    Import CSV
+                </x-ui.button>
+            </form>
         </div>
+
+        @error('csv')
+            <p class="text-sm text-red-600">
+                {{ $message }}
+            </p>
+        @enderror
 
         <x-ui.card padding="none" class="overflow-hidden">
             <div class="divide-y divide-slate-200">
