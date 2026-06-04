@@ -27,6 +27,12 @@ return [
         'virtual_phone' => env('TWILIO_VIRTUAL_PHONE'),
     ],
 
+    'telnyx' => [
+        'api_key' => env('TELNYX_API_KEY'),
+        'from' => env('TELNYX_FROM'),
+        'webhook_public_key' => env('TELNYX_WEBHOOK_PUBLIC_KEY'),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

@@ -2,25 +2,30 @@
 
 namespace App\Http\Controllers\Webhooks;
 
-use App\Actions\Sms\HandleTwilioInboundSmsWebhookAction;
+use App\Actions\Messaging\HandleInboundSmsWebhookAction;
 use App\Http\Controllers\Controller;
-use App\Services\Messaging\TwilioWebhookVerifier;
+use App\Services\Messaging\SmsWebhookHandlerResolver;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 class SmsWebhookController extends Controller
 {
     public function __invoke(
+        string $provider,
         Request $request,
-        TwilioWebhookVerifier $verifier,
-        HandleTwilioInboundSmsWebhookAction $handleTwilioInboundSmsWebhookAction,
+        SmsWebhookHandlerResolver $resolver,
+        HandleInboundSmsWebhookAction $handleInboundSmsWebhookAction,
     ): Response {
-        if (! $verifier->isValid($request)) {
+        $handler = $resolver->resolve($provider);
+
+        if (! $handler->isValid($request)) {
             abort(403);
         }
 
-        return $this->twiml(
-            $handleTwilioInboundSmsWebhookAction->handle($request),
+        $message = $handleInboundSmsWebhookAction->handle(
+            $handler->payloadFrom($request),
         );
+
+        return $handler->response($message);
     }
 }

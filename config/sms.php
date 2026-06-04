@@ -14,15 +14,66 @@ return [
 
         'twilio' => [
             'from' => env('SMS_FROM', env('TWILIO_FROM')),
+
+            'webhooks' => [
+                'stop_keywords' => [
+                    'stop',
+                    'stopall',
+                    'unsubscribe',
+                    'cancel',
+                    'end',
+                    'quit',
+                    'revoke',
+                    'optout',
+                ],
+
+                'start_keywords' => [
+                    'start',
+                    'yes',
+                    'unstop',
+                ],
+
+                'help_keywords' => [
+                    'help',
+                    'info',
+                ],
+
+                'stop_response' => 'You have been opted out of SMS messages. Reply START to resubscribe.',
+                'help_response' => 'Reply STOP to opt out of SMS messages. Message and data rates may apply.',
+            ],
         ],
 
-    ],
+        'telnyx' => [
+            'from' => env('TELNYX_FROM'),
 
-    'webhooks' => [
-        'twilio' => [
-            'stop_response' => 'You have been opted out of SMS messages. Reply START to resubscribe.',
-            'help_response' => 'Reply STOP to opt out of SMS messages. Message and data rates may apply.',
+            'webhooks' => [
+                'stop_keywords' => [
+                    'stop',
+                    'stopall',
+                    'unsubscribe',
+                    'cancel',
+                    'end',
+                    'quit',
+                    'revoke',
+                    'optout',
+                ],
+
+                'start_keywords' => [
+                    'start',
+                    'yes',
+                    'unstop',
+                ],
+
+                'help_keywords' => [
+                    'help',
+                    'info',
+                ],
+
+                'stop_response' => 'You have been opted out of SMS messages. Reply START to resubscribe.',
+                'help_response' => 'Reply STOP to opt out of SMS messages. Message and data rates may apply.',
+            ],
         ],
+
     ],
 
     'queues' => [

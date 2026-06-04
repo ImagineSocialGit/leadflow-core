@@ -40,37 +40,4 @@ return [
 
     ],
 
-    'webhooks' => [
-
-        'sms' => [
-
-            'twilio' => [
-
-                'stop_keywords' => [
-                    'stop',
-                    'unsubscribe',
-                    'cancel',
-                    'end',
-                    'quit',
-                    'stopall',
-                    'revoke',
-                    'optout',
-                ],
-
-                'start_keywords' => [
-                    'start',
-                    'unstop',
-                ],
-
-                'help_keywords' => [
-                    'help',
-                    'info',
-                ],
-
-            ],
-
-        ],
-
-    ],
-
 ];

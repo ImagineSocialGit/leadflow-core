@@ -139,7 +139,7 @@
                         <x-ui.form.label for="phone">
                             {{ $page['fields']['phone']['label'] ?? 'Phone Number' }}
                         </x-ui.form.label>
-
+                        
                         <x-ui.form.input
                             id="phone"
                             name="phone"

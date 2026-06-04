@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\Messaging\SmsWebhookHandlerResolver;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -20,6 +21,10 @@ class AppServiceProvider extends ServiceProvider
                 config('services.twilio.sid'),
                 config('services.twilio.token')
             );
+        });
+
+        $this->app->singleton(SmsWebhookHandlerResolver::class, function () {
+            return SmsWebhookHandlerResolver::default();
         });
     }
 

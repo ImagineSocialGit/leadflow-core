@@ -9,9 +9,9 @@
 │   │   ├── Messaging
 │   │   │   ├── DispatchMessageAction.php
 │   │   │   ├── GrantMessageConsentAction.php
+│   │   │   ├── HandleInboundSmsWebhookAction.php
 │   │   │   └── RevokeMessageConsentAction.php
 │   │   ├── Sms
-│   │   │   └── HandleTwilioInboundSmsWebhookAction.php
 │   │   └── Webinars
 │   │       ├── AddRegistrantToWebinarProviderAction.php
 │   │       ├── CreateWebinarRegistrationAction.php
@@ -30,6 +30,9 @@
 │   │   ├── Messaging
 │   │   │   ├── EmailMessagePayload.php
 │   │   │   └── SmsMessagePayload.php
+│   │   ├── Services
+│   │   │   └── Messaging
+│   │   │       └── SmsWebhookHandler.php
 │   │   └── Webinars
 │   │       └── WebinarProvider.php
 │   ├── Data
@@ -57,7 +60,7 @@
 │   │   │   │   └── WebinarWaitlistSignupController.php
 │   │   │   └── Webhooks
 │   │   │       ├── ResendWebhookController.php
-│   │   │       ├── TwilioSmsWebhookController.php
+│   │   │       ├── SmsWebhookController.php
 │   │   │       └── WebinarWebhookController.php
 │   │   ├── Middleware
 │   │   │   └── ForceStagingAccess.php
@@ -97,10 +100,12 @@
 │   │           └── WebinarWaitlistScheduledSmsPayload.php
 │   ├── Models
 │   │   ├── ConsentRevocation.php
+│   │   ├── ContactMortgageProfile.php
 │   │   ├── Contact.php
 │   │   ├── ContactTag.php
 │   │   ├── MessageConsent.php
 │   │   ├── MessageSuppression.php
+│   │   ├── MortgageStage.php
 │   │   ├── Note.php
 │   │   ├── ScheduledMessage.php
 │   │   ├── Task.php
@@ -124,10 +129,15 @@
 │   │   │   ├── MessageEligibilityGate.php
 │   │   │   ├── MessageSuppressionService.php
 │   │   │   ├── PhoneNumberNormalizer.php
+│   │   │   ├── Providers
+│   │   │   │   ├── TelnyxSmsWebhookHandler.php
+│   │   │   │   └── TwilioSmsWebhookHandler.php
 │   │   │   ├── ResendWebhookVerifier.php
 │   │   │   ├── SmsMessagingService.php
 │   │   │   ├── SmsSendGuard.php
-│   │   │   └── TwilioWebhookVerifier.php
+│   │   │   ├── SmsWebhookHandlerResolver.php
+│   │   │   ├── SmsWebhookPayload.php
+│   │   │   └── SmsWebhookResponseFactory.php
 │   │   ├── Webinars
 │   │   │   ├── Providers
 │   │   │   │   ├── Zoom
@@ -221,7 +231,9 @@
 │   │   ├── 2026_05_15_215534_create_message_consents_table.php
 │   │   ├── 2026_05_15_215834_create_consent_revocations_table.php
 │   │   ├── 2026_05_19_221010_create_message_suppressions_table.php
-│   │   └── 2026_05_26_211538_create_scheduled_messages_table.php
+│   │   ├── 2026_05_26_211538_create_scheduled_messages_table.php
+│   │   ├── 2026_06_02_211108_create_mortgage_stages_table.php
+│   │   └── 2026_06_02_211116_create_contact_mortgage_profiles_table.php
 │   ├── schema
 │   └── seeders
 │       ├── DatabaseSeeder.php
@@ -284,6 +296,8 @@
 │       │       └── registration-form-modal.blade.php
 │       ├── crm
 │       │   ├── contacts
+│       │   │   ├── import.blade.php
+│       │   │   ├── import-preview.blade.php
 │       │   │   ├── index.blade.php
 │       │   │   └── show.blade.php
 │       │   ├── dashboard.blade.php
@@ -332,7 +346,7 @@
 │   │   │   ├── Public
 │   │   │   │   └── WebinarWaitlistSignupControllerTest.php
 │   │   │   ├── Webhooks
-│   │   │   │   └── TwilioSmsWebhookControllerTest.php
+│   │   │   │   └── SmsWebhookControllerTest.php
 │   │   │   └── Webinars
 │   │   │       └── DispatchWebinarWaitlistMessagesActionTest.php
 │   │   ├── Messaging
@@ -353,4 +367,4 @@
 │   └── Unit
 └── vite.config.js
 
-106 directories, 248 files
+109 directories, 259 files

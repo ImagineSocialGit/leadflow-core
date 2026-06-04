@@ -9,31 +9,30 @@ use App\Models\Contact;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-class TwilioSmsWebhookControllerTest extends TestCase
+class SmsWebhookControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_invalid_signature_is_rejected(): void
+    public function test_twilio_invalid_signature_is_rejected(): void
     {
         config(['services.twilio.token' => 'test-token']);
 
         $this
             ->withHeader('X-Twilio-Signature', 'invalid-signature')
-            ->post(route('webhooks.twilio.sms'), $this->payload(body: 'STOP'))
+            ->post(route('webhooks.sms', ['provider' => 'twilio']), $this->twilioPayload(body: 'STOP'))
             ->assertForbidden();
     }
 
-    public function test_stop_revokes_sms_transactional_and_marketing_consent(): void
+    public function test_twilio_stop_revokes_sms_transactional_and_marketing_consent(): void
     {
         config(['services.twilio.token' => 'test-token']);
-        config(['sms.webhooks.twilio.stop_response' => 'You have been opted out of SMS messages. Reply START to resubscribe.']);
 
         $contact = Contact::factory()->create([
             'phone' => '+15555550123',
         ]);
 
-        $payload = $this->payload(body: 'STOP', from: '+15555550123');
-        $url = route('webhooks.twilio.sms');
+        $payload = $this->twilioPayload(body: 'STOP', from: '+15555550123');
+        $url = route('webhooks.sms', ['provider' => 'twilio']);
 
         $this
             ->withHeader('X-Twilio-Signature', $this->twilioSignature($url, $payload))
@@ -61,17 +60,16 @@ class TwilioSmsWebhookControllerTest extends TestCase
         $this->assertDatabaseCount('consent_revocations', 2);
     }
 
-    public function test_help_returns_help_twiml_without_revoking_consent(): void
+    public function test_twilio_help_returns_help_twiml_without_revoking_consent(): void
     {
         config(['services.twilio.token' => 'test-token']);
-        config(['sms.webhooks.twilio.help_response' => 'Reply STOP to opt out of SMS messages. Message and data rates may apply.']);
 
         Contact::factory()->create([
             'phone' => '+15555550123',
         ]);
 
-        $payload = $this->payload(body: 'HELP', from: '+15555550123');
-        $url = route('webhooks.twilio.sms');
+        $payload = $this->twilioPayload(body: 'HELP', from: '+15555550123');
+        $url = route('webhooks.sms', ['provider' => 'twilio']);
 
         $this
             ->withHeader('X-Twilio-Signature', $this->twilioSignature($url, $payload))
@@ -83,7 +81,7 @@ class TwilioSmsWebhookControllerTest extends TestCase
         $this->assertDatabaseCount('consent_revocations', 0);
     }
 
-    public function test_normal_message_returns_empty_twiml_without_revoking_consent(): void
+    public function test_twilio_normal_message_returns_empty_twiml_without_revoking_consent(): void
     {
         config(['services.twilio.token' => 'test-token']);
 
@@ -91,8 +89,8 @@ class TwilioSmsWebhookControllerTest extends TestCase
             'phone' => '+15555550123',
         ]);
 
-        $payload = $this->payload(body: 'Hello', from: '+15555550123');
-        $url = route('webhooks.twilio.sms');
+        $payload = $this->twilioPayload(body: 'Hello', from: '+15555550123');
+        $url = route('webhooks.sms', ['provider' => 'twilio']);
 
         $this
             ->withHeader('X-Twilio-Signature', $this->twilioSignature($url, $payload))
@@ -104,13 +102,12 @@ class TwilioSmsWebhookControllerTest extends TestCase
         $this->assertDatabaseCount('consent_revocations', 0);
     }
 
-    public function test_stop_from_unmatched_phone_returns_stop_twiml_without_revoking_consent(): void
+    public function test_twilio_stop_from_unmatched_phone_returns_stop_twiml_without_revoking_consent(): void
     {
         config(['services.twilio.token' => 'test-token']);
-        config(['sms.webhooks.twilio.stop_response' => 'You have been opted out of SMS messages. Reply START to resubscribe.']);
 
-        $payload = $this->payload(body: 'STOP', from: '+15555550999');
-        $url = route('webhooks.twilio.sms');
+        $payload = $this->twilioPayload(body: 'STOP', from: '+15555550999');
+        $url = route('webhooks.sms', ['provider' => 'twilio']);
 
         $this
             ->withHeader('X-Twilio-Signature', $this->twilioSignature($url, $payload))
@@ -122,7 +119,20 @@ class TwilioSmsWebhookControllerTest extends TestCase
         $this->assertDatabaseCount('consent_revocations', 0);
     }
 
-    private function payload(string $body, string $from = '+15555550123'): array
+    public function test_telnyx_invalid_signature_is_rejected(): void
+    {
+        config(['services.telnyx.webhook_public_key' => str_repeat('a', 64)]);
+
+        $this
+            ->withHeaders([
+                'Telnyx-Signature-Ed25519' => str_repeat('b', 128),
+                'Telnyx-Timestamp' => (string) now()->timestamp,
+            ])
+            ->postJson(route('webhooks.sms', ['provider' => 'telnyx']), $this->telnyxPayload(body: 'STOP'))
+            ->assertForbidden();
+    }
+
+    private function twilioPayload(string $body, string $from = '+15555550123'): array
     {
         return [
             'MessageSid' => 'SMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
@@ -134,6 +144,29 @@ class TwilioSmsWebhookControllerTest extends TestCase
             'To' => '+15555550000',
             'Body' => $body,
             'NumMedia' => '0',
+        ];
+    }
+
+    private function telnyxPayload(string $body, string $from = '+15555550123'): array
+    {
+        return [
+            'data' => [
+                'event_type' => 'message.received',
+                'id' => 'event-id',
+                'payload' => [
+                    'id' => 'message-id',
+                    'from' => [
+                        'phone_number' => $from,
+                    ],
+                    'to' => [
+                        [
+                            'phone_number' => '+15555550000',
+                        ],
+                    ],
+                    'text' => $body,
+                    'received_at' => now()->toIso8601String(),
+                ],
+            ],
         ];
     }
 
