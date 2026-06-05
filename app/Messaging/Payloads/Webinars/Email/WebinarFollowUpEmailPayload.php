@@ -1,17 +1,19 @@
 <?php
 
-namespace App\Messaging\Payloads\Webinars;
+namespace App\Messaging\Payloads\Webinars\Email;
 
-use App\Contracts\Messaging\EmailMessagePayload;
+use App\Contracts\Messaging\Email\EmailMessagePayload;
 use App\Data\WebinarMessageData;
-use App\Mail\Webinars\WebinarRegistrationConfirmationMail;
+use App\Mail\Webinars\WebinarPostFollowUpMail;
 use App\Support\Messaging\EmailConsentRevocationLinkGenerator;
 use Illuminate\Mail\Mailable;
+use InvalidArgumentException;
 
-class WebinarConfirmationEmailPayload implements EmailMessagePayload
+class WebinarFollowUpEmailPayload implements EmailMessagePayload
 {
     public function __construct(
         public WebinarMessageData $data,
+        public string $followUpType,
         public ?string $transactionalOptOutUrl = null,
     ) {}
 
@@ -19,6 +21,7 @@ class WebinarConfirmationEmailPayload implements EmailMessagePayload
     {
         return new self(
             data: WebinarMessageData::fromArray($payload),
+            followUpType: $payload['follow_up_type'],
             transactionalOptOutUrl: $payload['transactional_opt_out_url'] ?? null,
         );
     }
@@ -30,8 +33,10 @@ class WebinarConfirmationEmailPayload implements EmailMessagePayload
 
     public function mailable(): Mailable
     {
-        return new WebinarRegistrationConfirmationMail(
+        return new WebinarPostFollowUpMail(
             data: $this->data,
+            followUpType: $this->followUpType,
+            subjectLine: $this->subject(),
             transactionalOptOutUrl: $this->resolveTransactionalOptOutUrl(),
         );
     }
@@ -40,9 +45,20 @@ class WebinarConfirmationEmailPayload implements EmailMessagePayload
     {
         return [
             ...$this->data->toArray(),
-            'kind' => 'registration_confirmation',
+            'kind' => 'post_webinar_follow_up',
+            'follow_up_type' => $this->followUpType,
+            'subject' => $this->subject(),
             'transactional_opt_out_url' => $this->resolveTransactionalOptOutUrl(),
         ];
+    }
+
+    private function subject(): string
+    {
+        return match ($this->followUpType) {
+            'missed' => 'Sorry we missed you: '.$this->data->webinarTitle,
+            'replay' => 'Thanks for joining: '.$this->data->webinarTitle,
+            default => throw new InvalidArgumentException("Unsupported webinar follow-up type [{$this->followUpType}]."),
+        };
     }
 
     private function resolveTransactionalOptOutUrl(): string

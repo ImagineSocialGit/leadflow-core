@@ -5,8 +5,8 @@ namespace App\Actions\Webinars;
 use App\Actions\Messaging\DispatchMessageAction;
 use App\Enums\MessageChannel;
 use App\Enums\MessagePurpose;
-use App\Messaging\Payloads\Webinars\WebinarWaitlistScheduledEmailPayload;
-use App\Messaging\Payloads\Webinars\WebinarWaitlistScheduledSmsPayload;
+use App\Messaging\Payloads\Webinars\Email\WebinarWaitlistScheduledEmailPayload;
+use App\Messaging\Payloads\Webinars\Sms\WebinarWaitlistScheduledSmsPayload;
 use App\Models\Webinar;
 use App\Models\WebinarWaitlistSignup;
 

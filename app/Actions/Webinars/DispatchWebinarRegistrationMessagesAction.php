@@ -6,10 +6,10 @@ use App\Actions\Messaging\DispatchMessageAction;
 use App\Data\WebinarMessageData;
 use App\Enums\MessageChannel;
 use App\Enums\MessagePurpose;
-use App\Messaging\Payloads\Webinars\WebinarConfirmationEmailPayload;
-use App\Messaging\Payloads\Webinars\WebinarConfirmationSmsPayload;
-use App\Messaging\Payloads\Webinars\WebinarReminderEmailPayload;
-use App\Messaging\Payloads\Webinars\WebinarReminderSmsPayload;
+use App\Messaging\Payloads\Webinars\Email\WebinarConfirmationEmailPayload;
+use App\Messaging\Payloads\Webinars\Sms\WebinarConfirmationSmsPayload;
+use App\Messaging\Payloads\Webinars\Email\WebinarReminderEmailPayload;
+use App\Messaging\Payloads\Webinars\Sms\WebinarReminderSmsPayload;
 use App\Models\WebinarRegistration;
 use Carbon\CarbonInterface;
 

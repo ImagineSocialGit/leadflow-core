@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Messaging;
+namespace App\Services\Messaging\Sms;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;

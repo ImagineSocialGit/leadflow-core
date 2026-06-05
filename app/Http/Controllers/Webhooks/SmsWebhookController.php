@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Webhooks;
 
 use App\Actions\Messaging\HandleInboundSmsWebhookAction;
 use App\Http\Controllers\Controller;
-use App\Services\Messaging\SmsWebhookHandlerResolver;
+use App\Services\Messaging\Sms\SmsWebhookHandlerResolver;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 

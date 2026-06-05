@@ -2,13 +2,13 @@
 
 namespace Tests\Feature\Messaging;
 
-use App\Contracts\Messaging\SmsMessagePayload;
-use App\Contracts\Messaging\SmsProvider;
+use App\Contracts\Messaging\Sms\SmsMessagePayload;
+use App\Contracts\Messaging\Sms\SmsProvider;
 use App\Services\Messaging\DevMessageSink;
 use App\Services\Messaging\PhoneNumberNormalizer;
-use App\Services\Messaging\SmsMessagingService;
-use App\Services\Messaging\SmsProviderManager;
-use App\Services\Messaging\SmsSendGuard;
+use App\Services\Messaging\Sms\SmsMessagingService;
+use App\Services\Messaging\Sms\SmsProviderManager;
+use App\Services\Messaging\Sms\SmsSendGuard;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

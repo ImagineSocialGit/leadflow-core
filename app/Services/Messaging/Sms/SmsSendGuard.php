@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Messaging;
+namespace App\Services\Messaging\Sms;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;

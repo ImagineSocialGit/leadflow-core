@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Services\Messaging;
+namespace App\Services\Messaging\Sms;
 
-use App\Contracts\Messaging\SmsWebhookHandler;
+use App\Contracts\Messaging\Sms\SmsWebhookHandler;
 use App\Integrations\Messaging\Sms\Telnyx\TelnyxWebhookHandler;
 use App\Integrations\Messaging\Sms\Twilio\TwilioWebhookHandler;
 use InvalidArgumentException;

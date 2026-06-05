@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Services\Messaging;
+namespace App\Services\Messaging\Sms;
 
-use App\Contracts\Messaging\SmsMessagePayload;
+use App\Contracts\Messaging\Sms\SmsMessagePayload;
 
 class SmsMessagingService
 {

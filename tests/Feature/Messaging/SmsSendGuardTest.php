@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Messaging;
 
-use App\Services\Messaging\SmsSendGuard;
+use App\Services\Messaging\Sms\SmsSendGuard;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Tests\TestCase;

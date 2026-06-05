@@ -2,8 +2,8 @@
 
 namespace App\Providers;
 
-use App\Services\Messaging\SmsProviderManager;
-use App\Services\Messaging\SmsWebhookHandlerResolver;
+use App\Services\Messaging\Sms\SmsProviderManager;
+use App\Services\Messaging\Sms\SmsWebhookHandlerResolver;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;

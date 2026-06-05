@@ -2,7 +2,7 @@
 
 namespace App\Integrations\Messaging\Sms\Twilio;
 
-use App\Contracts\Messaging\SmsProvider;
+use App\Contracts\Messaging\Sms\SmsProvider;
 use Twilio\Rest\Client;
 
 class TwilioSmsProvider implements SmsProvider

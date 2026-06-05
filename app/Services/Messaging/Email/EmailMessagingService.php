@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Services\Messaging;
+namespace App\Services\Messaging\Email;
 
-use App\Contracts\Messaging\EmailMessagePayload;
+use App\Contracts\Messaging\Email\EmailMessagePayload;
+use App\Services\Messaging\DevMessageSink;
 use Illuminate\Support\Facades\Mail;
 
 class EmailMessagingService

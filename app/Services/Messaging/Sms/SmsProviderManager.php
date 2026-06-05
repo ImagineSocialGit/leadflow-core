@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Services\Messaging;
+namespace App\Services\Messaging\Sms;
 
-use App\Contracts\Messaging\SmsProvider;
+use App\Contracts\Messaging\Sms\SmsProvider;
 use App\Integrations\Messaging\Sms\Telnyx\TelnyxSmsProvider;
 use App\Integrations\Messaging\Sms\Twilio\TwilioSmsProvider;
 use InvalidArgumentException;

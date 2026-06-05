@@ -6,7 +6,7 @@ use App\Enums\MessageChannel;
 use App\Enums\MessagePurpose;
 use App\Models\ConsentRevocation;
 use App\Models\Contact;
-use App\Services\Messaging\SmsWebhookPayload;
+use App\Services\Messaging\Sms\SmsWebhookPayload;
 
 class HandleInboundSmsWebhookAction
 {

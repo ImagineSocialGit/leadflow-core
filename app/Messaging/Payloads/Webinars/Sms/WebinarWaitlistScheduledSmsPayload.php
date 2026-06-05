@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Messaging\Payloads\Webinars;
+namespace App\Messaging\Payloads\Webinars\Sms;
 
-use App\Contracts\Messaging\SmsMessagePayload;
+use App\Contracts\Messaging\Sms\SmsMessagePayload;
 
 class WebinarWaitlistScheduledSmsPayload implements SmsMessagePayload
 {

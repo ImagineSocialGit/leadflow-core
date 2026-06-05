@@ -2,13 +2,13 @@
 
 namespace App\Jobs\Messaging;
 
-use App\Contracts\Messaging\EmailMessagePayload;
-use App\Contracts\Messaging\SmsMessagePayload;
+use App\Contracts\Messaging\Email\EmailMessagePayload;
+use App\Contracts\Messaging\Sms\SmsMessagePayload;
 use App\Enums\MessageChannel;
 use App\Models\ScheduledMessage;
-use App\Services\Messaging\EmailMessagingService;
+use App\Services\Messaging\Email\EmailMessagingService;
 use App\Services\Messaging\MessageEligibilityGate;
-use App\Services\Messaging\SmsMessagingService;
+use App\Services\Messaging\Sms\SmsMessagingService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use InvalidArgumentException;

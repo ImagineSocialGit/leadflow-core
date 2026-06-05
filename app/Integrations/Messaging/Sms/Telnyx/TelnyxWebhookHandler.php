@@ -2,8 +2,8 @@
 
 namespace App\Integrations\Messaging\Sms\Telnyx;
 
-use App\Contracts\Messaging\SmsWebhookHandler;
-use App\Services\Messaging\SmsWebhookPayload;
+use App\Contracts\Messaging\Sms\SmsWebhookHandler;
+use App\Services\Messaging\Sms\SmsWebhookPayload;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;

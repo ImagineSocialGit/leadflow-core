@@ -6,8 +6,8 @@ use App\Actions\Messaging\DispatchMessageAction;
 use App\Data\WebinarMessageData;
 use App\Enums\MessageChannel;
 use App\Enums\MessagePurpose;
-use App\Messaging\Payloads\Webinars\WebinarFollowUpEmailPayload;
-use App\Messaging\Payloads\Webinars\WebinarFollowUpSmsPayload;
+use App\Messaging\Payloads\Webinars\Email\WebinarFollowUpEmailPayload;
+use App\Messaging\Payloads\Webinars\Sms\WebinarFollowUpSmsPayload;
 use App\Models\WebinarRegistration;
 
 class DispatchWebinarOutcomeMessagesAction
