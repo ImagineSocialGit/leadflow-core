@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Messaging;
 
-use App\Contracts\Messaging\Sms\SmsMessagePayload;
+use App\Contracts\Messaging\Sms\SmsMessage;
 use App\Contracts\Messaging\Sms\SmsProvider;
 use App\Services\Messaging\DevMessageSink;
 use App\Services\Messaging\PhoneNumberNormalizer;
@@ -102,7 +102,7 @@ class FakeSmsProvider implements SmsProvider
     }
 }
 
-class FakeSmsPayload implements SmsMessagePayload
+class FakeSmsPayload implements SmsMessage
 {
     public function __construct(
         private readonly string $to,

@@ -2,12 +2,12 @@
 
 namespace App\Messaging\Payloads\Webinars\Email;
 
-use App\Contracts\Messaging\Email\EmailMessagePayload;
+use App\Contracts\Messaging\Email\EmailMessage;
 use App\Mail\Webinars\WebinarWaitlistScheduledMail;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Mail;
 
-class WebinarWaitlistScheduledEmailPayload implements EmailMessagePayload
+class WebinarWaitlistScheduledEmailPayload implements EmailMessage
 {
     public function __construct(
         public string $email,

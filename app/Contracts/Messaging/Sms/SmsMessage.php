@@ -2,7 +2,8 @@
 
 namespace App\Contracts\Messaging\Sms;
 
-interface SmsMessagePayload
+interface SmsMessage
+
 {
     public static function fromArray(array $payload): self;
 

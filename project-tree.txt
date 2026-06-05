@@ -28,10 +28,13 @@
 │   │   └── Commands
 │   ├── Contracts
 │   │   ├── Messaging
-│   │   │   ├── EmailMessagePayload.php
-│   │   │   ├── SmsMessagePayload.php
-│   │   │   ├── SmsProvider.php
-│   │   │   └── SmsWebhookHandler.php
+│   │   │   ├── Email
+│   │   │   │   ├── EmailMessage.php
+│   │   │   │   └── EmailProvider.php
+│   │   │   └── Sms
+│   │   │       ├── SmsMessage.php
+│   │   │       ├── SmsProvider.php
+│   │   │       └── SmsWebhookHandler.php
 │   │   └── Webinars
 │   │       └── WebinarProvider.php
 │   ├── Data
@@ -110,14 +113,16 @@
 │   ├── Messaging
 │   │   └── Payloads
 │   │       └── Webinars
-│   │           ├── WebinarConfirmationEmailPayload.php
-│   │           ├── WebinarConfirmationSmsPayload.php
-│   │           ├── WebinarFollowUpEmailPayload.php
-│   │           ├── WebinarFollowUpSmsPayload.php
-│   │           ├── WebinarReminderEmailPayload.php
-│   │           ├── WebinarReminderSmsPayload.php
-│   │           ├── WebinarWaitlistScheduledEmailPayload.php
-│   │           └── WebinarWaitlistScheduledSmsPayload.php
+│   │           ├── Email
+│   │           │   ├── WebinarConfirmationEmailPayload.php
+│   │           │   ├── WebinarFollowUpEmailPayload.php
+│   │           │   ├── WebinarReminderEmailPayload.php
+│   │           │   └── WebinarWaitlistScheduledEmailPayload.php
+│   │           └── Sms
+│   │               ├── WebinarConfirmationSmsPayload.php
+│   │               ├── WebinarFollowUpSmsPayload.php
+│   │               ├── WebinarReminderSmsPayload.php
+│   │               └── WebinarWaitlistScheduledSmsPayload.php
 │   ├── Models
 │   │   ├── ConsentRevocation.php
 │   │   ├── ContactMortgageProfile.php
@@ -145,15 +150,17 @@
 │   │   ├── Leads
 │   │   ├── Messaging
 │   │   │   ├── DevMessageSink.php
-│   │   │   ├── EmailMessagingService.php
+│   │   │   ├── Email
+│   │   │   │   └── EmailMessagingService.php
 │   │   │   ├── MessageEligibilityGate.php
 │   │   │   ├── MessageSuppressionService.php
 │   │   │   ├── PhoneNumberNormalizer.php
-│   │   │   ├── SmsMessagingService.php
-│   │   │   ├── SmsProviderManager.php
-│   │   │   ├── SmsSendGuard.php
-│   │   │   ├── SmsWebhookHandlerResolver.php
-│   │   │   └── SmsWebhookPayload.php
+│   │   │   └── Sms
+│   │   │       ├── SmsMessagingService.php
+│   │   │       ├── SmsProviderManager.php
+│   │   │       ├── SmsSendGuard.php
+│   │   │       ├── SmsWebhookHandlerResolver.php
+│   │   │       └── SmsWebhookPayload.php
 │   │   └── Webinars
 │   │       └── WebinarProviderManager.php
 │   └── Support
@@ -379,4 +386,4 @@
 │   └── Unit
 └── vite.config.js
 
-117 directories, 263 files
+123 directories, 264 files

@@ -2,10 +2,10 @@
 
 namespace App\Messaging\Payloads\Webinars\Sms;
 
-use App\Contracts\Messaging\Sms\SmsMessagePayload;
+use App\Contracts\Messaging\Sms\SmsMessage;
 use App\Data\WebinarMessageData;
 
-class WebinarConfirmationSmsPayload implements SmsMessagePayload
+class WebinarConfirmationSmsPayload implements SmsMessage
 {
     public function __construct(
         public WebinarMessageData $data,

@@ -4,7 +4,7 @@ namespace App\Contracts\Messaging\Email;
 
 use Illuminate\Mail\Mailable;
 
-interface EmailMessagePayload
+interface EmailMessage
 {
     public static function fromArray(array $payload): self;
 

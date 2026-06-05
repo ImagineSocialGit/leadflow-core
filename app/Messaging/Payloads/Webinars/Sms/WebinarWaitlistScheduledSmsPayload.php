@@ -2,9 +2,9 @@
 
 namespace App\Messaging\Payloads\Webinars\Sms;
 
-use App\Contracts\Messaging\Sms\SmsMessagePayload;
+use App\Contracts\Messaging\Sms\SmsMessage;
 
-class WebinarWaitlistScheduledSmsPayload implements SmsMessagePayload
+class WebinarWaitlistScheduledSmsPayload implements SmsMessage
 {
     public function __construct(
         public string $phone,

@@ -2,7 +2,7 @@
 
 namespace App\Services\Messaging\Email;
 
-use App\Contracts\Messaging\Email\EmailMessagePayload;
+use App\Contracts\Messaging\Email\EmailMessage;
 use App\Services\Messaging\DevMessageSink;
 use Illuminate\Support\Facades\Mail;
 
@@ -12,7 +12,7 @@ class EmailMessagingService
         private readonly DevMessageSink $devMessageSink,
     ) {}
 
-    public function send(EmailMessagePayload $payload): void
+    public function send(EmailMessage $payload): void
     {
         if (! $payload->to()) {
             return;

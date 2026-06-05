@@ -2,8 +2,8 @@
 
 namespace App\Jobs\Messaging;
 
-use App\Contracts\Messaging\Email\EmailMessagePayload;
-use App\Contracts\Messaging\Sms\SmsMessagePayload;
+use App\Contracts\Messaging\Email\EmailMessage;
+use App\Contracts\Messaging\Sms\SmsMessage;
 use App\Enums\MessageChannel;
 use App\Models\ScheduledMessage;
 use App\Services\Messaging\Email\EmailMessagingService;
@@ -82,7 +82,7 @@ class SendScheduledMessageJob implements ShouldQueue
         }
     }
 
-    private function resolvePayload(ScheduledMessage $scheduledMessage): EmailMessagePayload|SmsMessagePayload
+    private function resolvePayload(ScheduledMessage $scheduledMessage): EmailMessage|SmsMessage
     {
         $payloadClass = $scheduledMessage->payload_class;
 
@@ -96,7 +96,7 @@ class SendScheduledMessageJob implements ShouldQueue
 
         $payload = $payloadClass::fromArray($scheduledMessage->payload ?? []);
 
-        if (! $payload instanceof EmailMessagePayload && ! $payload instanceof SmsMessagePayload) {
+        if (! $payload instanceof EmailMessage && ! $payload instanceof SmsMessage) {
             throw new InvalidArgumentException("Payload class [{$payloadClass}] must implement a supported message payload contract.");
         }
 
@@ -104,10 +104,10 @@ class SendScheduledMessageJob implements ShouldQueue
     }
 
     private function sendEmail(
-        EmailMessagePayload|SmsMessagePayload $payload,
+        EmailMessage|SmsMessage $payload,
         EmailMessagingService $emailMessagingService,
     ): void {
-        if (! $payload instanceof EmailMessagePayload) {
+        if (! $payload instanceof EmailMessage) {
             throw new InvalidArgumentException(
                 'Scheduled email message resolved to a non-email payload.'
             );
@@ -117,10 +117,10 @@ class SendScheduledMessageJob implements ShouldQueue
     }
 
     private function sendSms(
-        EmailMessagePayload|SmsMessagePayload $payload,
+        EmailMessage|SmsMessage $payload,
         SmsMessagingService $smsMessagingService,
     ): void {
-        if (! $payload instanceof SmsMessagePayload) {
+        if (! $payload instanceof SmsMessage) {
             throw new InvalidArgumentException(
                 'Scheduled SMS message resolved to a non-SMS payload.'
             );

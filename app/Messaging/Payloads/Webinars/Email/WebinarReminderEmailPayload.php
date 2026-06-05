@@ -2,14 +2,14 @@
 
 namespace App\Messaging\Payloads\Webinars\Email;
 
-use App\Contracts\Messaging\Email\EmailMessagePayload;
+use App\Contracts\Messaging\Email\EmailMessage;
 use App\Data\WebinarMessageData;
 use App\Mail\Webinars\WebinarReminderMail;
 use App\Support\Messaging\EmailConsentRevocationLinkGenerator;
 use Illuminate\Mail\Mailable;
 use InvalidArgumentException;
 
-class WebinarReminderEmailPayload implements EmailMessagePayload
+class WebinarReminderEmailPayload implements EmailMessage
 {
     public function __construct(
         public WebinarMessageData $data,
