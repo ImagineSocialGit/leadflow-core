@@ -34,6 +34,9 @@ class DispatchWebinarOutcomeMessagesAction
                 scope: self::SCOPE,
                 message: 'follow_up',
                 variant: $followUpType,
+                context: [
+                    'webinar_slug' => $registration->webinar?->slug ?? $registration->webinar_slug,
+                ],
             );
 
             foreach ($definitions as $definition) {

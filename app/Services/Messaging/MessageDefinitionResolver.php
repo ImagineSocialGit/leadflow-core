@@ -8,6 +8,7 @@ use InvalidArgumentException;
 class MessageDefinitionResolver
 {
     /**
+     * @param  array<string, mixed>  $context
      * @return array<int, array<string, mixed>>
      */
     public function resolve(
@@ -15,6 +16,7 @@ class MessageDefinitionResolver
         string $scope,
         string $message,
         ?string $variant = null,
+        array $context = [],
     ): array {
         $channel = $channel instanceof MessageChannel
             ? $channel->value
@@ -27,19 +29,36 @@ class MessageDefinitionResolver
             return [];
         }
 
-        $configPath = "messaging.{$channel}.{$configScope}.{$message}";
-        $definition = config($configPath);
+        $baseConfigPath = "messaging.{$channel}.{$configScope}.{$message}";
+        $definition = config($baseConfigPath);
 
-        if (! is_array($definition) || ! ($definition['enabled'] ?? true)) {
+        if (! is_array($definition)) {
+            return [];
+        }
+
+        $overrideConfigPath = null;
+        $webinarSlug = $context['webinar_slug'] ?? null;
+
+        if (is_string($webinarSlug) && trim($webinarSlug) !== '') {
+            $overrideConfigPath = "messaging.{$channel}.{$configScope}.overrides.{$webinarSlug}.{$message}";
+            $override = config($overrideConfigPath);
+
+            if (is_array($override)) {
+                $definition = array_replace_recursive($definition, $override);
+            }
+        }
+
+        if (! ($definition['enabled'] ?? true)) {
             return [];
         }
 
         $definition['scope'] = $definition['scope'] ?? $scope;
-        $definition['config_path'] = $configPath;
+        $definition['config_path'] = $baseConfigPath;
+        $definition['override_config_path'] = is_array(config($overrideConfigPath)) ? $overrideConfigPath : null;
 
         if (($definition['scope'] ?? null) !== $scope) {
             throw new InvalidArgumentException(
-                "Message definition [{$configPath}] has scope [{$definition['scope']}], expected [{$scope}]."
+                "Message definition [{$baseConfigPath}] has scope [{$definition['scope']}], expected [{$scope}]."
             );
         }
 

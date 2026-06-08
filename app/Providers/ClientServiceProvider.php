@@ -51,12 +51,16 @@ class ClientServiceProvider extends ServiceProvider
                 ->replace(DIRECTORY_SEPARATOR, '.')
                 ->toString();
 
+            $current = config($key);
+
             Config::set(
                 $key,
-                array_replace_recursive(
-                    config($key, []),
-                    require $path,
-                ),
+                is_array($current)
+                    ? array_replace_recursive(
+                        $current,
+                        require $path,
+                    )
+                    : require $path,
             );
         }
     }

@@ -50,6 +50,7 @@ class DispatchWebinarRegistrationMessagesAction
                     channel: $channel,
                     scope: self::SCOPE,
                     message: 'registration_confirmation',
+                    context: $this->resolverContext($registration),
                 ),
                 payload: $payload,
                 sendAt: now(),
@@ -74,6 +75,7 @@ class DispatchWebinarRegistrationMessagesAction
                 channel: $channel,
                 scope: self::SCOPE,
                 message: 'reminders',
+                context: $this->resolverContext($registration),
             );
 
             foreach ($definitions as $definition) {
@@ -178,6 +180,7 @@ class DispatchWebinarRegistrationMessagesAction
             channel: MessageChannel::Sms,
             scope: self::SCOPE,
             message: 'transactional_opt_in',
+            context: $this->resolverContext($registration),
         );
 
         foreach ($definitions as $definition) {
@@ -208,6 +211,16 @@ class DispatchWebinarRegistrationMessagesAction
                 ],
             );
         }
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function resolverContext(WebinarRegistration $registration): array
+    {
+        return [
+            'webinar_slug' => $registration->webinar?->slug ?? $registration->webinar_slug,
+        ];
     }
 
     private function dedupeKey(

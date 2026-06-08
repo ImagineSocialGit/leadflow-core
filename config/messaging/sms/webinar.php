@@ -78,4 +78,24 @@ return [
         ],
     ],
 
+    'overrides' => [
+
+        'homebuyer-game-plan' => [
+
+            'reminders' => [
+                'variants' => [
+                    '24_hours' => [
+                        'enabled' => false,
+                    ],
+
+                    '30_minutes' => [
+                        'offset_minutes_before_start' => 45,
+                    ],
+                ],
+            ],
+
+        ],
+
+    ],
+
 ];
