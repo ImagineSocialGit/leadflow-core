@@ -1,15 +1,5 @@
 @php
-    $style = array_replace_recursive(
-        config('webinars.style', []),
-        config('webinars.notify-me.style', []),
-    );
-
-    $page = array_replace_recursive(
-        config('webinars.content', []),
-        config('webinars.notify-me.content', []),
-        $series->meta['public_page'] ?? [],
-    );
-
+    
     $tokens = $style['tokens'] ?? [];
 
 @endphp

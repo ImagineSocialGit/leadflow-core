@@ -57,15 +57,21 @@ class WebinarRegistrationController extends Controller
 
         $webinar = $getNextUpcomingWebinarAction->getForSeries($series);
 
+        $config = app(\App\Support\Webinars\WebinarRegisterPageConfig::class);
+
         if (! $webinar) {
             return view('webinar.notify-me', [
                 'series' => $series,
+                'page' => $config->content('notify-me', $series->slug, $series->meta ?? []),
+                'style' => $config->style('notify-me', $series->slug),
             ])->render();
         }
 
         return view('webinar.register', [
             'webinar' => $webinar,
             'series' => $series,
+            'page' => $config->content('register', $series->slug, $series->meta ?? []),
+            'style' => $config->style('register', $series->slug),
         ])->render();
     }
 

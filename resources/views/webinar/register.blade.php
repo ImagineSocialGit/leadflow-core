@@ -1,15 +1,4 @@
 @php
-    $style = array_replace_recursive(
-        config('webinars.style', []),
-        config('webinars.register.style', []),
-    );
-
-    $page = array_replace_recursive(
-        config('webinars.content', []),
-        config('webinars.register.content', []),
-        $series->meta['public_page'] ?? [],
-    );
-
     $tokens = $style['tokens'] ?? [];
     $countdownTarget = $webinar?->starts_at?->timezone('UTC')->toIso8601String();
 
