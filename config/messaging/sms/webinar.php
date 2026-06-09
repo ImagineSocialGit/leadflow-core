@@ -3,7 +3,6 @@
 use App\Messaging\Payloads\Webinars\Sms\WebinarConfirmationSmsPayload;
 use App\Messaging\Payloads\Webinars\Sms\WebinarReminderSmsPayload;
 use App\Messaging\Payloads\Webinars\Sms\WebinarTransactionalSmsPayload;
-use App\Messaging\Payloads\Webinars\Sms\WebinarWaitlistScheduledSmsPayload;
 
 return [
 
@@ -22,6 +21,7 @@ return [
         'purpose' => 'transactional',
         'payload_class' => WebinarTransactionalSmsPayload::class,
         'queue' => 'confirmation_messages',
+        'message' => 'Thanks for subscribing to receive webinar-related messages! Reply HELP for help. Message frequency may vary. Msg&data rates may apply. Reply STOP to opt out.',
     ],
 
     'reminders' => [

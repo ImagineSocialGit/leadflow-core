@@ -48,6 +48,10 @@ class WebinarConfirmationEmailPayload implements EmailMessage
     private function resolveTransactionalOptOutUrl(): string
     {
         return $this->transactionalOptOutUrl
-            ?? app(EmailConsentRevocationLinkGenerator::class)->transactionalOptOutUrl($this->data->contact());
+            ?? app(EmailConsentRevocationLinkGenerator::class)
+                ->transactionalOptOutUrl(
+                    $this->data->contact(),
+                    'webinar',
+                );
     }
 }
