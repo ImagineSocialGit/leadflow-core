@@ -6,6 +6,7 @@
 │   │   ├── Contacts
 │   │   ├── Messaging
 │   │   │   ├── DispatchMessageAction.php
+│   │   │   ├── DispatchOptInMessageAction.php
 │   │   │   ├── Email
 │   │   │   │   └── HandleInboundEmailWebhookAction.php
 │   │   │   ├── GrantMessageConsentAction.php
@@ -116,6 +117,8 @@
 │   ├── Messaging
 │   │   └── Payloads
 │   │       ├── Marketing
+│   │       │   ├── Email
+│   │       │   │   └── MarketingEmailPayload.php
 │   │       │   └── Sms
 │   │       │       └── MarketingSmsPayload.php
 │   │       └── Webinars
@@ -163,6 +166,7 @@
 │   │   │   │   ├── EmailProviderManager.php
 │   │   │   │   ├── EmailWebhookHandlerResolver.php
 │   │   │   │   └── EmailWebhookPayload.php
+│   │   │   ├── MessageDefinitionResolver.php
 │   │   │   ├── MessageEligibilityGate.php
 │   │   │   ├── MessageGate.php
 │   │   │   ├── MessageSuppressionService.php
@@ -288,12 +292,15 @@
 │   ├── mail.php
 │   ├── messaging
 │   │   ├── email
-│   │   │   └── webinars.php
+│   │   │   ├── general_drip.php
+│   │   │   ├── webinar.php
+│   │   │   └── webinar_waitlist.php
 │   │   ├── email.php
 │   │   ├── sms
-│   │   │   ├── marketing.php
+│   │   │   ├── general_drip.php
 │   │   │   ├── opt-in.php
-│   │   │   └── webinars.php
+│   │   │   ├── webinar.php
+│   │   │   └── webinar_waitlist.php
 │   │   └── sms.php
 │   ├── messaging.php
 │   ├── queue.php
@@ -509,12 +516,14 @@
 │   │   │   └── Feature
 │   │   │       └── Webinars
 │   │   │           └── WebinarRegistrationControllerTest.php
-│   │   └── Webhooks
-│   │       ├── DispatchWebinarOutcomeMessagesActionTest.php
-│   │       ├── EmailWebhookControllerTest.php
-│   │       └── ZoomWebhookTest.php
+│   │   ├── Webhooks
+│   │   │   ├── DispatchWebinarOutcomeMessagesActionTest.php
+│   │   │   ├── EmailWebhookControllerTest.php
+│   │   │   └── ZoomWebhookTest.php
+│   │   └── Webinars
+│   │       └── DispatchWebinarRegistrationMessagesActionTest.php
 │   ├── TestCase.php
 │   └── Unit
 └── vite.config.js
 
-181 directories, 337 files
+183 directories, 344 files

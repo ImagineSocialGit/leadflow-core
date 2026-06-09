@@ -2,20 +2,24 @@
 
 namespace Tests\Feature\Public;
 
+use App\Actions\Messaging\DispatchOptInMessageAction;
 use App\Enums\MessageChannel;
 use App\Enums\MessagePurpose;
 use App\Models\Contact;
 use App\Models\WebinarSeries;
 use App\Models\WebinarWaitlistSignup;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Mockery;
 use Tests\TestCase;
 
 class WebinarWaitlistSignupControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_waitlist_signup_is_stored_successfully(): void
+    public function test_waitlist_signup_is_stored_successfully_with_marketing_email_consent(): void
     {
+        $this->mockOptInDispatch();
+
         $series = WebinarSeries::factory()->create([
             'status' => 'active',
             'slug' => 'first-time-homebuyer',
@@ -26,7 +30,7 @@ class WebinarWaitlistSignupControllerTest extends TestCase
             'last_name' => 'Yarnall',
             'email' => 'jeff@gmail.com',
             'phone' => '6155551212',
-            'transactional_email_consent' => true,
+            'marketing_email_consent' => true,
         ]);
 
         $response->assertRedirect(route('webinar.show', $series->slug));
@@ -43,6 +47,13 @@ class WebinarWaitlistSignupControllerTest extends TestCase
         $this->assertDatabaseHas('message_consents', [
             'contact_id' => $contact->id,
             'channel' => MessageChannel::Email->value,
+            'purpose' => MessagePurpose::Marketing->value,
+            'scope' => 'webinar_waitlist',
+            'source' => 'webinar_waitlist',
+        ]);
+
+        $this->assertDatabaseMissing('message_consents', [
+            'contact_id' => $contact->id,
             'purpose' => MessagePurpose::Transactional->value,
             'source' => 'webinar_waitlist',
         ]);
@@ -50,6 +61,8 @@ class WebinarWaitlistSignupControllerTest extends TestCase
 
     public function test_duplicate_waitlist_signup_updates_existing_record(): void
     {
+        $this->mockOptInDispatch();
+
         $series = WebinarSeries::factory()->create([
             'status' => 'active',
         ]);
@@ -72,7 +85,7 @@ class WebinarWaitlistSignupControllerTest extends TestCase
             'last_name' => 'Yarnall',
             'email' => 'jeff@gmail.com',
             'phone' => '6155551212',
-            'transactional_email_consent' => true,
+            'marketing_email_consent' => true,
         ])->assertRedirect(route('webinar.show', $series->slug));
 
         $this->assertDatabaseCount('webinar_waitlist_signups', 1);
@@ -82,7 +95,7 @@ class WebinarWaitlistSignupControllerTest extends TestCase
         $this->assertSame($contact->id, $signup->contact_id);
     }
 
-    public function test_waitlist_signup_requires_at_least_one_transactional_channel(): void
+    public function test_waitlist_signup_requires_at_least_one_marketing_channel(): void
     {
         $series = WebinarSeries::factory()->create([
             'status' => 'active',
@@ -99,15 +112,17 @@ class WebinarWaitlistSignupControllerTest extends TestCase
         $response
             ->assertRedirect(route('webinar.show', $series->slug))
             ->assertSessionHasErrors([
-                'transactional_consent',
+                'marketing_consent',
             ]);
 
         $this->assertDatabaseCount('webinar_waitlist_signups', 0);
         $this->assertDatabaseCount('message_consents', 0);
     }
 
-    public function test_waitlist_signup_can_use_transactional_sms_consent_only(): void
+    public function test_waitlist_signup_can_use_marketing_sms_consent_only(): void
     {
+        $this->mockOptInDispatch();
+
         $series = WebinarSeries::factory()->create([
             'status' => 'active',
         ]);
@@ -117,7 +132,7 @@ class WebinarWaitlistSignupControllerTest extends TestCase
             'last_name' => 'Yarnall',
             'email' => 'jeff@gmail.com',
             'phone' => '6155551212',
-            'transactional_sms_consent' => true,
+            'marketing_sms_consent' => true,
         ])->assertRedirect(route('webinar.show', $series->slug));
 
         $contact = Contact::query()->where('email', 'jeff@gmail.com')->first();
@@ -127,19 +142,28 @@ class WebinarWaitlistSignupControllerTest extends TestCase
         $this->assertDatabaseHas('message_consents', [
             'contact_id' => $contact->id,
             'channel' => MessageChannel::Sms->value,
-            'purpose' => MessagePurpose::Transactional->value,
+            'purpose' => MessagePurpose::Marketing->value,
+            'scope' => 'webinar_waitlist',
             'source' => 'webinar_waitlist',
         ]);
 
         $this->assertDatabaseMissing('message_consents', [
             'contact_id' => $contact->id,
             'channel' => MessageChannel::Email->value,
+            'purpose' => MessagePurpose::Marketing->value,
+            'scope' => 'webinar_waitlist',
+        ]);
+
+        $this->assertDatabaseMissing('message_consents', [
+            'contact_id' => $contact->id,
             'purpose' => MessagePurpose::Transactional->value,
         ]);
     }
 
-    public function test_waitlist_signup_can_use_both_transactional_channels(): void
+    public function test_waitlist_signup_can_use_both_marketing_channels(): void
     {
+        $this->mockOptInDispatch();
+
         $series = WebinarSeries::factory()->create([
             'status' => 'active',
         ]);
@@ -149,8 +173,8 @@ class WebinarWaitlistSignupControllerTest extends TestCase
             'last_name' => 'Yarnall',
             'email' => 'jeff@gmail.com',
             'phone' => '6155551212',
-            'transactional_email_consent' => true,
-            'transactional_sms_consent' => true,
+            'marketing_email_consent' => true,
+            'marketing_sms_consent' => true,
         ])->assertRedirect(route('webinar.show', $series->slug));
 
         $contact = Contact::query()->where('email', 'jeff@gmail.com')->first();
@@ -160,15 +184,32 @@ class WebinarWaitlistSignupControllerTest extends TestCase
         $this->assertDatabaseHas('message_consents', [
             'contact_id' => $contact->id,
             'channel' => MessageChannel::Email->value,
-            'purpose' => MessagePurpose::Transactional->value,
+            'purpose' => MessagePurpose::Marketing->value,
+            'scope' => 'webinar_waitlist',
             'source' => 'webinar_waitlist',
         ]);
 
         $this->assertDatabaseHas('message_consents', [
             'contact_id' => $contact->id,
             'channel' => MessageChannel::Sms->value,
-            'purpose' => MessagePurpose::Transactional->value,
+            'purpose' => MessagePurpose::Marketing->value,
+            'scope' => 'webinar_waitlist',
             'source' => 'webinar_waitlist',
         ]);
+
+        $this->assertDatabaseMissing('message_consents', [
+            'contact_id' => $contact->id,
+            'purpose' => MessagePurpose::Transactional->value,
+        ]);
+    }
+
+    private function mockOptInDispatch(): void
+    {
+        $this->instance(
+            DispatchOptInMessageAction::class,
+            Mockery::mock(DispatchOptInMessageAction::class, function ($mock): void {
+                $mock->shouldReceive('handle')->zeroOrMoreTimes();
+            })
+        );
     }
 }
