@@ -162,7 +162,7 @@ class CreateWebinarRegistrationAction
         WebinarRegistration $registration,
         Webinar $webinar
     ): void {
-        if ($webinar->platform !== config('webinars.provider')) {
+        if (blank($webinar->providerKey())) {
             return;
         }
 
@@ -170,19 +170,14 @@ class CreateWebinarRegistrationAction
             return;
         }
 
-        $providerResponse = $this->addRegistrantToWebinarProviderAction->handle(
+        $providerRegistration = $this->addRegistrantToWebinarProviderAction->handle(
             $webinar,
             $registration
         );
 
         $meta = $registration->meta ?? [];
 
-        $meta['provider'] = [
-            'name' => $providerResponse['name'],
-            'registrant_id' => data_get($providerResponse, 'data.registrant_id'),
-            'join_url' => data_get($providerResponse, 'data.join_url'),
-            'raw' => $providerResponse['raw'] ?? null,
-        ];
+        $meta['provider'] = $providerRegistration->toMeta();
 
         $registration->update([
             'meta' => $meta,

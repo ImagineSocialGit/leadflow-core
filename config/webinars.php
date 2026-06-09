@@ -8,6 +8,7 @@ return [
 
     'providers' => [
         'zoom' => [
+            'provider' => App\Integrations\Webinars\Zoom\ZoomWebinarProvider::class,
             'base_url' => env('ZOOM_BASE_URL', 'https://api.zoom.us/v2'),
             'oauth_url' => env('ZOOM_OAUTH_URL', 'https://zoom.us/oauth/token'),
             'oauth_token_ttl_seconds' => env('ZOOM_OAUTH_TOKEN_TTL_SECONDS', 3500),

@@ -214,7 +214,7 @@ class ZoomWebhookTest extends TestCase
             'webinars.provider' => 'unsupported',
         ]);
 
-        $response = $this->postJson(route('webhooks.zoom'), [
+        $response = $this->postJson(route('webhooks.webinar', ['provider' => 'unsupported']), [
             'event' => 'endpoint.url_validation',
             'payload' => [
                 'plainToken' => 'plain-token-from-zoom',
@@ -314,5 +314,28 @@ class ZoomWebhookTest extends TestCase
         );
 
         $secondResponse->assertUnauthorized();
+    }
+
+    public function test_it_handles_zoom_url_validation_through_generic_webinar_provider_route(): void
+    {
+        $plainToken = 'plain-token-from-zoom';
+
+        $response = $this->postJson(route('webhooks.webinar', ['provider' => 'zoom']), [
+            'event' => 'endpoint.url_validation',
+            'payload' => [
+                'plainToken' => $plainToken,
+            ],
+        ]);
+
+        $response->assertOk();
+
+        $response->assertExactJson([
+            'plainToken' => $plainToken,
+            'encryptedToken' => hash_hmac(
+                'sha256',
+                $plainToken,
+                config('services.zoom.webhook_secret')
+            ),
+        ]);
     }
 }

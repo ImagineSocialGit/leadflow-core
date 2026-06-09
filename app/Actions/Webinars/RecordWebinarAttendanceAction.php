@@ -2,8 +2,10 @@
 
 namespace App\Actions\Webinars;
 
+use App\Data\Webinars\WebinarAttendanceRecord;
 use App\Jobs\Webinars\RoutePostWebinarRegistrationJob;
 use App\Models\Webinar;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -23,6 +25,13 @@ class RecordWebinarAttendanceAction
             return;
         }
 
+        $attendanceRecords = $attendanceRecords
+            ->map(fn (WebinarAttendanceRecord|array $record) => $record instanceof WebinarAttendanceRecord
+                ? $record
+                : WebinarAttendanceRecord::fromArray($record)
+            )
+            ->values();
+
         $registrations = $webinar->registrations()
             ->with('contact')
             ->get();
@@ -38,7 +47,7 @@ class RecordWebinarAttendanceAction
                 : null;
 
             $match = $attendanceRecords->first(
-                fn (array $record) => $this->matchesRegistration(
+                fn (WebinarAttendanceRecord $record) => $this->matchesRegistration(
                     registrationRegistrantId: $registrationRegistrantId,
                     registrationEmail: $registrationEmail,
                     attendanceRecord: $record,
@@ -53,17 +62,17 @@ class RecordWebinarAttendanceAction
 
             $meta['attendance'] = [
                 'provider' => $provider,
-                'status' => $match['status'] ?? 'attended',
-                'duration' => $match['duration'] ?? null,
-                'join_time' => $this->dateTimeString($match['join_time'] ?? null),
-                'leave_time' => $this->dateTimeString($match['leave_time'] ?? null),
+                'status' => $match->status,
+                'duration' => $match->duration,
+                'join_time' => $this->dateTimeString($match->joinTime),
+                'leave_time' => $this->dateTimeString($match->leaveTime),
                 'recorded_at' => now()->toIso8601String(),
-                'raw' => $match['raw'] ?? $match,
+                'raw' => $match->raw,
             ];
 
             $registration->forceFill([
                 'attended_at' => $registration->attended_at
-                    ?? $this->attendedAt($match['join_time'] ?? null),
+                    ?? $this->attendedAt($match->joinTime),
                 'meta' => $meta,
             ])->save();
 
@@ -99,35 +108,30 @@ class RecordWebinarAttendanceAction
     protected function matchesRegistration(
         mixed $registrationRegistrantId,
         ?string $registrationEmail,
-        array $attendanceRecord,
+        WebinarAttendanceRecord $attendanceRecord,
     ): bool {
-        $attendanceRegistrantId = $attendanceRecord['registrant_id'] ?? null;
-        $attendanceEmail = filled($attendanceRecord['email'] ?? null)
-            ? mb_strtolower(trim($attendanceRecord['email']))
-            : null;
-
-        if (filled($registrationRegistrantId) && filled($attendanceRegistrantId)) {
-            return (string) $attendanceRegistrantId === (string) $registrationRegistrantId;
+        if (filled($registrationRegistrantId) && filled($attendanceRecord->registrantId)) {
+            return (string) $attendanceRecord->registrantId === (string) $registrationRegistrantId;
         }
 
-        if (filled($registrationEmail) && filled($attendanceEmail)) {
-            return $attendanceEmail === $registrationEmail;
+        if (filled($registrationEmail) && filled($attendanceRecord->email)) {
+            return $attendanceRecord->email === $registrationEmail;
         }
 
         return false;
     }
 
-    protected function attendedAt(mixed $joinTime): Carbon
+    protected function attendedAt(?CarbonInterface $joinTime): CarbonInterface
     {
-        return $joinTime instanceof Carbon ? $joinTime : now();
+        return $joinTime ?: now();
     }
 
-    protected function dateTimeString(mixed $value): ?string
+    protected function dateTimeString(?CarbonInterface $value): ?string
     {
-        if ($value instanceof Carbon) {
-            return $value->toIso8601String();
+        if (! $value) {
+            return null;
         }
 
-        return null;
+        return Carbon::instance($value)->toIso8601String();
     }
 }

@@ -3,6 +3,7 @@
 namespace Tests\Feature\CRM;
 
 use App\Actions\Caching\FlushWebinarCachesAction;
+use App\Data\Webinars\ProviderWebinarData;
 use App\Integrations\Webinars\Zoom\ZoomWebinarService;
 use App\Jobs\Webinars\NotifyWebinarWaitlistJob;
 use App\Models\Contact;
@@ -36,30 +37,22 @@ class WebinarSyncTest extends TestCase
             ->once()
             ->with('Home Buyer Game Plan')
             ->andReturn(collect([
-                [
-                    'external_id' => 'zoom-1001',
-                    'title' => 'Home Buyer Game Plan',
-                    'join_url' => 'https://example.com/join-1001',
-                    'starts_at' => Carbon::parse('2026-05-01 19:00:00', 'America/Chicago')->utc(),
-                    'ends_at' => Carbon::parse('2026-05-01 20:00:00', 'America/Chicago')->utc(),
-                    'timezone' => 'America/Chicago',
-                    'description' => 'First webinar',
-                    'meta' => [
-                        'zoom_uuid' => 'uuid-1001',
-                    ],
-                ],
-                [
-                    'external_id' => 'zoom-1002',
-                    'title' => 'Home Buyer Game Plan',
-                    'join_url' => 'https://example.com/join-1002',
-                    'starts_at' => Carbon::parse('2026-05-08 19:00:00', 'America/Chicago')->utc(),
-                    'ends_at' => Carbon::parse('2026-05-08 20:00:00', 'America/Chicago')->utc(),
-                    'timezone' => 'America/Chicago',
-                    'description' => 'Second webinar',
-                    'meta' => [
-                        'zoom_uuid' => 'uuid-1002',
-                    ],
-                ],
+                $this->providerWebinar(
+                    externalId: 'zoom-1001',
+                    joinUrl: 'https://example.com/join-1001',
+                    startsAt: Carbon::parse('2026-05-01 19:00:00', 'America/Chicago')->utc(),
+                    endsAt: Carbon::parse('2026-05-01 20:00:00', 'America/Chicago')->utc(),
+                    description: 'First webinar',
+                    meta: ['zoom_uuid' => 'uuid-1001'],
+                ),
+                $this->providerWebinar(
+                    externalId: 'zoom-1002',
+                    joinUrl: 'https://example.com/join-1002',
+                    startsAt: Carbon::parse('2026-05-08 19:00:00', 'America/Chicago')->utc(),
+                    endsAt: Carbon::parse('2026-05-08 20:00:00', 'America/Chicago')->utc(),
+                    description: 'Second webinar',
+                    meta: ['zoom_uuid' => 'uuid-1002'],
+                ),
             ]));
 
         $this->app->instance(ZoomWebinarService::class, $zoomWebinarService);
@@ -140,19 +133,15 @@ class WebinarSyncTest extends TestCase
             ->once()
             ->with('Home Buyer Game Plan')
             ->andReturn(collect([
-                [
-                    'external_id' => 'zoom-1001',
-                    'title' => 'Home Buyer Game Plan',
-                    'join_url' => 'https://example.com/new-join',
-                    'registration_url' => 'https://example.com/new-register',
-                    'starts_at' => Carbon::parse('2026-05-01 19:00:00', 'America/Chicago')->utc(),
-                    'ends_at' => Carbon::parse('2026-05-01 20:00:00', 'America/Chicago')->utc(),
-                    'timezone' => 'America/Chicago',
-                    'description' => 'Updated description',
-                    'meta' => [
-                        'zoom_uuid' => 'new-uuid',
-                    ],
-                ],
+                $this->providerWebinar(
+                    externalId: 'zoom-1001',
+                    joinUrl: 'https://example.com/new-join',
+                    registrationUrl: null,
+                    startsAt: Carbon::parse('2026-05-01 19:00:00', 'America/Chicago')->utc(),
+                    endsAt: Carbon::parse('2026-05-01 20:00:00', 'America/Chicago')->utc(),
+                    description: 'Updated description',
+                    meta: ['zoom_uuid' => 'new-uuid'],
+                ),
             ]));
 
         $this->app->instance(ZoomWebinarService::class, $zoomWebinarService);
@@ -316,17 +305,14 @@ class WebinarSyncTest extends TestCase
         $zoomWebinarService->shouldReceive('listWebinarsByTitle')
             ->once()
             ->andReturn(collect([
-                [
-                    'external_id' => 'zoom-1001',
-                    'title' => 'Home Buyer Game Plan',
-                    'join_url' => 'https://example.com/join',
-                    'registration_url' => 'https://example.com/register',
-                    'starts_at' => now()->addDays(7),
-                    'ends_at' => now()->addDays(7)->addHour(),
-                    'timezone' => 'America/Chicago',
-                    'description' => 'Upcoming webinar',
-                    'meta' => [],
-                ],
+                $this->providerWebinar(
+                    externalId: 'zoom-1001',
+                    joinUrl: 'https://example.com/join',
+                    registrationUrl: 'https://example.com/register',
+                    startsAt: now()->addDays(7),
+                    endsAt: now()->addDays(7)->addHour(),
+                    description: 'Upcoming webinar',
+                ),
             ]));
 
         $this->app->instance(ZoomWebinarService::class, $zoomWebinarService);
@@ -372,17 +358,14 @@ class WebinarSyncTest extends TestCase
             ->once()
             ->with('Home Buyer Game Plan')
             ->andReturn(collect([
-                [
-                    'external_id' => 'zoom-existing',
-                    'title' => 'Home Buyer Game Plan',
-                    'join_url' => 'https://example.com/existing-join',
-                    'registration_url' => 'https://example.com/existing-register',
-                    'starts_at' => now()->addDays(3),
-                    'ends_at' => now()->addDays(3)->addHour(),
-                    'timezone' => 'America/Chicago',
-                    'description' => 'Existing webinar',
-                    'meta' => [],
-                ],
+                $this->providerWebinar(
+                    externalId: 'zoom-existing',
+                    joinUrl: 'https://example.com/existing-join',
+                    registrationUrl: 'https://example.com/existing-register',
+                    startsAt: now()->addDays(3),
+                    endsAt: now()->addDays(3)->addHour(),
+                    description: 'Existing webinar',
+                ),
             ]));
 
         $this->app->instance(ZoomWebinarService::class, $zoomWebinarService);
@@ -415,6 +398,30 @@ class WebinarSyncTest extends TestCase
             ->handle(seriesSlug: $series->slug);
 
         $this->assertFalse(Cache::has(CacheKey::webinarLandingPage($series->slug)));
+    }
+
+    private function providerWebinar(
+        string $externalId,
+        string $title = 'Home Buyer Game Plan',
+        ?string $joinUrl = null,
+        ?string $registrationUrl = null,
+        mixed $startsAt = null,
+        mixed $endsAt = null,
+        string $timezone = 'America/Chicago',
+        ?string $description = null,
+        array $meta = [],
+    ): ProviderWebinarData {
+        return new ProviderWebinarData(
+            externalId: $externalId,
+            title: $title,
+            joinUrl: $joinUrl,
+            registrationUrl: $registrationUrl,
+            startsAt: $startsAt,
+            endsAt: $endsAt,
+            timezone: $timezone,
+            description: $description,
+            meta: $meta,
+        );
     }
 
     protected function tearDown(): void

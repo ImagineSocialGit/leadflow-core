@@ -2,6 +2,7 @@
 
 namespace App\Actions\Webinars;
 
+use App\Data\Webinars\ProviderRegistrationData;
 use App\Models\Webinar;
 use App\Models\WebinarRegistration;
 use App\Services\Webinars\WebinarProviderManager;
@@ -12,12 +13,10 @@ class AddRegistrantToWebinarProviderAction
         private readonly WebinarProviderManager $webinarProviderManager,
     ) {}
 
-    public function handle(Webinar $webinar, WebinarRegistration $registration): array
+    public function handle(Webinar $webinar, WebinarRegistration $registration): ProviderRegistrationData
     {
-        $providerName = $webinar->platform ?: config('webinars.provider');
-
         return $this->webinarProviderManager
-            ->provider($providerName)
+            ->provider($webinar->providerKey())
             ->registerAttendee($webinar, $registration);
     }
 }

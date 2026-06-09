@@ -68,4 +68,9 @@ class Webinar extends Model
         return $this->hasMany(WebinarRegistration::class);
     }
 
+    public function providerKey(): string
+    {
+        return $this->platform;
+    }
+
 }

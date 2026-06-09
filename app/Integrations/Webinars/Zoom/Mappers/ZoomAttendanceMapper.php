@@ -2,6 +2,7 @@
 
 namespace App\Integrations\Webinars\Zoom\Mappers;
 
+use App\Data\Webinars\WebinarAttendanceRecord;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -14,23 +15,27 @@ class ZoomAttendanceMapper
             ->values();
     }
 
-    protected function mapParticipant(array $participant): array
+    protected function mapParticipant(array $participant): WebinarAttendanceRecord
     {
         $email = $participant['user_email'] ?? $participant['email'] ?? null;
 
-        return [
-            'registrant_id' => $participant['registrant_id'] ?? null,
-            'email' => filled($email) ? mb_strtolower(trim($email)) : null,
-            'status' => 'attended',
-            'duration' => $participant['duration'] ?? null,
-            'join_time' => $this->parseDateTime($participant['join_time'] ?? null),
-            'leave_time' => $this->parseDateTime($participant['leave_time'] ?? null),
-            'raw' => $this->filterEmptyValues($participant),
-        ];
+        return new WebinarAttendanceRecord(
+            registrantId: isset($participant['registrant_id']) ? (string) $participant['registrant_id'] : null,
+            email: filled($email) ? mb_strtolower(trim((string) $email)) : null,
+            status: 'attended',
+            duration: isset($participant['duration']) ? (int) $participant['duration'] : null,
+            joinTime: $this->parseDateTime($participant['join_time'] ?? null),
+            leaveTime: $this->parseDateTime($participant['leave_time'] ?? null),
+            raw: $this->filterEmptyValues($participant),
+        );
     }
 
-    protected function parseDateTime(?string $value): ?Carbon
+    protected function parseDateTime(mixed $value): ?Carbon
     {
+        if ($value instanceof Carbon) {
+            return $value;
+        }
+
         if (! filled($value)) {
             return null;
         }

@@ -3,21 +3,30 @@
 namespace App\Integrations\Webinars\Zoom;
 
 use App\Contracts\Webinars\WebinarProvider;
+use App\Data\Webinars\ProviderRegistrationData;
 use App\Models\Webinar;
 use App\Models\WebinarRegistration;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class ZoomWebinarProvider implements WebinarProvider
 {
     public function __construct(
         private readonly ZoomWebinarService $zoomWebinarService,
+        private readonly ZoomWebhookHandler $zoomWebhookHandler,
     ) {}
 
-    public function name(): string
+    public function key(): string
     {
         return 'zoom';
     }
 
-    public function registerAttendee(Webinar $webinar, WebinarRegistration $registration): array
+    public function name(): string
+    {
+        return 'Zoom';
+    }
+
+    public function registerAttendee(Webinar $webinar, WebinarRegistration $registration): ProviderRegistrationData
     {
         $registration->loadMissing('contact');
 
@@ -30,18 +39,21 @@ class ZoomWebinarProvider implements WebinarProvider
             'phone' => $contact->phone,
         ]);
 
-        return [
-            'name' => $this->name(),
-            'data' => [
-                'registrant_id' => $response['registrant_id'] ?? $response['id'] ?? null,
-                'join_url' => $response['join_url'] ?? null,
-            ],
-            'raw' => $response,
-        ];
+        return new ProviderRegistrationData(
+            provider: $this->key(),
+            registrantId: $response['registrant_id'] ?? $response['id'] ?? null,
+            joinUrl: $response['join_url'] ?? null,
+            raw: $response,
+        );
     }
 
     public function listWebinarsByTitle(string $title): iterable
     {
         return $this->zoomWebinarService->listWebinarsByTitle($title);
+    }
+
+    public function handleWebhook(Request $request): Response
+    {
+        return $this->zoomWebhookHandler->handle($request);
     }
 }

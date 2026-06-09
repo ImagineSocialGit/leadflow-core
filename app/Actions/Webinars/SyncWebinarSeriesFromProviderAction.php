@@ -3,11 +3,13 @@
 namespace App\Actions\Webinars;
 
 use App\Actions\Caching\FlushWebinarCachesAction;
-use App\Services\Webinars\WebinarProviderManager;
+use App\Data\Webinars\ProviderWebinarData;
 use App\Jobs\Webinars\NotifyWebinarWaitlistJob;
 use App\Models\Webinar;
 use App\Models\WebinarSeries;
+use App\Services\Webinars\WebinarProviderManager;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 class SyncWebinarSeriesFromProviderAction
@@ -25,40 +27,43 @@ class SyncWebinarSeriesFromProviderAction
         );
 
         $webinarProvider = $this->webinarProviderManager->provider();
-
-        $fetchedWebinars = $webinarProvider->listWebinarsByTitle($series->title);
-
         $provider = $webinarProvider->name();
+
+        $fetchedWebinars = collect($webinarProvider->listWebinarsByTitle($series->title))
+            ->values();
 
         $created = 0;
         $updated = 0;
         $deleted = 0;
         $missing = [];
 
-        $fetchedExternalIds = collect($fetchedWebinars)
-            ->pluck('external_id')
+        $fetchedExternalIds = $fetchedWebinars
+            ->map(fn (ProviderWebinarData $webinar) => $webinar->externalId)
+            ->filter()
+            ->values()
             ->all();
 
-        foreach ($fetchedWebinars as $fetchedWebinar) {
+        $fetchedWebinars->each(function (ProviderWebinarData $fetchedWebinar) use ($series, $provider, &$created, &$updated): void {
             $webinar = Webinar::query()->firstOrNew([
                 'platform' => $provider,
-                'external_id' => $fetchedWebinar['external_id'],
+                'external_id' => $fetchedWebinar->externalId,
                 'webinar_series_id' => $series->id,
             ]);
 
             $webinar->fill([
-                'title' => $fetchedWebinar['title'],
+                'title' => $fetchedWebinar->title,
                 'slug' => $this->makeSlug(
-                    title: $fetchedWebinar['title'],
-                    startTime: $fetchedWebinar['starts_at'],
-                    externalId: $fetchedWebinar['external_id'],
+                    title: $fetchedWebinar->title,
+                    startTime: $fetchedWebinar->startsAt,
+                    externalId: $fetchedWebinar->externalId,
                 ),
-                'join_url' => $fetchedWebinar['join_url'],
-                'starts_at' => $fetchedWebinar['starts_at'],
-                'ends_at' => $fetchedWebinar['ends_at'],
-                'timezone' => $fetchedWebinar['timezone'],
-                'description' => $fetchedWebinar['description'],
-                'meta' => $fetchedWebinar['meta'],
+                'join_url' => $fetchedWebinar->joinUrl,
+                'registration_url' => $fetchedWebinar->registrationUrl ?? $webinar->registration_url,
+                'starts_at' => $fetchedWebinar->startsAt,
+                'ends_at' => $fetchedWebinar->endsAt,
+                'timezone' => $fetchedWebinar->timezone,
+                'description' => $fetchedWebinar->description,
+                'meta' => $fetchedWebinar->meta,
             ]);
 
             if (! $webinar->exists) {
@@ -69,15 +74,18 @@ class SyncWebinarSeriesFromProviderAction
 
             if ($webinar->wasRecentlyCreated) {
                 $created++;
-            } else {
-                $updated++;
-            }
-        }
 
-        $missingWebinars = $series->webinars()
-            ->where('platform', $provider)
-            ->whereNotIn('external_id', $fetchedExternalIds)
-            ->get();
+                return;
+            }
+
+            $updated++;
+        });
+
+        $missingWebinars = $this->missingWebinars(
+            series: $series,
+            provider: $provider,
+            fetchedExternalIds: $fetchedExternalIds,
+        );
 
         foreach ($missingWebinars as $missingWebinar) {
             $hasRegistrations = $missingWebinar->registrations()->exists();
@@ -115,6 +123,20 @@ class SyncWebinarSeriesFromProviderAction
             'conflicts' => [],
             'missing' => $missing,
         ];
+    }
+
+    protected function missingWebinars(
+        WebinarSeries $series,
+        string $provider,
+        array $fetchedExternalIds,
+    ): Collection {
+        return $series->webinars()
+            ->where('platform', $provider)
+            ->when(
+                filled($fetchedExternalIds),
+                fn ($query) => $query->whereNotIn('external_id', $fetchedExternalIds),
+            )
+            ->get();
     }
 
     protected function makeSlug(string $title, ?Carbon $startTime, string $externalId): string

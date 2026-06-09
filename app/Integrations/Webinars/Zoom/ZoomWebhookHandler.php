@@ -9,6 +9,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ZoomWebhookHandler
 {
+    private const PROVIDER = 'zoom';
+
     public function __construct(
         private readonly ZoomWebhookVerifier $verifier,
         private readonly ZoomWebinarService $zoomWebinarService,
@@ -49,7 +51,7 @@ class ZoomWebhookHandler
         $attendanceRecords = $this->zoomAttendanceMapper->map($participants);
 
         $this->recordWebinarAttendanceAction->execute(
-            provider: 'zoom',
+            provider: self::PROVIDER,
             externalWebinarId: $webinarId,
             attendanceRecords: $attendanceRecords,
         );

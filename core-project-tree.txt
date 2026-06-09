@@ -40,7 +40,11 @@
 │   │   └── Webinars
 │   │       └── WebinarProvider.php
 │   ├── Data
-│   │   └── WebinarMessageData.php
+│   │   ├── WebinarMessageData.php
+│   │   └── Webinars
+│   │       ├── ProviderRegistrationData.php
+│   │       ├── ProviderWebinarData.php
+│   │       └── WebinarAttendanceRecord.php
 │   ├── Enums
 │   │   ├── MessageChannel.php
 │   │   ├── MessagePurpose.php
@@ -227,7 +231,7 @@
 │   │       └── views
 │   │           └── emails
 │   │               └── webinars
-│   └── slam-dunk-home-loans
+│   └── slam-dunk-crm
 │       ├── client-project-tree.txt
 │       ├── config
 │       │   ├── brand.php
@@ -377,14 +381,6 @@
 │   │       │       ├── 640.webp
 │   │       │       └── placeholder.webp
 │   │       └── webinar
-│   │           ├── landing
-│   │           │   ├── 320.avif
-│   │           │   ├── 320.webp
-│   │           │   ├── 640.avif
-│   │           │   ├── 640.webp
-│   │           │   ├── 960.avif
-│   │           │   ├── 960.webp
-│   │           │   └── placeholder.webp
 │   │           └── register
 │   │               └── instructor
 │   ├── index.php
@@ -526,4 +522,4 @@
 │   └── Unit
 └── vite.config.js
 
-183 directories, 344 files
+183 directories, 340 files

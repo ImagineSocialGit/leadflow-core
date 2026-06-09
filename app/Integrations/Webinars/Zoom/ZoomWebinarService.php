@@ -2,6 +2,7 @@
 
 namespace App\Integrations\Webinars\Zoom;
 
+use App\Data\Webinars\ProviderWebinarData;
 use App\Support\Caching\CacheKey;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -120,7 +121,7 @@ class ZoomWebinarService
             ->values();
     }
 
-    protected function normalizeWebinar(array $webinar): array
+    protected function normalizeWebinar(array $webinar): ProviderWebinarData
     {
         $startsAt = filled($webinar['start_time'] ?? null)
             ? Carbon::parse($webinar['start_time'])->utc()
@@ -134,18 +135,18 @@ class ZoomWebinarService
             ? $startsAt->copy()->addMinutes($duration)
             : null;
 
-        return [
-            'external_id' => (string) $webinar['id'],
-            'title' => $webinar['topic'],
-            'join_url' => $webinar['join_url'] ?? null,
-            'registration_url' => $webinar['registration_url'] ?? null,
-            'starts_at' => $startsAt,
-            'ends_at' => $endsAt,
-            'timezone' => $webinar['timezone'] ?? config('app.timezone', 'America/Chicago'),
-            'description' => $webinar['agenda'] ?? null,
-            'meta' => [
+        return new ProviderWebinarData(
+            externalId: (string) $webinar['id'],
+            title: $webinar['topic'],
+            joinUrl: $webinar['join_url'] ?? null,
+            registrationUrl: $webinar['registration_url'] ?? null,
+            startsAt: $startsAt,
+            endsAt: $endsAt,
+            timezone: $webinar['timezone'] ?? config('app.timezone', 'America/Chicago'),
+            description: $webinar['agenda'] ?? null,
+            meta: [
                 'zoom_uuid' => $webinar['uuid'] ?? null,
             ],
-        ];
+        );
     }
 }
