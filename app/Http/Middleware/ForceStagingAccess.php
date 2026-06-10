@@ -15,7 +15,8 @@ class ForceStagingAccess
         }
 
         if (
-            $request->is('staging-login') ||
+            $request->routeIs('staging.login') ||
+            $request->routeIs('staging.login.submit') ||
             $request->routeIs('webhooks.*')
         ) {
             return $next($request);
@@ -25,6 +26,6 @@ class ForceStagingAccess
             return $next($request);
         }
 
-        return redirect()->to('/staging-login');
+        return redirect()->route('staging.login');
     }
 }

@@ -17,6 +17,11 @@ return Application::configure(basePath: dirname(__DIR__))
             $domain = config('app.root_domain');
 
             Route::middleware(['web'])
+                ->group(function () {
+                    require base_path('routes/staging.php');
+                });
+
+            Route::middleware(['web'])
                 ->domain('webhooks.'.$domain)
                 ->group(function () {
                     require base_path('routes/webhooks.php');
@@ -24,22 +29,19 @@ return Application::configure(basePath: dirname(__DIR__))
 
             Route::middleware(['web'])
                 ->domain('webinar.'.$domain)
-                ->name('webinar.')
                 ->group(function () {
-                    require base_path('routes/staging.php');
                     require base_path('routes/webinar.php');
                 });
 
             Route::middleware(['web'])
                 ->domain('crm.'.$domain)
-                ->name('crm.')
                 ->group(function () {
-                    require base_path('routes/staging.php');
                     require base_path('routes/crm.php');
                 });
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+
         $middleware->alias([
             'staging.access' => ForceStagingAccess::class,
         ]);
