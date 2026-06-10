@@ -21,7 +21,7 @@ Route::get('/email-preferences/transactional/opt-out/{contact}', [ConsentRevocat
     ->middleware(['throttle:6,1'])
     ->name('messaging.email.transactional-opt-out');
 
-Route::pattern('seriesSlug', '[a-z0-9-]+');
+Route::pattern('seriesSlug', '(?!staging-login$)[a-z0-9-]+');
 
 Route::get('/{seriesSlug}', [WebinarRegistrationController::class, 'show'])
     ->name('webinar.show');
