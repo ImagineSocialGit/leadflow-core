@@ -14,7 +14,7 @@ use Illuminate\Validation\ValidationException;
 class GrantMessageConsentAction
 {
     public function __construct(
-        private readonly DispatchOptInMessageAction $dispatchOptInMessageAction,
+        private readonly DispatchMessageAction $dispatchMessageAction,
     ) {}
 
     /**
@@ -71,14 +71,17 @@ class GrantMessageConsentAction
 
         if (! $wasActivelyConsented && $willBeActivelyConsented) {
             DB::afterCommit(function () use ($contact, $channel, $purpose, $scope, $optInPayload, $context, $resolverContext): void {
-                $this->dispatchOptInMessageAction->handle(
+                $this->dispatchMessageAction->handle(
                     contact: $contact,
                     channel: $channel,
                     purpose: $purpose,
                     scope: $scope,
+                    dispatchKeys: 'consent_granted',
                     payload: $optInPayload,
                     context: $context,
-                    resolverContext: $resolverContext,
+                    meta: [
+                        'resolver_context' => $resolverContext,
+                    ],
                 );
             });
         }

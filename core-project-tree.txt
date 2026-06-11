@@ -6,7 +6,6 @@
 │   │   ├── Contacts
 │   │   ├── Messaging
 │   │   │   ├── DispatchMessageAction.php
-│   │   │   ├── DispatchOptInMessageAction.php
 │   │   │   ├── Email
 │   │   │   │   └── HandleInboundEmailWebhookAction.php
 │   │   │   ├── GrantMessageConsentAction.php
@@ -120,23 +119,9 @@
 │   │       └── WebinarWaitlistScheduledMail.php
 │   ├── Messaging
 │   │   └── Payloads
-│   │       ├── Marketing
-│   │       │   ├── Email
-│   │       │   │   └── MarketingEmailPayload.php
-│   │       │   └── Sms
-│   │       │       └── MarketingSmsPayload.php
+│   │       ├── EmailPayload.php
+│   │       ├── SmsPayload.php
 │   │       └── Webinars
-│   │           ├── Email
-│   │           │   ├── WebinarConfirmationEmailPayload.php
-│   │           │   ├── WebinarFollowUpEmailPayload.php
-│   │           │   ├── WebinarReminderEmailPayload.php
-│   │           │   └── WebinarWaitlistScheduledEmailPayload.php
-│   │           └── Sms
-│   │               ├── WebinarConfirmationSmsPayload.php
-│   │               ├── WebinarFollowUpSmsPayload.php
-│   │               ├── WebinarReminderSmsPayload.php
-│   │               ├── WebinarTransactionalSmsPayload.php
-│   │               └── WebinarWaitlistScheduledSmsPayload.php
 │   ├── Models
 │   │   ├── ConsentRevocation.php
 │   │   ├── ContactMortgageProfile.php
@@ -170,6 +155,7 @@
 │   │   │   │   ├── EmailProviderManager.php
 │   │   │   │   ├── EmailWebhookHandlerResolver.php
 │   │   │   │   └── EmailWebhookPayload.php
+│   │   │   ├── MessageConditionChecker.php
 │   │   │   ├── MessageDefinitionResolver.php
 │   │   │   ├── MessageEligibilityGate.php
 │   │   │   ├── MessageGate.php
@@ -279,6 +265,7 @@
 │           ├── build-image-manifest.php
 │           ├── process-images.sh
 │           └── upload-images.sh
+├── client-project-tree.txt
 ├── composer.json
 ├── composer.lock
 ├── config
@@ -297,15 +284,18 @@
 │   ├── mail.php
 │   ├── messaging
 │   │   ├── email
-│   │   │   ├── general_drip.php
-│   │   │   ├── webinar.php
-│   │   │   └── webinar_waitlist.php
+│   │   │   ├── marketing
+│   │   │   │   ├── webinar.php
+│   │   │   │   └── webinar_waitlist.php
+│   │   │   └── transactional
+│   │   │       └── webinar.php
 │   │   ├── email.php
 │   │   ├── sms
-│   │   │   ├── general_drip.php
-│   │   │   ├── opt-in.php
-│   │   │   ├── webinar.php
-│   │   │   └── webinar_waitlist.php
+│   │   │   ├── marketing
+│   │   │   │   ├── webinar.php
+│   │   │   │   └── webinar_waitlist.php
+│   │   │   └── transactional
+│   │   │       └── webinar.php
 │   │   └── sms.php
 │   ├── messaging.php
 │   ├── queue.php
@@ -449,6 +439,7 @@
 │       │   ├── dashboard.blade.php
 │       │   └── webinars
 │       │       └── index.blade.php
+│       ├── email.blade.php
 │       ├── emails
 │       │   └── webinars
 │       │       ├── post-follow-up.blade.php
@@ -491,7 +482,6 @@
 │   │   │   └── HandleInboundEmailWebhookActionTest.php
 │   │   ├── Feature
 │   │   │   ├── Public
-│   │   │   │   └── WebinarWaitlistSignupControllerTest.php
 │   │   │   ├── Webhooks
 │   │   │   │   └── SmsWebhookControllerTest.php
 │   │   │   └── Webinars
@@ -523,4 +513,4 @@
 │   └── Unit
 └── vite.config.js
 
-183 directories, 341 files
+182 directories, 332 files

@@ -2,36 +2,222 @@
 
 namespace App\Actions\Messaging;
 
+use App\Enums\MessageChannel;
+use App\Enums\MessagePurpose;
 use App\Jobs\Messaging\SendScheduledMessageJob;
-use App\Models\ScheduledMessage;
 use App\Models\Contact;
+use App\Models\ScheduledMessage;
+use App\Services\Messaging\MessageConditionChecker;
+use App\Services\Messaging\MessageDefinitionResolver;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
+use InvalidArgumentException;
 
 class DispatchMessageAction
 {
+    public function __construct(
+        private readonly MessageDefinitionResolver $messageDefinitionResolver,
+        private readonly MessageConditionChecker $messageConditionChecker,
+    ) {}
+
+    /**
+     * @param  string|array<int, string>  $dispatchKeys
+     * @param  array<string, mixed>  $payload
+     * @param  array<string, mixed>|null  $meta
+     * @return array<int, ScheduledMessage>
+     */
     public function handle(
         Contact $contact,
-        string $channel,
-        string $messageType,
-        string $purpose,
+        MessageChannel|string $channel,
+        MessagePurpose|string $purpose,
         string $scope,
-        string $payloadClass,
-        array $payload,
-        Carbon|string|null $sendAt = null,
+        string|array $dispatchKeys,
+        array $payload = [],
         ?Model $context = null,
-        ?string $dedupeKey = null,
+        Carbon|string|null $triggeredAt = null,
+        Carbon|string|null $anchor = null,
         ?array $meta = null,
-    ): ScheduledMessage {
-        $sendAt = $sendAt ? Carbon::parse($sendAt) : now();
+    ): array {
+        $channel = $this->normalizeEnumValue($channel);
+        $purpose = $this->normalizeEnumValue($purpose);
+        $scope = $this->normalizeSegment($scope);
+        $dispatchKeys = $this->normalizeDispatchKeys($dispatchKeys);
 
+        if ($dispatchKeys === []) {
+            return [];
+        }
+
+        $triggeredAt = $triggeredAt ? Carbon::parse($triggeredAt) : now();
+        $anchor = $anchor ? Carbon::parse($anchor) : null;
+
+        $definitions = $this->messageDefinitionResolver->resolve(
+            channel: $channel,
+            purpose: $purpose,
+            scope: $scope,
+        );
+
+        $scheduledMessages = [];
+
+        foreach ($definitions as $definition) {
+            if (! $this->definitionMatchesDispatchKeys($definition, $dispatchKeys)) {
+                continue;
+            }
+
+            $mergedPayload = $this->buildPayload(
+                contact: $contact,
+                definition: $definition,
+                payload: $payload,
+            );
+
+            if (! $this->messageConditionChecker->passes(
+                conditions: $definition['conditions'] ?? [],
+                context: $this->conditionContext($contact, $context, $mergedPayload),
+            )) {
+                continue;
+            }
+
+            $sendAt = $this->sendAt(
+                definition: $definition,
+                triggeredAt: $triggeredAt,
+                anchor: $anchor,
+            );
+
+            $scheduledMessages[] = $this->createScheduledMessage(
+                contact: $contact,
+                definition: $definition,
+                payload: $mergedPayload,
+                sendAt: $sendAt,
+                context: $context,
+                dedupeKey: $this->dedupeKey($contact, $definition, $context),
+                meta: array_replace_recursive(
+                    [
+                        'queue' => $definition['queue'],
+                        'definition_config_path' => $definition['config_path'],
+                        'dispatch_keys' => $definition['dispatch_keys'],
+                        'conditions' => $definition['conditions'] ?? [],
+                        'schedule' => $definition['schedule'] ?? null,
+                        'triggered_at' => $triggeredAt->toISOString(),
+                        'anchor' => $anchor?->toISOString(),
+                    ],
+                    $meta ?? [],
+                ),
+            );
+        }
+
+        return $scheduledMessages;
+    }
+
+    /**
+     * @param  array<string, mixed>  $definition
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    private function buildPayload(Contact $contact, array $definition, array $payload): array
+    {
+        return array_replace_recursive(
+            $definition['payload'] ?? [],
+            $payload,
+            [
+                'to' => $payload['to']
+                    ?? $payload['email']
+                    ?? $payload['phone']
+                    ?? $this->destinationForChannel($contact, $definition['channel']),
+
+                'contact_id' => $contact->getKey(),
+                'channel' => $definition['channel'],
+                'purpose' => $definition['purpose'],
+                'scope' => $definition['scope'],
+                'message_type' => $definition['message_type'],
+            ],
+        );
+    }
+
+    private function destinationForChannel(Contact $contact, string $channel): ?string
+    {
+        return match ($channel) {
+            MessageChannel::Email->value => $contact->email,
+            MessageChannel::Sms->value => $contact->phone,
+            default => $contact->email ?? $contact->phone,
+        };
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    private function conditionContext(Contact $contact, ?Model $context, array $payload): array
+    {
+        $conditionContext = [
+            'contact' => $contact->toArray(),
+        ];
+
+        if ($context) {
+            $conditionContext[Str::snake(class_basename($context))] = $context->toArray();
+        }
+
+        return array_replace_recursive(
+            $conditionContext,
+            is_array($payload['runtime_context'] ?? null) ? $payload['runtime_context'] : [],
+            is_array($payload['context'] ?? null) ? $payload['context'] : [],
+            is_array($payload['tokens'] ?? null) ? $payload['tokens'] : [],
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $definition
+     */
+    private function sendAt(array $definition, Carbon $triggeredAt, ?Carbon $anchor): Carbon
+    {
+        if (($definition['timing'] ?? null) === 'immediate') {
+            return $triggeredAt->copy();
+        }
+
+        $schedule = $definition['schedule'] ?? null;
+
+        if (! is_array($schedule)) {
+            throw new InvalidArgumentException("Scheduled message definition [{$definition['config_path']}] is missing [schedule].");
+        }
+
+        $type = $schedule['type'] ?? null;
+        $minutes = $schedule['minutes'] ?? null;
+
+        if (! is_int($minutes)) {
+            throw new InvalidArgumentException("Scheduled message definition [{$definition['config_path']}] has invalid [schedule.minutes].");
+        }
+
+        return match ($type) {
+            'delay' => $triggeredAt->copy()->addMinutes($minutes),
+
+            'anchored' => $anchor instanceof Carbon
+                ? $anchor->copy()->addMinutes($minutes)
+                : throw new InvalidArgumentException("Scheduled message definition [{$definition['config_path']}] requires an anchor."),
+
+            default => throw new InvalidArgumentException("Scheduled message definition [{$definition['config_path']}] has invalid [schedule.type]."),
+        };
+    }
+
+    /**
+     * @param  array<string, mixed>  $definition
+     * @param  array<string, mixed>  $payload
+     * @param  array<string, mixed>  $meta
+     */
+    private function createScheduledMessage(
+        Contact $contact,
+        array $definition,
+        array $payload,
+        Carbon $sendAt,
+        ?Model $context,
+        ?string $dedupeKey,
+        array $meta,
+    ): ScheduledMessage {
         $attributes = [
             'contact_id' => $contact->getKey(),
-            'channel' => $channel,
-            'message_type' => $messageType,
-            'purpose' => $purpose,
-            'scope' => $scope,
-            'payload_class' => $payloadClass,
+            'channel' => $definition['channel'],
+            'message_type' => $definition['message_type'],
+            'purpose' => $definition['purpose'],
+            'scope' => $definition['scope'],
+            'payload_class' => $definition['payload_class'],
             'payload' => $payload,
             'send_at' => $sendAt,
             'status' => 'pending',
@@ -43,14 +229,12 @@ class DispatchMessageAction
             $attributes['context_id'] = $context->getKey();
         }
 
-        if ($dedupeKey) {
-            $scheduledMessage = ScheduledMessage::query()->firstOrCreate(
+        $scheduledMessage = $dedupeKey
+            ? ScheduledMessage::query()->firstOrCreate(
                 ['dedupe_key' => $dedupeKey],
                 $attributes + ['dedupe_key' => $dedupeKey],
-            );
-        } else {
-            $scheduledMessage = ScheduledMessage::query()->create($attributes);
-        }
+            )
+            : ScheduledMessage::query()->create($attributes);
 
         if ($scheduledMessage->wasRecentlyCreated) {
             $dispatch = SendScheduledMessageJob::dispatch($scheduledMessage->id)
@@ -62,5 +246,67 @@ class DispatchMessageAction
         }
 
         return $scheduledMessage;
+    }
+
+    /**
+     * @param  array<string, mixed>  $definition
+     * @param  array<int, string>  $dispatchKeys
+     */
+    private function definitionMatchesDispatchKeys(array $definition, array $dispatchKeys): bool
+    {
+        $definitionDispatchKeys = $definition['dispatch_keys'] ?? [];
+
+        if (! is_array($definitionDispatchKeys)) {
+            return false;
+        }
+
+        return array_intersect($dispatchKeys, $definitionDispatchKeys) !== [];
+    }
+
+    /**
+     * @param  array<string, mixed>  $definition
+     */
+    private function dedupeKey(Contact $contact, array $definition, ?Model $context): string
+    {
+        return implode(':', array_filter([
+            'message',
+            $contact->getKey(),
+            $definition['channel'],
+            $definition['purpose'],
+            $definition['scope'],
+            $definition['message_type'],
+            $context?->getMorphClass(),
+            $context?->getKey(),
+        ], fn (mixed $value): bool => $value !== null && $value !== ''));
+    }
+
+    private function normalizeEnumValue(MessageChannel|MessagePurpose|string $value): string
+    {
+        return $value instanceof MessageChannel || $value instanceof MessagePurpose
+            ? $value->value
+            : strtolower(trim($value));
+    }
+
+    private function normalizeSegment(string $value): string
+    {
+        return str_replace('-', '_', strtolower(trim($value)));
+    }
+
+    /**
+     * @param  string|array<int, string>  $dispatchKeys
+     * @return array<int, string>
+     */
+    private function normalizeDispatchKeys(string|array $dispatchKeys): array
+    {
+        $dispatchKeys = is_string($dispatchKeys)
+            ? [$dispatchKeys]
+            : $dispatchKeys;
+
+        return array_values(array_unique(array_filter(array_map(
+            fn (mixed $dispatchKey): ?string => is_string($dispatchKey) && trim($dispatchKey) !== ''
+                ? $this->normalizeSegment($dispatchKey)
+                : null,
+            $dispatchKeys,
+        ))));
     }
 }

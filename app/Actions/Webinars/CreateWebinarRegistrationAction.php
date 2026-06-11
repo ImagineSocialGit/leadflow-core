@@ -106,13 +106,13 @@ class CreateWebinarRegistrationAction
             'marketing_email_consent' => [
                 'channel' => MessageChannel::Email,
                 'purpose' => MessagePurpose::Marketing,
-                'scope' => 'general_drip',
+                'scope' => 'webinar',
             ],
 
             'marketing_sms_consent' => [
                 'channel' => MessageChannel::Sms,
                 'purpose' => MessagePurpose::Marketing,
-                'scope' => 'general_drip',
+                'scope' => 'webinar',
             ],
         ];
 

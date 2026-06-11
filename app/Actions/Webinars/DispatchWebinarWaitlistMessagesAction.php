@@ -3,10 +3,11 @@
 namespace App\Actions\Webinars;
 
 use App\Actions\Messaging\DispatchMessageAction;
+use App\Data\WebinarMessageData;
 use App\Enums\MessageChannel;
+use App\Enums\MessagePurpose;
 use App\Models\Webinar;
 use App\Models\WebinarWaitlistSignup;
-use App\Services\Messaging\MessageDefinitionResolver;
 
 class DispatchWebinarWaitlistMessagesAction
 {
@@ -14,11 +15,12 @@ class DispatchWebinarWaitlistMessagesAction
 
     public function __construct(
         private readonly DispatchMessageAction $dispatchMessageAction,
-        private readonly MessageDefinitionResolver $messageDefinitionResolver,
     ) {}
 
     public function handle(Webinar $webinar): void
     {
+        $webinar->loadMissing('series');
+
         $signups = WebinarWaitlistSignup::query()
             ->with(['contact', 'series'])
             ->where('webinar_series_id', $webinar->webinar_series_id)
@@ -26,7 +28,7 @@ class DispatchWebinarWaitlistMessagesAction
             ->get();
 
         foreach ($signups as $signup) {
-            $this->dispatchForSignup($signup);
+            $this->dispatchForSignup($signup, $webinar);
 
             $signup->forceFill([
                 'notified_at' => now(),
@@ -34,62 +36,34 @@ class DispatchWebinarWaitlistMessagesAction
         }
     }
 
-    private function dispatchForSignup(WebinarWaitlistSignup $signup): void
+    private function dispatchForSignup(WebinarWaitlistSignup $signup, Webinar $webinar): void
     {
         if (! $signup->contact) {
             return;
         }
 
-        $payload = [
-            'contact_id' => $signup->contact->id,
-            'contact_first_name' => $signup->contact->first_name ?? 'there',
-            'contact_last_name' => $signup->contact->last_name,
-            'contact_email' => $signup->contact->email,
-            'contact_phone' => $signup->contact->phone,
-            'webinar_series_id' => $signup->webinar_series_id,
-            'webinar_series_title' => $signup->series?->title,
-            'webinar_series_slug' => $signup->series?->slug,
-            'source_page' => $signup->source_page,
-        ];
+        $messageData = WebinarMessageData::fromWaitlistSignup($signup, $webinar)->toArray();
 
         foreach ([MessageChannel::Email, MessageChannel::Sms] as $channel) {
-            $definitions = $this->messageDefinitionResolver->resolve(
+            $this->dispatchMessageAction->handle(
+                contact: $signup->contact,
                 channel: $channel,
+                purpose: MessagePurpose::Marketing,
                 scope: self::SCOPE,
-                message: 'scheduled',
+                dispatchKeys: 'webinar_added',
+                payload: [
+                    'tokens' => $messageData,
+                    'context' => $messageData,
+                ],
+                context: $signup,
+                triggeredAt: now(),
+                anchor: $webinar->starts_at,
+                meta: [
+                    'webinar_waitlist_signup_id' => $signup->getKey(),
+                    'webinar_id' => $webinar->getKey(),
+                    'webinar_series_id' => $webinar->webinar_series_id,
+                ],
             );
-
-            foreach ($definitions as $definition) {
-                $this->dispatchMessageAction->handle(
-                    contact: $signup->contact,
-                    channel: $channel->value,
-                    messageType: $definition['message_type'],
-                    purpose: $definition['purpose'],
-                    scope: $definition['scope'],
-                    payloadClass: $definition['payload_class'],
-                    payload: [
-                        ...$payload,
-                        'message_type' => $definition['message_type'],
-                    ],
-                    sendAt: now(),
-                    context: $signup,
-                    dedupeKey: implode(':', [
-                        'scheduled-message',
-                        $signup->contact->getKey(),
-                        $signup->getMorphClass(),
-                        $signup->getKey(),
-                        $channel->value,
-                        $definition['scope'],
-                        $definition['message_type'],
-                    ]),
-                    meta: [
-                        'queue' => $definition['queue'] ?? null,
-                        'definition_config_path' => $definition['config_path'] ?? null,
-                        'message' => $definition['message'] ?? null,
-                        'variant' => $definition['variant'] ?? null,
-                    ],
-                );
-            }
         }
     }
 }

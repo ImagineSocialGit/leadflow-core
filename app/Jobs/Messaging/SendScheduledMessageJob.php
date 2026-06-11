@@ -7,10 +7,13 @@ use App\Contracts\Messaging\Sms\SmsMessage;
 use App\Enums\MessageChannel;
 use App\Models\ScheduledMessage;
 use App\Services\Messaging\Email\EmailMessagingService;
+use App\Services\Messaging\MessageConditionChecker;
 use App\Services\Messaging\MessageEligibilityGate;
 use App\Services\Messaging\Sms\SmsMessagingService;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Throwable;
 
@@ -23,19 +26,16 @@ class SendScheduledMessageJob implements ShouldQueue
     ) {}
 
     public function handle(
+        MessageConditionChecker $messageConditionChecker,
         MessageEligibilityGate $messageEligibilityGate,
         EmailMessagingService $emailMessagingService,
         SmsMessagingService $smsMessagingService,
     ): void {
         $scheduledMessage = ScheduledMessage::query()
-            ->with('contact')
+            ->with(['contact', 'context'])
             ->find($this->scheduledMessageId);
 
-        if (! $scheduledMessage) {
-            return;
-        }
-
-        if ($scheduledMessage->status !== 'pending') {
+        if (! $scheduledMessage || $scheduledMessage->status !== 'pending') {
             return;
         }
 
@@ -43,6 +43,15 @@ class SendScheduledMessageJob implements ShouldQueue
 
         if (! $contact) {
             $this->markSkipped($scheduledMessage, 'Contact not found.');
+
+            return;
+        }
+
+        if (! $messageConditionChecker->passes(
+            conditions: $scheduledMessage->meta['conditions'] ?? [],
+            context: $this->conditionContext($scheduledMessage),
+        )) {
+            $this->markSkipped($scheduledMessage, 'Message conditions no longer pass.');
 
             return;
         }
@@ -55,7 +64,7 @@ class SendScheduledMessageJob implements ShouldQueue
             messageKey: $scheduledMessage->message_type,
             definitionConfigPath: $scheduledMessage->meta['definition_config_path'] ?? null,
         )) {
-            $scheduledMessage->markSkipped();
+            $this->markSkipped($scheduledMessage, 'Message eligibility gate denied send.');
 
             return;
         }
@@ -97,7 +106,15 @@ class SendScheduledMessageJob implements ShouldQueue
             throw new InvalidArgumentException("Payload class [{$payloadClass}] must define fromArray().");
         }
 
-        $payload = $payloadClass::fromArray($scheduledMessage->payload ?? []);
+        $payload = $payloadClass::fromArray(array_replace_recursive(
+            [
+                'channel' => $scheduledMessage->channel,
+                'purpose' => $scheduledMessage->purpose,
+                'scope' => $scheduledMessage->scope,
+                'message_type' => $scheduledMessage->message_type,
+            ],
+            $scheduledMessage->payload ?? [],
+        ));
 
         if (! $payload instanceof EmailMessage && ! $payload instanceof SmsMessage) {
             throw new InvalidArgumentException("Payload class [{$payloadClass}] must implement a supported message payload contract.");
@@ -106,14 +123,37 @@ class SendScheduledMessageJob implements ShouldQueue
         return $payload;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    private function conditionContext(ScheduledMessage $scheduledMessage): array
+    {
+        $context = [
+            'contact' => $scheduledMessage->contact?->toArray() ?? [],
+        ];
+
+        $relatedContext = $scheduledMessage->context;
+
+        if ($relatedContext instanceof Model) {
+            $context[Str::snake(class_basename($relatedContext))] = $relatedContext->toArray();
+        }
+
+        $payload = $scheduledMessage->payload ?? [];
+
+        return array_replace_recursive(
+            $context,
+            is_array($payload['runtime_context'] ?? null) ? $payload['runtime_context'] : [],
+            is_array($payload['context'] ?? null) ? $payload['context'] : [],
+            is_array($payload['tokens'] ?? null) ? $payload['tokens'] : [],
+        );
+    }
+
     private function sendEmail(
         EmailMessage|SmsMessage $payload,
         EmailMessagingService $emailMessagingService,
     ): void {
         if (! $payload instanceof EmailMessage) {
-            throw new InvalidArgumentException(
-                'Scheduled email message resolved to a non-email payload.'
-            );
+            throw new InvalidArgumentException('Scheduled email message resolved to a non-email payload.');
         }
 
         $emailMessagingService->send($payload);
@@ -124,9 +164,7 @@ class SendScheduledMessageJob implements ShouldQueue
         SmsMessagingService $smsMessagingService,
     ): void {
         if (! $payload instanceof SmsMessage) {
-            throw new InvalidArgumentException(
-                'Scheduled SMS message resolved to a non-SMS payload.'
-            );
+            throw new InvalidArgumentException('Scheduled SMS message resolved to a non-SMS payload.');
         }
 
         $smsMessagingService->send($payload);

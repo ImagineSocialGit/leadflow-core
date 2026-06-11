@@ -1,0 +1,146 @@
+<?php
+
+use App\Messaging\Payloads\EmailPayload;
+
+return [
+
+    'registration_confirmation' => [
+        'timing' => 'immediate',
+        'payload_class' => EmailPayload::class,
+        'queue' => 'confirmation_messages',
+
+        'payload' => [
+            'subject' => 'You’re registered: {webinar_title}',
+            'view' => 'emails.webinars.registration-confirmation',
+        ],
+    ],
+
+    'webinar_transactional_opt_in' => [
+        'timing' => 'immediate',
+        'payload_class' => EmailPayload::class,
+        'queue' => 'opt_in_messages',
+
+        'payload' => [
+            'subject' => 'You’re subscribed to webinar emails',
+            'body' => 'Thanks for subscribing to receive webinar-related emails. You can opt out of these messages using the link in any webinar email.',
+        ],
+    ],
+
+    'reminder_10d' => [
+        'timing' => 'scheduled',
+        'payload_class' => EmailPayload::class,
+        'queue' => 'reminders',
+
+        'schedule' => [
+            'type' => 'anchored',
+            'minutes' => -14400,
+        ],
+
+        'payload' => [
+            'subject' => 'Your webinar is coming up in 10 days',
+            'view' => 'emails.webinars.reminder',
+        ],
+    ],
+
+    'reminder_7d' => [
+        'timing' => 'scheduled',
+        'payload_class' => EmailPayload::class,
+        'queue' => 'reminders',
+
+        'schedule' => [
+            'type' => 'anchored',
+            'minutes' => -10080,
+        ],
+
+        'payload' => [
+            'subject' => 'Your webinar is one week away',
+            'view' => 'emails.webinars.reminder',
+        ],
+    ],
+
+    'reminder_24h' => [
+        'timing' => 'scheduled',
+        'payload_class' => EmailPayload::class,
+        'queue' => 'reminders',
+
+        'schedule' => [
+            'type' => 'anchored',
+            'minutes' => -1440,
+        ],
+
+        'payload' => [
+            'subject' => 'Your webinar is tomorrow',
+            'view' => 'emails.webinars.reminder',
+        ],
+    ],
+
+    'reminder_30m' => [
+        'timing' => 'scheduled',
+        'payload_class' => EmailPayload::class,
+        'queue' => 'reminders',
+
+        'schedule' => [
+            'type' => 'anchored',
+            'minutes' => -30,
+        ],
+
+        'payload' => [
+            'subject' => 'Your webinar starts in 30 minutes',
+            'view' => 'emails.webinars.reminder',
+        ],
+    ],
+
+    'reminder_10m' => [
+        'timing' => 'scheduled',
+        'payload_class' => EmailPayload::class,
+        'queue' => 'reminders',
+
+        'schedule' => [
+            'type' => 'anchored',
+            'minutes' => -10,
+        ],
+
+        'payload' => [
+            'subject' => 'Your webinar starts in 10 minutes',
+            'view' => 'emails.webinars.reminder',
+        ],
+    ],
+
+    'reminder_live' => [
+        'timing' => 'scheduled',
+        'payload_class' => EmailPayload::class,
+        'queue' => 'reminders',
+
+        'schedule' => [
+            'type' => 'anchored',
+            'minutes' => 0,
+        ],
+
+        'payload' => [
+            'message' => '{webinar_title} is live! Join here: {webinar_join_url}',
+        ],
+    ],
+
+    'webinar_post_replay' => [
+        'timing' => 'immediate',
+        'payload_class' => EmailPayload::class,
+        'queue' => 'notifications',
+
+        'payload' => [
+            'subject' => 'Thanks for joining: {webinar_title}',
+            'view' => 'emails.webinars.post-follow-up',
+        ],
+    ],
+
+    'webinar_post_missed' => [
+        'timing' => 'immediate',
+        'payload_class' => EmailPayload::class,
+        'queue' => 'notifications',
+
+        'payload' => [
+            'subject' => 'Sorry we missed you: {webinar_title}',
+            'view' => 'emails.webinars.post-follow-up',
+        ],
+    ],
+
+];

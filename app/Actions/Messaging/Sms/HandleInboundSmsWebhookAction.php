@@ -67,7 +67,7 @@ class HandleInboundSmsWebhookAction
                 ],
                 (object) [
                     'purpose' => MessagePurpose::Marketing->value,
-                    'scope' => 'general_drip',
+                    'scope' => 'webinar',
                 ],
             ]);
         }

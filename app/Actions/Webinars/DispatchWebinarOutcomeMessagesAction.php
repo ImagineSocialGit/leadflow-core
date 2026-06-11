@@ -5,8 +5,8 @@ namespace App\Actions\Webinars;
 use App\Actions\Messaging\DispatchMessageAction;
 use App\Data\WebinarMessageData;
 use App\Enums\MessageChannel;
+use App\Enums\MessagePurpose;
 use App\Models\WebinarRegistration;
-use App\Services\Messaging\MessageDefinitionResolver;
 
 class DispatchWebinarOutcomeMessagesAction
 {
@@ -14,60 +14,47 @@ class DispatchWebinarOutcomeMessagesAction
 
     public function __construct(
         private readonly DispatchMessageAction $dispatchMessageAction,
-        private readonly MessageDefinitionResolver $messageDefinitionResolver,
     ) {}
 
     public function handle(WebinarRegistration $registration): void
     {
-        $registration->loadMissing(['contact', 'webinar']);
+        $registration->loadMissing([
+            'contact',
+            'webinar',
+            'webinar.series',
+        ]);
 
         if (! $registration->contact) {
             return;
         }
 
-        $followUpType = $registration->attended_at ? 'replay' : 'missed';
-        $payload = WebinarMessageData::fromRegistration($registration)->toArray();
+        $messageData = WebinarMessageData::fromRegistration($registration)->toArray();
 
         foreach ([MessageChannel::Email, MessageChannel::Sms] as $channel) {
-            $definitions = $this->messageDefinitionResolver->resolve(
-                channel: $channel,
-                scope: self::SCOPE,
-                message: 'follow_up',
-                variant: $followUpType,
-                context: [
-                    'webinar_slug' => $registration->webinar?->slug ?? $registration->webinar_slug,
-                ],
-            );
-
-            foreach ($definitions as $definition) {
+            foreach ([MessagePurpose::Transactional, MessagePurpose::Marketing] as $purpose) {
                 $this->dispatchMessageAction->handle(
                     contact: $registration->contact,
-                    channel: $channel->value,
-                    messageType: $definition['message_type'],
-                    purpose: $definition['purpose'],
-                    scope: $definition['scope'],
-                    payloadClass: $definition['payload_class'],
+                    channel: $channel,
+                    purpose: $purpose,
+                    scope: self::SCOPE,
+                    dispatchKeys: 'webinar_ended',
                     payload: [
-                        ...$payload,
-                        'follow_up_type' => $followUpType,
-                        'message_type' => $definition['message_type'],
+                        'tokens' => $messageData,
+                        'context' => [
+                            'contact' => $registration->contact->toArray(),
+                            'webinar_registration' => $registration->toArray(),
+                            'webinar' => $registration->webinar?->toArray() ?? [],
+                            'webinar_series' => $registration->webinar?->series?->toArray() ?? [],
+                        ],
                     ],
-                    sendAt: now(),
                     context: $registration,
-                    dedupeKey: implode(':', [
-                        'scheduled-message',
-                        $registration->contact->getKey(),
-                        $registration->getMorphClass(),
-                        $registration->getKey(),
-                        $channel->value,
-                        $definition['scope'],
-                        $definition['message_type'],
-                    ]),
+                    triggeredAt: now(),
+                    anchor: $registration->webinar?->ends_at,
                     meta: [
-                        'queue' => $definition['queue'] ?? null,
-                        'definition_config_path' => $definition['config_path'] ?? null,
-                        'message' => $definition['message'] ?? null,
-                        'variant' => $definition['variant'] ?? null,
+                        'webinar_registration_id' => $registration->getKey(),
+                        'webinar_id' => $registration->webinar_id,
+                        'webinar_slug' => $registration->webinar_slug,
+                        'webinar_outcome' => $registration->attended_at ? 'attended' : 'missed',
                     ],
                 );
             }

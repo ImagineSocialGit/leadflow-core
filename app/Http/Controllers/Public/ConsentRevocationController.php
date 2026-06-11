@@ -66,6 +66,7 @@ class ConsentRevocationController extends Controller
         Contact $contact,
         MessagePurpose $purpose,
         string $reason,
+        string $scope,
         RevokeMessageConsentAction $revokeMessageConsentAction
     ): array {
         return $revokeMessageConsentAction->handle($contact, [
@@ -75,9 +76,7 @@ class ConsentRevocationController extends Controller
             'source' => 'public_email_unsubscribe',
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
-            'scope' => $purpose === MessagePurpose::Marketing
-                ? 'general_drip'
-                : 'webinar',
+            'scope' => $scope,
             'meta' => [
                 'signed_url' => true,
             ],

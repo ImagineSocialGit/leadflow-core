@@ -52,7 +52,7 @@ class EmailConsentRevocationControllerTest extends TestCase
             'message_consent_id' => $this->messageConsentId($contact, MessagePurpose::Marketing),
             'channel' => MessageChannel::Email->value,
             'purpose' => MessagePurpose::Marketing->value,
-            'scope' => 'general_drip',
+            'scope' => 'webinar',
             'reason' => ConsentRevocation::REASON_UNSUBSCRIBE,
             'source' => 'public_email_unsubscribe',
         ]);
@@ -111,11 +111,11 @@ class EmailConsentRevocationControllerTest extends TestCase
 
         $gate = app(MessageEligibilityGate::class);
 
-        $this->assertTrue($gate->canSend($contact, MessageChannel::Email, MessagePurpose::Marketing, 'general_drip'));
+        $this->assertTrue($gate->canSend($contact, MessageChannel::Email, MessagePurpose::Marketing, 'webinar'));
 
         $this->get($this->signedUnsubscribeUrl($contact))->assertOk();
 
-        $this->assertFalse($gate->canSend($contact->refresh(), MessageChannel::Email, MessagePurpose::Marketing, 'general_drip'));
+        $this->assertFalse($gate->canSend($contact->refresh(), MessageChannel::Email, MessagePurpose::Marketing, 'webinar'));
     }
 
     public function test_email_unsubscribe_does_not_revoke_transactional_email_consent(): void
@@ -177,7 +177,7 @@ class EmailConsentRevocationControllerTest extends TestCase
             'channel' => MessageChannel::Email->value,
             'purpose' => $purpose->value,
             'scope' => $purpose === MessagePurpose::Marketing
-            ? 'general_drip'
+            ? 'webinar'
             : 'webinar',
             'consented_at' => now(),
             'ip_address' => '127.0.0.1',
@@ -193,7 +193,7 @@ class EmailConsentRevocationControllerTest extends TestCase
         return DB::table('message_consents')
             ->where('contact_id', $contact->id)
             ->where('channel', MessageChannel::Email->value)
-            ->where('scope', $purpose === MessagePurpose::Marketing ? 'general_drip' : 'webinar')
+            ->where('scope', $purpose === MessagePurpose::Marketing ? 'webinar' : 'webinar')
             ->where('purpose', $purpose->value)
             ->value('id');
     }
