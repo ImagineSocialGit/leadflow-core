@@ -5,6 +5,9 @@ namespace App\Providers;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use FilesystemIterator;
 
 class ClientServiceProvider extends ServiceProvider
 {
@@ -31,10 +34,10 @@ class ClientServiceProvider extends ServiceProvider
             return;
         }
 
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator(
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator(
                 $root,
-                \FilesystemIterator::SKIP_DOTS,
+                FilesystemIterator::SKIP_DOTS,
             )
         );
 
@@ -51,18 +54,50 @@ class ClientServiceProvider extends ServiceProvider
                 ->replace(DIRECTORY_SEPARATOR, '.')
                 ->toString();
 
+            $clientConfig = require $path;
             $current = config($key);
 
             Config::set(
                 $key,
-                is_array($current)
-                    ? array_replace_recursive(
-                        $current,
-                        require $path,
-                    )
-                    : require $path,
+                is_array($current) && is_array($clientConfig)
+                    ? $this->mergeConfigValues($current, $clientConfig)
+                    : $clientConfig,
             );
         }
+    }
+
+    private function mergeConfigValues(array $defaults, array $overrides): array
+    {
+        foreach ($overrides as $key => $value) {
+            if (! array_key_exists($key, $defaults)) {
+                $defaults[$key] = $value;
+
+                continue;
+            }
+
+            $defaults[$key] = $this->shouldMergeRecursively($defaults[$key], $value)
+                ? $this->mergeConfigValues($defaults[$key], $value)
+                : $value;
+        }
+
+        return $defaults;
+    }
+
+    private function shouldMergeRecursively(mixed $default, mixed $override): bool
+    {
+        return is_array($default)
+            && is_array($override)
+            && $this->isAssociativeArray($default)
+            && $this->isAssociativeArray($override);
+    }
+
+    private function isAssociativeArray(array $array): bool
+    {
+        if ($array === []) {
+            return true;
+        }
+
+        return array_keys($array) !== range(0, count($array) - 1);
     }
 
     private function loadClientEnvironment(): void

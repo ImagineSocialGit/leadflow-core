@@ -3,7 +3,6 @@
 namespace App\Actions\Webinars\PostEvent;
 
 use App\Data\Webinars\WebinarAttendanceRecord;
-use App\Jobs\Webinars\RoutePostWebinarRegistrationJob;
 use App\Models\Webinar;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
@@ -87,13 +86,6 @@ class RecordWebinarAttendanceAction
                 $registration->forceFill([
                     'meta' => $meta,
                 ])->save();
-            });
-
-        $webinar->registrations()
-            ->pluck('id')
-            ->each(function ($registrationId) {
-                RoutePostWebinarRegistrationJob::dispatch($registrationId)
-                    ->onQueue('notifications');
             });
     }
 

@@ -3,7 +3,7 @@
 namespace App\Actions\Webinars\PostEvent;
 
 use App\Data\Webinars\ProviderWebhookEvent;
-use App\Jobs\Webinars\FinalizeCompletedWebinarJob;
+use App\Jobs\Webinars\ProcessPostWebinarEventJob;
 
 class HandleWebinarProviderWebhookEventAction
 {
@@ -17,7 +17,7 @@ class HandleWebinarProviderWebhookEventAction
             return;
         }
 
-        FinalizeCompletedWebinarJob::dispatch(
+        ProcessPostWebinarEventJob::dispatch(
             provider: $event->provider,
             externalWebinarId: $event->externalWebinarId,
         )->onQueue('webinars');

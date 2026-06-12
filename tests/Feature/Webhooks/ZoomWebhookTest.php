@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Webhooks;
 
-use App\Jobs\Webinars\FinalizeCompletedWebinarJob;
+use App\Jobs\Webinars\ProcessPostWebinarEventJob;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
@@ -75,7 +75,7 @@ class ZoomWebhookTest extends TestCase
 
         $response->assertNoContent();
 
-        Queue::assertNotPushed(FinalizeCompletedWebinarJob::class);
+        Queue::assertNotPushed(ProcessPostWebinarEventJob::class);
     }
 
     public function test_it_ignores_supported_events_without_a_webinar_id(): void
@@ -107,7 +107,7 @@ class ZoomWebhookTest extends TestCase
 
         $response->assertNoContent();
 
-        Queue::assertPushed(FinalizeCompletedWebinarJob::class, function (FinalizeCompletedWebinarJob $job) use ($webinarId) {
+        Queue::assertPushed(ProcessPostWebinarEventJob::class, function (ProcessPostWebinarEventJob $job) use ($webinarId) {
             return $job->provider === 'zoom'
                 && $job->externalWebinarId === $webinarId;
         });
@@ -130,7 +130,7 @@ class ZoomWebhookTest extends TestCase
 
         $response->assertNoContent();
 
-        Queue::assertPushed(FinalizeCompletedWebinarJob::class, function (FinalizeCompletedWebinarJob $job) use ($webinarId) {
+        Queue::assertPushed(ProcessPostWebinarEventJob::class, function (ProcessPostWebinarEventJob $job) use ($webinarId) {
             return $job->provider === 'zoom'
                 && $job->externalWebinarId === $webinarId;
         });

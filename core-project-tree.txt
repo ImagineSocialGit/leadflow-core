@@ -18,13 +18,14 @@
 │   │   └── Webinars
 │   │       ├── AddRegistrantToWebinarProviderAction.php
 │   │       ├── CreateWebinarRegistrationAction.php
-│   │       ├── DispatchWebinarOutcomeMessagesAction.php
 │   │       ├── DispatchWebinarRegistrationMessagesAction.php
 │   │       ├── DispatchWebinarWaitlistMessagesAction.php
 │   │       ├── GetActiveWebinarSeriesAction.php
 │   │       ├── GetNextUpcomingWebinarAction.php
 │   │       ├── MarkWebinarRegistrationConvertedAction.php
 │   │       ├── PostEvent
+│   │       │   ├── DispatchPostWebinarFollowUpsAction.php
+│   │       │   ├── DispatchWebinarOutcomeMessagesAction.php
 │   │       │   ├── HandleWebinarProviderWebhookEventAction.php
 │   │       │   ├── RecordWebinarAttendanceAction.php
 │   │       │   └── ResolveWebinarPlaybackAction.php
@@ -118,8 +119,8 @@
 │   │   │   └── SendScheduledMessageJob.php
 │   │   ├── TestQueueJob.php
 │   │   └── Webinars
-│   │       ├── FinalizeCompletedWebinarJob.php
 │   │       ├── NotifyWebinarWaitlistJob.php
+│   │       ├── ProcessPostWebinarEventJob.php
 │   │       └── RoutePostWebinarRegistrationJob.php
 │   ├── Messaging
 │   │   └── Payloads
@@ -248,6 +249,7 @@
 │       │       ├── notify-me
 │       │       │   ├── content.php
 │       │       │   └── style.php
+│       │       ├── post_event.php
 │       │       ├── register
 │       │       │   ├── content.php
 │       │       │   ├── homebuyer-game-plan
@@ -325,6 +327,7 @@
 │   │   ├── notify-me
 │   │   │   ├── content.php
 │   │   │   └── style.php
+│   │   ├── post_event.php
 │   │   ├── register
 │   │   │   ├── content.php
 │   │   │   └── style.php
@@ -528,8 +531,8 @@
 │   │       ├── DispatchWebinarRegistrationMessagesActionTest.php
 │   │       ├── DispatchWebinarWaitlistMessagesActionTest.php
 │   │       └── PostEvent
-│   │           └── FinalizeCompletedWebinarJobTest.php
+│   │           └── ProcessPostWebinarEventJobTest.php
 │   └── TestCase.php
 └── vite.config.js
 
-182 directories, 351 files
+182 directories, 354 files
