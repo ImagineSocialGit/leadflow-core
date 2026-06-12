@@ -27,7 +27,7 @@ class SyncWebinarSeriesFromProviderAction
         );
 
         $webinarProvider = $this->webinarProviderManager->provider();
-        $provider = $webinarProvider->name();
+        $provider = $webinarProvider->key();
 
         $fetchedWebinars = collect($webinarProvider->listWebinarsByTitle($series->title))
             ->values();
