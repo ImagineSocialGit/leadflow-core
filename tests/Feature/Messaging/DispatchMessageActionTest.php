@@ -11,6 +11,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Queue;
+use InvalidArgumentException;
 use Tests\TestCase;
 
 class DispatchMessageActionTest extends TestCase
@@ -266,6 +267,163 @@ class DispatchMessageActionTest extends TestCase
         $this->assertSame(
             'messaging.email.transactional.webinar.confirmation',
             $message->meta['definition_config_path'],
+        );
+    }
+
+    public function test_it_filters_campaign_messages_by_criteria(): void
+    {
+        Queue::fake();
+
+        Config::set('messaging.email.marketing.webinar', [
+            'first_drip' => [
+                'dispatch_key' => 'marketing_message_sent',
+                'campaign_key' => 'webinar_attended',
+                'step' => 1,
+                'timing' => 'scheduled',
+                'schedule' => [
+                    'type' => 'delay',
+                    'minutes' => 60,
+                ],
+                'payload_class' => EmailPayload::class,
+                'queue' => 'marketing',
+                'payload' => [
+                    'subject' => 'Step 1',
+                    'body' => 'First',
+                ],
+            ],
+
+            'second_drip' => [
+                'dispatch_key' => 'marketing_message_sent',
+                'campaign_key' => 'webinar_attended',
+                'step' => 2,
+                'timing' => 'scheduled',
+                'schedule' => [
+                    'type' => 'delay',
+                    'minutes' => 120,
+                ],
+                'payload_class' => EmailPayload::class,
+                'queue' => 'marketing',
+                'payload' => [
+                    'subject' => 'Step 2',
+                    'body' => 'Second',
+                ],
+            ],
+        ]);
+
+        app(DispatchMessageAction::class)->handle(
+            contact: Contact::factory()->create(),
+            channel: 'email',
+            purpose: 'marketing',
+            scope: 'webinar',
+            dispatchKeys: 'marketing_message_sent',
+            criteria: [
+                'campaign_key' => 'webinar_attended',
+                'step' => 2,
+            ],
+        );
+
+        $this->assertDatabaseCount('scheduled_messages', 1);
+
+        $message = ScheduledMessage::first();
+
+        $this->assertSame('second_drip', $message->message_type);
+        $this->assertSame('webinar_attended', $message->meta['campaign_key']);
+        $this->assertSame(2, $message->meta['campaign_step']);
+        $this->assertSame('Step 2', $message->payload['subject']);
+    }
+
+    public function test_it_schedules_nothing_when_campaign_criteria_do_not_match(): void
+    {
+        Queue::fake();
+
+        Config::set('messaging.email.marketing.webinar', [
+            'first_drip' => [
+                'dispatch_key' => 'marketing_message_sent',
+                'campaign_key' => 'webinar_attended',
+                'step' => 1,
+                'timing' => 'scheduled',
+                'schedule' => [
+                    'type' => 'delay',
+                    'minutes' => 60,
+                ],
+                'payload_class' => EmailPayload::class,
+                'queue' => 'marketing',
+                'payload' => [
+                    'subject' => 'Step 1',
+                    'body' => 'First',
+                ],
+            ],
+        ]);
+
+        $messages = app(DispatchMessageAction::class)->handle(
+            contact: Contact::factory()->create(),
+            channel: 'email',
+            purpose: 'marketing',
+            scope: 'webinar',
+            dispatchKeys: 'marketing_message_sent',
+            criteria: [
+                'campaign_key' => 'webinar_attended',
+                'step' => 2,
+            ],
+        );
+
+        $this->assertSame([], $messages);
+        $this->assertDatabaseCount('scheduled_messages', 0);
+    }
+
+    public function test_it_throws_when_campaign_criteria_match_multiple_definitions(): void
+    {
+        Queue::fake();
+
+        Config::set('messaging.email.marketing.webinar', [
+            'first_drip_a' => [
+                'dispatch_key' => 'marketing_message_sent',
+                'campaign_key' => 'webinar_attended',
+                'step' => 2,
+                'timing' => 'scheduled',
+                'schedule' => [
+                    'type' => 'delay',
+                    'minutes' => 60,
+                ],
+                'payload_class' => EmailPayload::class,
+                'queue' => 'marketing',
+                'payload' => [
+                    'subject' => 'A',
+                    'body' => 'A',
+                ],
+            ],
+
+            'first_drip_b' => [
+                'dispatch_key' => 'marketing_message_sent',
+                'campaign_key' => 'webinar_attended',
+                'step' => 2,
+                'timing' => 'scheduled',
+                'schedule' => [
+                    'type' => 'delay',
+                    'minutes' => 90,
+                ],
+                'payload_class' => EmailPayload::class,
+                'queue' => 'marketing',
+                'payload' => [
+                    'subject' => 'B',
+                    'body' => 'B',
+                ],
+            ],
+        ]);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Dispatch criteria matched multiple message definitions.');
+
+        app(DispatchMessageAction::class)->handle(
+            contact: Contact::factory()->create(),
+            channel: 'email',
+            purpose: 'marketing',
+            scope: 'webinar',
+            dispatchKeys: 'marketing_message_sent',
+            criteria: [
+                'campaign_key' => 'webinar_attended',
+                'step' => 2,
+            ],
         );
     }
 }

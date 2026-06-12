@@ -2,9 +2,11 @@
 
 namespace App\Jobs\Messaging;
 
+use App\Actions\Campaigns\ScheduleNextCampaignStepAction;
 use App\Contracts\Messaging\Email\EmailMessage;
 use App\Contracts\Messaging\Sms\SmsMessage;
 use App\Enums\MessageChannel;
+use App\Models\CampaignEnrollment;
 use App\Models\ScheduledMessage;
 use App\Services\Messaging\Email\EmailMessagingService;
 use App\Services\Messaging\MessageConditionChecker;
@@ -30,6 +32,7 @@ class SendScheduledMessageJob implements ShouldQueue
         MessageEligibilityGate $messageEligibilityGate,
         EmailMessagingService $emailMessagingService,
         SmsMessagingService $smsMessagingService,
+        ScheduleNextCampaignStepAction $scheduleNextCampaignStepAction,
     ): void {
         $scheduledMessage = ScheduledMessage::query()
             ->with(['contact', 'context'])
@@ -83,6 +86,12 @@ class SendScheduledMessageJob implements ShouldQueue
                 'sent_at' => now(),
                 'failure_reason' => null,
             ])->save();
+
+            $this->scheduleNextCampaignStepIfNeeded(
+                scheduledMessage: $scheduledMessage,
+                scheduleNextCampaignStepAction: $scheduleNextCampaignStepAction,
+            );
+
         } catch (Throwable $exception) {
             $scheduledMessage->forceFill([
                 'status' => 'failed',
@@ -92,6 +101,33 @@ class SendScheduledMessageJob implements ShouldQueue
 
             throw $exception;
         }
+    }
+
+    private function scheduleNextCampaignStepIfNeeded(
+        ScheduledMessage $scheduledMessage,
+        ScheduleNextCampaignStepAction $scheduleNextCampaignStepAction,
+    ): void {
+        $campaignEnrollmentId = $scheduledMessage->meta['campaign_enrollment_id'] ?? null;
+
+        if (! is_numeric($campaignEnrollmentId)) {
+            return;
+        }
+
+        $enrollment = CampaignEnrollment::query()->find((int) $campaignEnrollmentId);
+
+        if (! $enrollment) {
+            return;
+        }
+
+        $scheduleNextCampaignStepAction->handle(
+            enrollment: $enrollment,
+            dispatchKey: 'marketing_message_sent',
+            context: $scheduledMessage->context,
+            payload: [],
+            meta: [
+                'previous_scheduled_message_id' => $scheduledMessage->id,
+            ],
+        );
     }
 
     private function resolvePayload(ScheduledMessage $scheduledMessage): EmailMessage|SmsMessage

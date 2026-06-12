@@ -70,4 +70,9 @@ class Contact extends Model
     {
         return $this->hasMany(ConsentRevocation::class);
     }
+
+    public function campaignEnrollments(): HasMany
+    {
+        return $this->hasMany(CampaignEnrollment::class);
+    }
 }

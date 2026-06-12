@@ -21,10 +21,11 @@ class DispatchMessageAction
         private readonly MessageConditionChecker $messageConditionChecker,
     ) {}
 
-    /**
+        /**
      * @param  string|array<int, string>  $dispatchKeys
      * @param  array<string, mixed>  $payload
      * @param  array<string, mixed>|null  $meta
+     * @param  array<string, mixed>  $criteria
      * @return array<int, ScheduledMessage>
      */
     public function handle(
@@ -38,11 +39,13 @@ class DispatchMessageAction
         Carbon|string|null $triggeredAt = null,
         Carbon|string|null $anchor = null,
         ?array $meta = null,
+        array $criteria = [],
     ): array {
         $channel = $this->normalizeEnumValue($channel);
         $purpose = $this->normalizeEnumValue($purpose);
         $scope = $this->normalizeSegment($scope);
         $dispatchKeys = $this->normalizeDispatchKeys($dispatchKeys);
+        $criteria = $this->normalizeCriteria($criteria);
 
         if ($dispatchKeys === []) {
             return [];
@@ -57,10 +60,22 @@ class DispatchMessageAction
             scope: $scope,
         );
 
+        $definitions = array_values(array_filter(
+            $definitions,
+            fn (array $definition): bool => $this->definitionMatchesDispatchKeys($definition, $dispatchKeys)
+                && $this->definitionMatchesCriteria($definition, $criteria),
+        ));
+
+        $this->assertCriteriaMatchesSingleDefinition($definitions, $criteria);
+
         $scheduledMessages = [];
 
         foreach ($definitions as $definition) {
             if (! $this->definitionMatchesDispatchKeys($definition, $dispatchKeys)) {
+                continue;
+            }
+
+            if (! $this->definitionMatchesCriteria($definition, $criteria)) {
                 continue;
             }
 
@@ -95,6 +110,8 @@ class DispatchMessageAction
                         'queue' => $definition['queue'],
                         'definition_config_path' => $definition['config_path'],
                         'dispatch_keys' => $definition['dispatch_keys'],
+                        'campaign_key' => $definition['campaign_key'] ?? null,
+                        'campaign_step' => $definition['step'] ?? null,
                         'conditions' => $definition['conditions'] ?? [],
                         'schedule' => $definition['schedule'] ?? null,
                         'triggered_at' => $triggeredAt->toISOString(),
@@ -261,6 +278,87 @@ class DispatchMessageAction
         }
 
         return array_intersect($dispatchKeys, $definitionDispatchKeys) !== [];
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $definitions
+     * @param  array<string, mixed>  $criteria
+     */
+    private function assertCriteriaMatchesSingleDefinition(array $definitions, array $criteria): void
+    {
+        if ($criteria === []) {
+            return;
+        }
+
+        if (count($definitions) <= 1) {
+            return;
+        }
+
+        throw new InvalidArgumentException('Dispatch criteria matched multiple message definitions.');
+    }
+
+        /**
+     * @param  array<string, mixed>  $definition
+     * @param  array<string, mixed>  $criteria
+     */
+    private function definitionMatchesCriteria(array $definition, array $criteria): bool
+    {
+        foreach ($criteria as $key => $expected) {
+            if (! array_key_exists($key, $definition)) {
+                return false;
+            }
+
+            $actual = $definition[$key];
+
+            if ($key === 'campaign_key') {
+                if (! is_string($actual) || $this->normalizeSegment($actual) !== $expected) {
+                    return false;
+                }
+
+                continue;
+            }
+
+            if ($key === 'step') {
+                if (! is_int($actual) || $actual !== $expected) {
+                    return false;
+                }
+
+                continue;
+            }
+
+            if ($actual !== $expected) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * @param  array<string, mixed>  $criteria
+     * @return array<string, mixed>
+     */
+    private function normalizeCriteria(array $criteria): array
+    {
+        $normalized = [];
+
+        if (array_key_exists('campaign_key', $criteria)) {
+            if (! is_string($criteria['campaign_key']) || trim($criteria['campaign_key']) === '') {
+                throw new InvalidArgumentException('Dispatch criteria [campaign_key] must be a non-empty string.');
+            }
+
+            $normalized['campaign_key'] = $this->normalizeSegment($criteria['campaign_key']);
+        }
+
+        if (array_key_exists('step', $criteria)) {
+            if (! is_int($criteria['step']) || $criteria['step'] < 1) {
+                throw new InvalidArgumentException('Dispatch criteria [step] must be an integer greater than zero.');
+            }
+
+            $normalized['step'] = $criteria['step'];
+        }
+
+        return $normalized;
     }
 
     /**

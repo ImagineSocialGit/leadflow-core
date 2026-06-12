@@ -2,6 +2,7 @@
 
 namespace App\Actions\Messaging;
 
+use App\Models\CampaignEnrollment;
 use App\Models\ConsentRevocation;
 use App\Models\Contact;
 use App\Models\MessageConsent;
@@ -70,6 +71,14 @@ class GrantMessageConsentAction
         );
 
         if (! $wasActivelyConsented && $willBeActivelyConsented) {
+
+            $this->resumeCampaignEnrollments(
+                contact: $contact,
+                channel: $channel,
+                purpose: $purpose,
+                scope: $scope,
+            );
+
             DB::afterCommit(function () use ($contact, $channel, $purpose, $scope, $optInPayload, $context, $resolverContext): void {
                 $this->dispatchMessageAction->handle(
                     contact: $contact,
@@ -129,5 +138,28 @@ class GrantMessageConsentAction
             ->where('scope', $scope)
             ->where('revoked_at', '>=', $consentedAt)
             ->exists();
+    }
+
+    private function resumeCampaignEnrollments(
+        Contact $contact,
+        string $channel,
+        string $purpose,
+        string $scope,
+    ): void {
+        if ($purpose !== 'marketing') {
+            return;
+        }
+
+        CampaignEnrollment::query()
+            ->where('contact_id', $contact->getKey())
+            ->where('channel', $channel)
+            ->where('purpose', $purpose)
+            ->where('scope', $scope)
+            ->where('status', CampaignEnrollment::STATUS_PAUSED)
+            ->update([
+                'status' => CampaignEnrollment::STATUS_ACTIVE,
+                'paused_at' => null,
+                'resumed_at' => now(),
+            ]);
     }
 }

@@ -2,9 +2,12 @@
 
 namespace Tests\Feature\Messaging;
 
+use App\Actions\Campaigns\ScheduleNextCampaignStepAction;
 use App\Contracts\Messaging\Email\EmailMessage;
 use App\Contracts\Messaging\Sms\SmsMessage;
 use App\Jobs\Messaging\SendScheduledMessageJob;
+use App\Messaging\Payloads\EmailPayload;
+use App\Models\CampaignEnrollment;
 use App\Models\Contact;
 use App\Models\MessageConsent;
 use App\Models\ScheduledMessage;
@@ -12,6 +15,8 @@ use App\Services\Messaging\Email\EmailMessagingService;
 use App\Services\Messaging\Sms\SmsMessagingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Mail\Mailable;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Queue;
 use Mockery;
 use Tests\TestCase;
 
@@ -57,6 +62,7 @@ class SendScheduledMessageJobTest extends TestCase
             messageEligibilityGate: app(\App\Services\Messaging\MessageEligibilityGate::class),
             emailMessagingService: app(EmailMessagingService::class),
             smsMessagingService: app(SmsMessagingService::class),
+            scheduleNextCampaignStepAction: app(ScheduleNextCampaignStepAction::class),
         );
 
         $scheduledMessage->refresh();
@@ -104,6 +110,7 @@ class SendScheduledMessageJobTest extends TestCase
             messageEligibilityGate: app(\App\Services\Messaging\MessageEligibilityGate::class),
             emailMessagingService: app(EmailMessagingService::class),
             smsMessagingService: app(SmsMessagingService::class),
+            scheduleNextCampaignStepAction: app(ScheduleNextCampaignStepAction::class),
         );
 
         $scheduledMessage->refresh();
@@ -152,6 +159,7 @@ class SendScheduledMessageJobTest extends TestCase
             messageEligibilityGate: app(\App\Services\Messaging\MessageEligibilityGate::class),
             emailMessagingService: app(EmailMessagingService::class),
             smsMessagingService: app(SmsMessagingService::class),
+            scheduleNextCampaignStepAction: app(ScheduleNextCampaignStepAction::class),
         );
 
         $scheduledMessage->refresh();
@@ -196,6 +204,7 @@ class SendScheduledMessageJobTest extends TestCase
             messageEligibilityGate: app(\App\Services\Messaging\MessageEligibilityGate::class),
             emailMessagingService: app(EmailMessagingService::class),
             smsMessagingService: app(SmsMessagingService::class),
+            scheduleNextCampaignStepAction: app(ScheduleNextCampaignStepAction::class),
         );
 
         $scheduledMessage->refresh();
@@ -240,6 +249,7 @@ class SendScheduledMessageJobTest extends TestCase
                 messageEligibilityGate: app(\App\Services\Messaging\MessageEligibilityGate::class),
                 emailMessagingService: app(EmailMessagingService::class),
                 smsMessagingService: app(SmsMessagingService::class),
+                scheduleNextCampaignStepAction: app(ScheduleNextCampaignStepAction::class),
             );
         } finally {
             $scheduledMessage->refresh();
@@ -250,6 +260,211 @@ class SendScheduledMessageJobTest extends TestCase
                 $scheduledMessage->failure_reason
             );
         }
+    }
+
+    public function test_it_schedules_next_campaign_step_after_successful_send(): void
+    {
+        Queue::fake();
+
+        Config::set('messaging.email.marketing.webinar', [
+            'step_1' => [
+                'dispatch_key' => 'webinar_ended',
+                'campaign_key' => 'webinar_attended',
+                'step' => 1,
+                'timing' => 'scheduled',
+                'schedule' => [
+                    'type' => 'delay',
+                    'minutes' => 60,
+                ],
+                'payload_class' => EmailPayload::class,
+                'queue' => 'marketing',
+                'payload' => [
+                    'subject' => 'Step 1',
+                    'body' => 'First',
+                ],
+            ],
+            'step_2' => [
+                'dispatch_key' => 'marketing_message_sent',
+                'campaign_key' => 'webinar_attended',
+                'step' => 2,
+                'timing' => 'scheduled',
+                'schedule' => [
+                    'type' => 'delay',
+                    'minutes' => 60,
+                ],
+                'payload_class' => EmailPayload::class,
+                'queue' => 'marketing',
+                'payload' => [
+                    'subject' => 'Step 2',
+                    'body' => 'Second',
+                ],
+            ],
+        ]);
+
+        $contact = Contact::factory()->create([
+            'email' => 'test@example.com',
+        ]);
+
+        $this->grantConsent($contact, 'email', 'marketing');
+
+        $enrollment = CampaignEnrollment::create([
+            'contact_id' => $contact->id,
+            'campaign_key' => 'webinar_attended',
+            'channel' => 'email',
+            'purpose' => 'marketing',
+            'scope' => 'webinar',
+            'status' => CampaignEnrollment::STATUS_ACTIVE,
+            'current_step' => 1,
+            'started_at' => now(),
+        ]);
+
+        $message = ScheduledMessage::factory()->create([
+            'contact_id' => $contact->id,
+            'channel' => 'email',
+            'purpose' => 'marketing',
+            'scope' => 'webinar',
+            'message_type' => 'step_1',
+            'payload_class' => FakeJobEmailPayload::class,
+            'payload' => [
+                'to' => 'test@example.com',
+            ],
+            'status' => 'pending',
+            'meta' => [
+                'conditions' => [],
+                'definition_config_path' => 'messaging.email.marketing.webinar.step_1',
+                'campaign_enrollment_id' => $enrollment->id,
+                'campaign_key' => 'webinar_attended',
+                'campaign_step' => 1,
+            ],
+        ]);
+
+        $enrollment->update([
+            'last_scheduled_message_id' => $message->id,
+        ]);
+
+        $emailService = Mockery::mock(EmailMessagingService::class);
+        $emailService
+            ->shouldReceive('send')
+            ->once()
+            ->with(Mockery::type(FakeJobEmailPayload::class));
+
+        app()->instance(EmailMessagingService::class, $emailService);
+
+        (new SendScheduledMessageJob($message->id))->handle(
+            messageConditionChecker: app(\App\Services\Messaging\MessageConditionChecker::class),
+            messageEligibilityGate: app(\App\Services\Messaging\MessageEligibilityGate::class),
+            emailMessagingService: app(EmailMessagingService::class),
+            smsMessagingService: app(SmsMessagingService::class),
+            scheduleNextCampaignStepAction: app(ScheduleNextCampaignStepAction::class),
+        );
+
+        $enrollment->refresh();
+
+        $this->assertSame(2, $enrollment->current_step);
+        $this->assertNotSame($message->id, $enrollment->last_scheduled_message_id);
+
+        $this->assertDatabaseCount('scheduled_messages', 2);
+    }
+
+    public function test_it_does_not_progress_without_campaign_metadata(): void
+    {
+        $message = ScheduledMessage::factory()->create([
+            'status' => 'pending',
+            'meta' => [],
+        ]);
+
+        (new SendScheduledMessageJob($message->id))->handle(
+            messageConditionChecker: app(\App\Services\Messaging\MessageConditionChecker::class),
+            messageEligibilityGate: app(\App\Services\Messaging\MessageEligibilityGate::class),
+            emailMessagingService: app(EmailMessagingService::class),
+            smsMessagingService: app(SmsMessagingService::class),
+            scheduleNextCampaignStepAction: app(ScheduleNextCampaignStepAction::class),
+        );
+
+        $this->assertDatabaseCount('campaign_enrollments', 0);
+    }
+
+    public function test_it_completes_campaign_when_no_next_step_exists(): void
+    {
+        Config::set('messaging.email.marketing.webinar', [
+            'step_1' => [
+                'dispatch_key' => 'webinar_ended',
+                'campaign_key' => 'webinar_attended',
+                'step' => 1,
+                'timing' => 'scheduled',
+                'schedule' => [
+                    'type' => 'delay',
+                    'minutes' => 60,
+                ],
+                'payload_class' => EmailPayload::class,
+                'queue' => 'marketing',
+                'payload' => [
+                    'subject' => 'Step 1',
+                    'body' => 'First',
+                ],
+            ],
+        ]);
+
+        $contact = Contact::factory()->create([
+            'email' => 'test@example.com',
+        ]);
+
+        $this->grantConsent($contact, 'email', 'marketing');
+
+        $enrollment = CampaignEnrollment::create([
+            'contact_id' => $contact->id,
+            'campaign_key' => 'webinar_attended',
+            'channel' => 'email',
+            'purpose' => 'marketing',
+            'scope' => 'webinar',
+            'status' => CampaignEnrollment::STATUS_ACTIVE,
+            'current_step' => 1,
+            'started_at' => now(),
+        ]);
+
+        $message = ScheduledMessage::factory()->create([
+            'contact_id' => $contact->id,
+            'channel' => 'email',
+            'purpose' => 'marketing',
+            'scope' => 'webinar',
+            'message_type' => 'step_1',
+            'payload_class' => FakeJobEmailPayload::class,
+            'payload' => [
+                'to' => 'test@example.com',
+            ],
+            'status' => 'pending',
+            'meta' => [
+                'conditions' => [],
+                'definition_config_path' => 'messaging.email.marketing.webinar.step_1',
+                'campaign_enrollment_id' => $enrollment->id,
+                'campaign_key' => 'webinar_attended',
+                'campaign_step' => 1,
+            ],
+        ]);
+
+        $enrollment->update([
+            'last_scheduled_message_id' => $message->id,
+        ]);
+
+        $emailService = Mockery::mock(EmailMessagingService::class);
+        $emailService
+            ->shouldReceive('send')
+            ->once()
+            ->with(Mockery::type(FakeJobEmailPayload::class));
+
+        app()->instance(EmailMessagingService::class, $emailService);
+
+        (new SendScheduledMessageJob($message->id))->handle(
+            messageConditionChecker: app(\App\Services\Messaging\MessageConditionChecker::class),
+            messageEligibilityGate: app(\App\Services\Messaging\MessageEligibilityGate::class),
+            emailMessagingService: app(EmailMessagingService::class),
+            smsMessagingService: app(SmsMessagingService::class),
+            scheduleNextCampaignStepAction: app(ScheduleNextCampaignStepAction::class),
+        );
+
+        $enrollment->refresh();
+
+        $this->assertSame(CampaignEnrollment::STATUS_COMPLETED, $enrollment->status);
     }
 
     private function grantConsent(Contact $contact, string $channel, string $purpose): void

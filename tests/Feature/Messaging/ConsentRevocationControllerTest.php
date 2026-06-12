@@ -4,6 +4,7 @@ namespace Tests\Feature\Messaging;
 
 use App\Enums\MessageChannel;
 use App\Enums\MessagePurpose;
+use App\Models\CampaignEnrollment;
 use App\Models\ConsentRevocation;
 use App\Models\Contact;
 use App\Services\Messaging\MessageEligibilityGate;
@@ -217,6 +218,34 @@ class ConsentRevocationControllerTest extends TestCase
                 'purpose' => MessagePurpose::Transactional->value,
             ]
         );
+    }
+
+    public function test_marketing_unsubscribe_pauses_active_campaign_enrollments_for_matching_scope(): void
+    {
+        $contact = $this->createContact();
+
+        $this->grantConsent($contact, MessagePurpose::Marketing, 'webinar');
+
+        $enrollment = CampaignEnrollment::create([
+            'contact_id' => $contact->id,
+            'campaign_key' => 'webinar_attended',
+            'channel' => MessageChannel::Email->value,
+            'purpose' => MessagePurpose::Marketing->value,
+            'scope' => 'webinar',
+            'status' => CampaignEnrollment::STATUS_ACTIVE,
+            'current_step' => 2,
+            'started_at' => now()->subDays(2),
+        ]);
+
+        $this->get($this->signedUnsubscribeUrl($contact))
+            ->assertOk()
+            ->assertViewIs('messaging.unsubscribe-confirmed');
+
+        $enrollment->refresh();
+
+        $this->assertSame(CampaignEnrollment::STATUS_PAUSED, $enrollment->status);
+        $this->assertSame(2, $enrollment->current_step);
+        $this->assertNotNull($enrollment->paused_at);
     }
 
     private function createContact(): Contact

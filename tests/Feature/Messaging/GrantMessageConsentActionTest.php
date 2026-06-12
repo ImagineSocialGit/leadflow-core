@@ -4,6 +4,9 @@ namespace Tests\Feature\Messaging;
 
 use App\Actions\Messaging\DispatchMessageAction;
 use App\Actions\Messaging\GrantMessageConsentAction;
+use App\Enums\MessageChannel;
+use App\Enums\MessagePurpose;
+use App\Models\CampaignEnrollment;
 use App\Models\ConsentRevocation;
 use App\Models\Contact;
 use App\Models\MessageConsent;
@@ -202,6 +205,43 @@ class GrantMessageConsentActionTest extends TestCase
                 'consented_at' => now(),
             ],
         );
+    }
+
+    public function test_granting_marketing_consent_resumes_paused_campaign_enrollments_for_matching_scope(): void
+    {
+        $contact = Contact::factory()->create();
+
+        $enrollment = CampaignEnrollment::create([
+            'contact_id' => $contact->id,
+            'campaign_key' => 'webinar_attended',
+            'channel' => MessageChannel::Email->value,
+            'purpose' => MessagePurpose::Marketing->value,
+            'scope' => 'webinar',
+            'status' => CampaignEnrollment::STATUS_PAUSED,
+            'current_step' => 2,
+            'started_at' => now()->subDays(2),
+            'paused_at' => now()->subDay(),
+        ]);
+
+        $this->mockDispatchMessageActionOnce();
+
+        app(GrantMessageConsentAction::class)->handle(
+            contact: $contact,
+            data: [
+                'channel' => MessageChannel::Email->value,
+                'purpose' => MessagePurpose::Marketing->value,
+                'scope' => 'webinar',
+                'source' => 'test',
+                'consented_at' => now(),
+            ],
+        );
+
+        $enrollment->refresh();
+
+        $this->assertSame(CampaignEnrollment::STATUS_ACTIVE, $enrollment->status);
+        $this->assertSame(2, $enrollment->current_step);
+        $this->assertNull($enrollment->paused_at);
+        $this->assertNotNull($enrollment->resumed_at);
     }
 
     private function mockDispatchMessageActionOnce(): void

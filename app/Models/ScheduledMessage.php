@@ -54,4 +54,5 @@ class ScheduledMessage extends Model
     {
         return $this->morphTo();
     }
+
 }

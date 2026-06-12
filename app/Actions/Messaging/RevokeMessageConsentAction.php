@@ -2,6 +2,7 @@
 
 namespace App\Actions\Messaging;
 
+use App\Models\CampaignEnrollment;
 use App\Models\ConsentRevocation;
 use App\Models\Contact;
 use App\Models\MessageConsent;
@@ -98,6 +99,13 @@ class RevokeMessageConsentAction
             ];
         }
 
+        $this->pauseCampaignEnrollments(
+            contact: $contact,
+            channel: $validated['channel'],
+            purpose: $validated['purpose'],
+            scope: $scope,
+        );
+
         return [
             'revocation' => ConsentRevocation::query()->create([
                 'contact_id' => $contact->getKey(),
@@ -114,5 +122,27 @@ class RevokeMessageConsentAction
             ]),
             'created' => true,
         ];
+    }
+
+    private function pauseCampaignEnrollments(
+        Contact $contact,
+        string $channel,
+        string $purpose,
+        string $scope,
+    ): void {
+        if ($purpose !== 'marketing') {
+            return;
+        }
+
+        CampaignEnrollment::query()
+            ->where('contact_id', $contact->getKey())
+            ->where('channel', $channel)
+            ->where('purpose', $purpose)
+            ->where('scope', $scope)
+            ->where('status', CampaignEnrollment::STATUS_ACTIVE)
+            ->update([
+                'status' => CampaignEnrollment::STATUS_PAUSED,
+                'paused_at' => now(),
+            ]);
     }
 }
