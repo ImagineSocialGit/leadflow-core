@@ -3,6 +3,9 @@
 │   ├── Actions
 │   │   ├── Caching
 │   │   │   └── FlushWebinarCachesAction.php
+│   │   ├── Campaigns
+│   │   │   ├── EnrollContactInCampaignAction.php
+│   │   │   └── ScheduleNextCampaignStepAction.php
 │   │   ├── Contacts
 │   │   ├── Messaging
 │   │   │   ├── DispatchMessageAction.php
@@ -117,6 +120,7 @@
 │   │       ├── SmsPayload.php
 │   │       └── Webinars
 │   ├── Models
+│   │   ├── CampaignEnrollment.php
 │   │   ├── ConsentRevocation.php
 │   │   ├── ContactMortgageProfile.php
 │   │   ├── Contact.php
@@ -344,7 +348,8 @@
 │   │   ├── 2026_05_19_221010_create_message_suppressions_table.php
 │   │   ├── 2026_05_26_211538_create_scheduled_messages_table.php
 │   │   ├── 2026_06_02_211108_create_mortgage_stages_table.php
-│   │   └── 2026_06_02_211116_create_contact_mortgage_profiles_table.php
+│   │   ├── 2026_06_02_211116_create_contact_mortgage_profiles_table.php
+│   │   └── 2026_06_12_050337_create_campaign_enrollments_table.php
 │   ├── schema
 │   └── seeders
 │       ├── DatabaseSeeder.php
@@ -465,6 +470,9 @@
 │   ├── Feature
 │   │   ├── Auth
 │   │   │   └── LoginThrottlingTest.php
+│   │   ├── Campaigns
+│   │   │   ├── EnrollContactInCampaignActionTest.php
+│   │   │   └── ScheduleNextCampaignStepActionTest.php
 │   │   ├── CRM
 │   │   │   └── WebinarSyncTest.php
 │   │   ├── Email
@@ -503,4 +511,4 @@
 │   └── TestCase.php
 └── vite.config.js
 
-172 directories, 332 files
+174 directories, 338 files
