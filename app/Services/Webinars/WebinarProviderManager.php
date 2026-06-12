@@ -20,6 +20,8 @@ class WebinarProviderManager
             throw new InvalidArgumentException('No webinar provider is configured.');
         }
 
+        $name = strtolower($name);
+
         $providerClass = config("webinars.providers.{$name}.provider");
 
         if (! is_string($providerClass) || $providerClass === '') {
