@@ -85,6 +85,8 @@ readonly class WebinarMessageData extends MessageData
             'webinar_platform' => $this->webinar->platform,
             'webinar_join_url' => $this->webinarJoinUrl,
             'webinar_registration_url' => $this->webinar->registration_url,
+            'webinar_playback_url' => $this->webinar->playback_url,
+            'webinar_playback_passcode' => $this->webinar->playback_passcode,
 
             'webinar_starts_at' => $startsAt?->toIso8601String(),
             'webinar_ends_at' => $endsAt?->toIso8601String(),
@@ -110,9 +112,13 @@ readonly class WebinarMessageData extends MessageData
             'event_start_datetime' => $this->formatDateTime($startsAt, $timezone),
             'event_join_url' => $this->webinarJoinUrl,
             'event_registration_url' => $this->webinar->registration_url,
+            'event_playback_url' => $this->webinar->playback_url,
+            'event_playback_passcode' => $this->webinar->playback_passcode,
 
             'join_url' => $this->webinarJoinUrl,
             'registration_url' => $this->webinar->registration_url,
+            'playback_url' => $this->webinar->playback_url,
+            'playback_passcode' => $this->webinar->playback_passcode,
         ];
     }
 

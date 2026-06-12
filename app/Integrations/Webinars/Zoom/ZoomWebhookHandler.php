@@ -2,10 +2,8 @@
 
 namespace App\Integrations\Webinars\Zoom;
 
-use App\Actions\Webinars\RecordWebinarAttendanceAction;
-use App\Integrations\Webinars\Zoom\Mappers\ZoomAttendanceMapper;
+use App\Data\Webinars\ProviderWebhookEvent;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 
 class ZoomWebhookHandler
 {
@@ -13,16 +11,17 @@ class ZoomWebhookHandler
 
     public function __construct(
         private readonly ZoomWebhookVerifier $verifier,
-        private readonly ZoomWebinarService $zoomWebinarService,
-        private readonly ZoomAttendanceMapper $zoomAttendanceMapper,
-        private readonly RecordWebinarAttendanceAction $recordWebinarAttendanceAction,
     ) {}
 
-    public function handle(Request $request): Response
+    public function parse(Request $request): ProviderWebhookEvent
     {
         if ($request->input('event') === 'endpoint.url_validation') {
-            return response()->json(
-                $this->verifier->urlValidationResponse($request)
+            return new ProviderWebhookEvent(
+                provider: self::PROVIDER,
+                event: 'endpoint.url_validation',
+                payload: [
+                    'response' => $this->verifier->urlValidationResponse($request),
+                ],
             );
         }
 
@@ -30,32 +29,16 @@ class ZoomWebhookHandler
             abort(401);
         }
 
-        $event = $request->input('event');
-
-        if (! in_array($event, [
-            'webinar.ended',
-            'webinar.completed',
-        ], true)) {
-            return response()->noContent();
-        }
-
-        $webinarId = (string) ($request->input('payload.object.id') ?? '');
-
-        if ($webinarId === '') {
-            return response()->noContent();
-        }
-
-        $participants = $this->zoomWebinarService
-            ->listPastWebinarParticipants($webinarId);
-
-        $attendanceRecords = $this->zoomAttendanceMapper->map($participants);
-
-        $this->recordWebinarAttendanceAction->execute(
+        return new ProviderWebhookEvent(
             provider: self::PROVIDER,
-            externalWebinarId: $webinarId,
-            attendanceRecords: $attendanceRecords,
+            event: (string) $request->input('event'),
+            externalWebinarId: filled($request->input('payload.object.id'))
+                ? (string) $request->input('payload.object.id')
+                : null,
+            externalWebinarUuid: filled($request->input('payload.object.uuid'))
+                ? (string) $request->input('payload.object.uuid')
+                : null,
+            payload: $request->all(),
         );
-
-        return response()->noContent();
     }
 }

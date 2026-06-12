@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Actions\Webinars;
+namespace App\Actions\Webinars\PostEvent;
 
 use App\Data\Webinars\WebinarAttendanceRecord;
 use App\Jobs\Webinars\RoutePostWebinarRegistrationJob;
@@ -12,18 +12,10 @@ use Illuminate\Support\Collection;
 class RecordWebinarAttendanceAction
 {
     public function execute(
+        Webinar $webinar,
         string $provider,
-        string $externalWebinarId,
         Collection $attendanceRecords,
     ): void {
-        $webinar = Webinar::query()
-            ->where('platform', $provider)
-            ->where('external_id', $externalWebinarId)
-            ->first();
-
-        if (! $webinar) {
-            return;
-        }
 
         $attendanceRecords = $attendanceRecords
             ->map(fn (WebinarAttendanceRecord|array $record) => $record instanceof WebinarAttendanceRecord

@@ -3,17 +3,21 @@
 namespace App\Integrations\Webinars\Zoom;
 
 use App\Contracts\Webinars\WebinarProvider;
+use App\Data\Webinars\ProviderRecordingData;
 use App\Data\Webinars\ProviderRegistrationData;
+use App\Data\Webinars\ProviderWebhookEvent;
+use App\Data\Webinars\WebinarAttendanceRecord;
+use App\Integrations\Webinars\Zoom\Mappers\ZoomAttendanceMapper;
 use App\Models\Webinar;
 use App\Models\WebinarRegistration;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 
 class ZoomWebinarProvider implements WebinarProvider
 {
     public function __construct(
         private readonly ZoomWebinarService $zoomWebinarService,
         private readonly ZoomWebhookHandler $zoomWebhookHandler,
+        private readonly ZoomAttendanceMapper $zoomAttendanceMapper,
     ) {}
 
     public function key(): string
@@ -52,8 +56,34 @@ class ZoomWebinarProvider implements WebinarProvider
         return $this->zoomWebinarService->listWebinarsByTitle($title);
     }
 
-    public function handleWebhook(Request $request): Response
+    public function parseWebhook(Request $request): ProviderWebhookEvent
     {
-        return $this->zoomWebhookHandler->handle($request);
+        return $this->zoomWebhookHandler->parse($request);
+    }
+
+    /**
+     * @return iterable<WebinarAttendanceRecord>
+     */
+    public function listAttendanceRecords(Webinar $webinar): iterable
+    {
+        return $this->zoomAttendanceMapper->map(
+            $this->zoomWebinarService->listPastWebinarParticipants($webinar->external_id)
+        );
+    }
+
+    public function getRecording(Webinar $webinar): ?ProviderRecordingData
+    {
+        return $this->zoomWebinarService->getWebinarRecording(
+            webinarIdOrUuid: $this->recordingLookupId($webinar),
+        );
+    }
+
+    private function recordingLookupId(Webinar $webinar): string
+    {
+        $uuid = data_get($webinar->meta, 'zoom_uuid');
+
+        return filled($uuid)
+            ? (string) $uuid
+            : (string) $webinar->external_id;
     }
 }

@@ -21,6 +21,8 @@ class Webinar extends Model
         'host_account_key',
         'join_url',
         'registration_url',
+        'playback_url',
+        'playback_passcode',
         'starts_at',
         'ends_at',
         'timezone',

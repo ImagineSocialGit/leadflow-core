@@ -2,6 +2,7 @@
 
 namespace App\Integrations\Webinars\Zoom;
 
+use App\Data\Webinars\ProviderRecordingData;
 use App\Data\Webinars\ProviderWebinarData;
 use App\Support\Caching\CacheKey;
 use Carbon\Carbon;
@@ -119,6 +120,55 @@ class ZoomWebinarService
             ->filter(fn (array $webinar) => ($webinar['topic'] ?? null) === $title)
             ->map(fn (array $webinar) => $this->normalizeWebinar($webinar))
             ->values();
+    }
+
+    public function getWebinarRecording(string $webinarIdOrUuid): ?ProviderRecordingData
+    {
+        $response = $this->client()->get(
+            '/meetings/'.$this->encodeRecordingIdentifier($webinarIdOrUuid).'/recordings'
+        );
+
+        if ($response->status() === 404) {
+            return null;
+        }
+
+        $response->throw();
+
+        $payload = $response->json();
+
+        $recordingFile = collect($payload['recording_files'] ?? [])
+            ->first(fn (array $file) =>
+                ($file['status'] ?? null) === 'completed'
+                && ($file['file_type'] ?? null) === 'MP4'
+                && filled($file['play_url'] ?? null)
+            );
+
+        if (! $recordingFile) {
+            return new ProviderRecordingData(
+                playbackUrl: null,
+                playbackPasscode: $payload['recording_play_passcode']
+                    ?? $payload['password']
+                    ?? null,
+                raw: $payload,
+            );
+        }
+
+        return new ProviderRecordingData(
+            playbackUrl: $recordingFile['play_url'],
+            playbackPasscode: $payload['recording_play_passcode']
+                ?? $payload['password']
+                ?? null,
+            raw: $payload,
+        );
+    }
+
+    private function encodeRecordingIdentifier(string $identifier): string
+    {
+        if (str_starts_with($identifier, '/') || str_contains($identifier, '//')) {
+            return rawurlencode(rawurlencode($identifier));
+        }
+
+        return rawurlencode($identifier);
     }
 
     protected function normalizeWebinar(array $webinar): ProviderWebinarData

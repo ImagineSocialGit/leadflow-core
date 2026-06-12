@@ -24,7 +24,10 @@
 │   │       ├── GetActiveWebinarSeriesAction.php
 │   │       ├── GetNextUpcomingWebinarAction.php
 │   │       ├── MarkWebinarRegistrationConvertedAction.php
-│   │       ├── RecordWebinarAttendanceAction.php
+│   │       ├── PostEvent
+│   │       │   ├── HandleWebinarProviderWebhookEventAction.php
+│   │       │   ├── RecordWebinarAttendanceAction.php
+│   │       │   └── ResolveWebinarPlaybackAction.php
 │   │       ├── ResolveWebinarJoinUrlAction.php
 │   │       └── SyncWebinarSeriesFromProviderAction.php
 │   ├── Console
@@ -42,9 +45,12 @@
 │   │   └── Webinars
 │   │       └── WebinarProvider.php
 │   ├── Data
+│   │   ├── MessageData.php
 │   │   ├── WebinarMessageData.php
 │   │   └── Webinars
+│   │       ├── ProviderRecordingData.php
 │   │       ├── ProviderRegistrationData.php
+│   │       ├── ProviderWebhookEvent.php
 │   │       ├── ProviderWebinarData.php
 │   │       └── WebinarAttendanceRecord.php
 │   ├── Enums
@@ -112,6 +118,7 @@
 │   │   │   └── SendScheduledMessageJob.php
 │   │   ├── TestQueueJob.php
 │   │   └── Webinars
+│   │       ├── FinalizeCompletedWebinarJob.php
 │   │       ├── NotifyWebinarWaitlistJob.php
 │   │       └── RoutePostWebinarRegistrationJob.php
 │   ├── Messaging
@@ -120,6 +127,8 @@
 │   │       ├── SmsPayload.php
 │   │       └── Webinars
 │   ├── Models
+│   │   ├── Broadcast.php
+│   │   ├── BroadcastRecipient.php
 │   │   ├── CampaignEnrollment.php
 │   │   ├── ConsentRevocation.php
 │   │   ├── ContactMortgageProfile.php
@@ -224,8 +233,12 @@
 │       │   ├── generated
 │       │   │   └── images.php
 │       │   ├── messaging
-│       │   │   └── emails
-│       │   │       └── webinars.php
+│       │   │   ├── email
+│       │   │   │   ├── marketing
+│       │   │   │   └── transactional
+│       │   │   └── sms
+│       │   │       ├── marketing
+│       │   │       └── transactional
 │       │   ├── theme.php
 │       │   └── webinars
 │       │       ├── content.php
@@ -324,6 +337,8 @@
 ├── database
 │   ├── database.sqlite
 │   ├── factories
+│   │   ├── BroadcastFactory.php
+│   │   ├── BroadcastRecipientFactory.php
 │   │   ├── ContactFactory.php
 │   │   ├── ScheduledMessageFactory.php
 │   │   ├── UserFactory.php
@@ -349,7 +364,9 @@
 │   │   ├── 2026_05_26_211538_create_scheduled_messages_table.php
 │   │   ├── 2026_06_02_211108_create_mortgage_stages_table.php
 │   │   ├── 2026_06_02_211116_create_contact_mortgage_profiles_table.php
-│   │   └── 2026_06_12_050337_create_campaign_enrollments_table.php
+│   │   ├── 2026_06_12_050337_create_campaign_enrollments_table.php
+│   │   ├── 2026_06_12_065258_create_broadcasts_table.php
+│   │   └── 2026_06_12_065311_create_broadcast_recipients_table.php
 │   ├── schema
 │   └── seeders
 │       ├── DatabaseSeeder.php
@@ -470,6 +487,8 @@
 │   ├── Feature
 │   │   ├── Auth
 │   │   │   └── LoginThrottlingTest.php
+│   │   ├── Broadcasts
+│   │   │   └── BroadcastModelTest.php
 │   │   ├── Campaigns
 │   │   │   ├── EnrollContactInCampaignActionTest.php
 │   │   │   └── ScheduleNextCampaignStepActionTest.php
@@ -507,8 +526,10 @@
 │   │   └── Webinars
 │   │       ├── CreateWebinarRegistrationActionTest.php
 │   │       ├── DispatchWebinarRegistrationMessagesActionTest.php
-│   │       └── DispatchWebinarWaitlistMessagesActionTest.php
+│   │       ├── DispatchWebinarWaitlistMessagesActionTest.php
+│   │       └── PostEvent
+│   │           └── FinalizeCompletedWebinarJobTest.php
 │   └── TestCase.php
 └── vite.config.js
 
-174 directories, 338 files
+182 directories, 351 files

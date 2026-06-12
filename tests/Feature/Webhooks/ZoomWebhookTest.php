@@ -2,10 +2,8 @@
 
 namespace Tests\Feature\Webhooks;
 
-use App\Actions\Webinars\RecordWebinarAttendanceAction;
-use App\Integrations\Webinars\Zoom\Mappers\ZoomAttendanceMapper;
-use App\Integrations\Webinars\Zoom\ZoomWebinarService;
-use Mockery\MockInterface;
+use App\Jobs\Webinars\FinalizeCompletedWebinarJob;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class ZoomWebhookTest extends TestCase
@@ -64,6 +62,8 @@ class ZoomWebhookTest extends TestCase
 
     public function test_it_ignores_irrelevant_signed_events(): void
     {
+        Queue::fake();
+
         $response = $this->signedZoomPost([
             'event' => 'webinar.started',
             'payload' => [
@@ -74,6 +74,8 @@ class ZoomWebhookTest extends TestCase
         ]);
 
         $response->assertNoContent();
+
+        Queue::assertNotPushed(FinalizeCompletedWebinarJob::class);
     }
 
     public function test_it_ignores_supported_events_without_a_webinar_id(): void
@@ -88,53 +90,11 @@ class ZoomWebhookTest extends TestCase
         $response->assertNoContent();
     }
 
-    public function test_it_processes_webinar_ended_events(): void
+    public function test_it_dispatches_finalize_job_for_webinar_ended_events(): void
     {
+        Queue::fake();
+
         $webinarId = '123456789';
-
-        $participants = collect([
-            [
-                'id' => 'participant-1',
-                'user_email' => 'person@example.com',
-                'duration' => 3600,
-            ],
-        ]);
-
-        $attendanceRecords = collect([
-            [
-                'registrant_id' => null,
-                'email' => 'person@example.com',
-                'status' => 'attended',
-                'duration' => 3600,
-                'join_time' => null,
-                'leave_time' => null,
-                'raw' => [
-                    'id' => 'participant-1',
-                    'user_email' => 'person@example.com',
-                    'duration' => 3600,
-                ],
-            ],
-        ]);
-
-        $this->mock(ZoomWebinarService::class, function (MockInterface $mock) use ($webinarId, $participants) {
-            $mock->shouldReceive('listPastWebinarParticipants')
-                ->once()
-                ->with($webinarId)
-                ->andReturn($participants);
-        });
-
-        $this->mock(ZoomAttendanceMapper::class, function (MockInterface $mock) use ($participants, $attendanceRecords) {
-            $mock->shouldReceive('map')
-                ->once()
-                ->with($participants)
-                ->andReturn($attendanceRecords);
-        });
-
-        $this->mock(RecordWebinarAttendanceAction::class, function (MockInterface $mock) use ($webinarId, $attendanceRecords) {
-            $mock->shouldReceive('execute')
-                ->once()
-                ->with('zoom', $webinarId, $attendanceRecords);
-        });
 
         $response = $this->signedZoomPost([
             'event' => 'webinar.ended',
@@ -146,55 +106,18 @@ class ZoomWebhookTest extends TestCase
         ]);
 
         $response->assertNoContent();
+
+        Queue::assertPushed(FinalizeCompletedWebinarJob::class, function (FinalizeCompletedWebinarJob $job) use ($webinarId) {
+            return $job->provider === 'zoom'
+                && $job->externalWebinarId === $webinarId;
+        });
     }
 
-    public function test_it_processes_webinar_completed_events(): void
+    public function test_it_dispatches_finalize_job_for_webinar_completed_events(): void
     {
+        Queue::fake();
+
         $webinarId = '987654321';
-
-        $participants = collect([
-            [
-                'id' => 'participant-2',
-                'user_email' => 'another@example.com',
-                'duration' => 1800,
-            ],
-        ]);
-
-        $attendanceRecords = collect([
-            [
-                'registrant_id' => null,
-                'email' => 'another@example.com',
-                'status' => 'attended',
-                'duration' => 1800,
-                'join_time' => null,
-                'leave_time' => null,
-                'raw' => [
-                    'id' => 'participant-2',
-                    'user_email' => 'another@example.com',
-                    'duration' => 1800,
-                ],
-            ],
-        ]);
-
-        $this->mock(ZoomWebinarService::class, function (MockInterface $mock) use ($webinarId, $participants) {
-            $mock->shouldReceive('listPastWebinarParticipants')
-                ->once()
-                ->with($webinarId)
-                ->andReturn($participants);
-        });
-
-        $this->mock(ZoomAttendanceMapper::class, function (MockInterface $mock) use ($participants, $attendanceRecords) {
-            $mock->shouldReceive('map')
-                ->once()
-                ->with($participants)
-                ->andReturn($attendanceRecords);
-        });
-
-        $this->mock(RecordWebinarAttendanceAction::class, function (MockInterface $mock) use ($webinarId, $attendanceRecords) {
-            $mock->shouldReceive('execute')
-                ->once()
-                ->with('zoom', $webinarId, $attendanceRecords);
-        });
 
         $response = $this->signedZoomPost([
             'event' => 'webinar.completed',
@@ -206,6 +129,11 @@ class ZoomWebhookTest extends TestCase
         ]);
 
         $response->assertNoContent();
+
+        Queue::assertPushed(FinalizeCompletedWebinarJob::class, function (FinalizeCompletedWebinarJob $job) use ($webinarId) {
+            return $job->provider === 'zoom'
+                && $job->externalWebinarId === $webinarId;
+        });
     }
 
     public function test_it_returns_not_found_for_unsupported_webinar_providers(): void
