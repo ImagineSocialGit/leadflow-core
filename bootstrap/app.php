@@ -47,8 +47,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->validateCsrfTokens(except: [
-            'webhooks/zoom',
-            'webhooks/twilio/sms',
+            'webinar/zoom',
+            'sms/telnyx',
+            'sms/twilio',
+            'email/resend',
         ]);
 
         $middleware->web(append: [
