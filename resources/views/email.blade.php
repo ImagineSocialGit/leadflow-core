@@ -40,12 +40,35 @@
                                 }
 
                                 $paragraphs = array_values(array_filter($paragraphs, fn ($paragraph) => filled($paragraph)));
+
+                                $hasCta = ! empty($cta)
+                                    && is_array($cta)
+                                    && filled($cta['label'] ?? null)
+                                    && filled($cta['url'] ?? null);
+
+                                $hasInlineCta = false;
                             @endphp
 
                             @foreach($paragraphs as $paragraph)
-                                <p style="margin:0 0 18px; font-size:16px; line-height:26px; color:#334155;">
-                                    {!! nl2br(e($paragraph)) !!}
-                                </p>
+                                @if(trim($paragraph) === '{cta}')
+                                    @php $hasInlineCta = true; @endphp
+
+                                    @if($hasCta)
+                                        <table role="presentation" cellpadding="0" cellspacing="0" style="margin:28px 0;">
+                                            <tr>
+                                                <td>
+                                                    <a href="{{ $cta['url'] }}" style="display:inline-block; background:#0f172a; color:#ffffff; text-decoration:none; font-size:15px; font-weight:700; padding:14px 22px; border-radius:999px;">
+                                                        {{ $cta['label'] }}
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    @endif
+                                @else
+                                    <p style="margin:0 0 18px; font-size:16px; line-height:26px; color:#334155;">
+                                        {!! nl2br(e($paragraph)) !!}
+                                    </p>
+                                @endif
                             @endforeach
 
                             @if(! empty($details) && is_array($details))
@@ -64,7 +87,7 @@
                                 </table>
                             @endif
 
-                            @if(! empty($cta) && is_array($cta) && ! empty($cta['label']) && ! empty($cta['url']))
+                            @if($hasCta && ! $hasInlineCta)
                                 <table role="presentation" cellpadding="0" cellspacing="0" style="margin:28px 0;">
                                     <tr>
                                         <td>
