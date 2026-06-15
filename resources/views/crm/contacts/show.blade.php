@@ -365,18 +365,99 @@
             </x-ui.card>
         </div>
 
-        <div class="">
+        <div
+            x-data="{ tab: new URLSearchParams(window.location.search).get('messages_tab') || 'messages' }"
+        >
             <x-ui.card class="space-y-4">
-                    <div>
-                        <h3 class="text-lg font-semibold tracking-tight">
-                            Message Consents
-                        </h3>
+                <div>
+                    <h3 class="text-lg font-semibold tracking-tight">
+                        Messages
+                    </h3>
 
+                    <p class="text-sm text-slate-500">
+                        Sent messages and consent settings for this {{ config('contacts.labels.singular') }}.
+                    </p>
+                </div>
+
+                <div class="border-b border-slate-200">
+                    <nav class="-mb-px flex gap-6" aria-label="Tabs">
+                        <button
+                            type="button"
+                            x-on:click="tab = 'messages'"
+                            class="border-b-2 px-1 pb-3 text-sm font-semibold"
+                            x-bind:class="tab === 'messages'
+                                ? 'border-indigo-600 text-indigo-600'
+                                : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'"
+                        >
+                            Messages
+                        </button>
+
+                        <button
+                            type="button"
+                            x-on:click="tab = 'consents'"
+                            class="border-b-2 px-1 pb-3 text-sm font-semibold"
+                            x-bind:class="tab === 'consents'
+                                ? 'border-indigo-600 text-indigo-600'
+                                : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'"
+                        >
+                            Consent Settings
+                        </button>
+                    </nav>
+                </div>
+
+                <div x-show="tab === 'messages'" class="space-y-3">
+                    @forelse ($scheduledMessages as $message)
+                        <div class="rounded-xl border border-slate-200 p-3">
+                            <div class="flex items-start justify-between gap-4">
+                                <div>
+                                    <p class="font-medium text-slate-900">
+                                        {{ str($message->message_type)->replace('_', ' ')->title() }}
+                                    </p>
+
+                                    <p class="mt-1 text-sm text-slate-500">
+                                        {{ str($message->channel)->replace('_', ' ')->title() }}
+                                        <span class="text-slate-400">/</span>
+                                        {{ str($message->purpose)->replace('_', ' ')->title() }}
+                                        <span class="text-slate-400">/</span>
+                                        {{ str($message->scope)->replace('_', ' ')->title() }}
+                                    </p>
+                                </div>
+
+                                <span class="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
+                                    {{ str($message->status)->replace('_', ' ')->title() }}
+                                </span>
+                            </div>
+
+                            <div class="mt-3 grid gap-2 text-xs text-slate-500 sm:grid-cols-3">
+                                <p>
+                                    Sent:
+                                    <span class="font-medium text-slate-700">
+                                        {{ $message->send_at?->format('M j, Y g:i A') ?? '—' }}
+                                    </span>
+                                </p>
+
+                                <p>
+                                    Queue:
+                                    <span class="font-medium text-slate-700">
+                                        {{ $message->queue ? str($message->queue)->replace('_', ' ')->title() : '—' }}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                    @empty
                         <p class="text-sm text-slate-500">
-                            Current channel, purpose, and scope permissions for this {{ config('contacts.labels.singular') }}.
+                            No sent messages yet.
                         </p>
-                    </div>
+                    @endforelse
 
+                    @if ($scheduledMessages->hasPages())
+                        <div class="pt-2">
+                            {{ $scheduledMessages->appends(['messages_tab' => 'messages'])->links() }}
+                        </div>
+                    @endif
+                </div>
+
+                <div x-show="tab === 'consents'" class="space-y-4">
                     <div class="space-y-3">
                         @forelse ($contact->messageConsents as $consent)
                             <div class="rounded-xl border border-slate-200 p-3">
@@ -483,7 +564,8 @@
                             @endforelse
                         </div>
                     </div>
-                </x-ui.card>
+                </div>
+            </x-ui.card>
         </div>
     </div>
 </x-layouts.crm>

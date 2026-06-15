@@ -21,13 +21,21 @@ class ContactController extends Controller
 
     public function show(Contact $contact)
     {
+        $scheduledMessages = $contact->scheduledMessages()
+            ->where('status', 'sent')
+            ->latest('send_at')
+            ->paginate(10, ['*'], 'messages_page')
+            ->withQueryString();
+
         $contact->load([
             'registrations.webinar',
             'notes' => fn ($query) => $query->latest(),
             'tasks' => fn ($query) => $query->latest(),
+            'messageConsents',
+            'consentRevocations',
         ]);
 
-        return view('crm.contacts.show', compact('contact'));
+        return view('crm.contacts.show', compact('contact', 'scheduledMessages'));
     }
 
     public function markConverted(Contact $contact, WebinarRegistration $registration): RedirectResponse

@@ -61,6 +61,11 @@ class Contact extends Model
         return $this->hasMany(ContactMortgageProfile::class);
     }
 
+    public function scheduledMessages(): HasMany
+    {
+        return $this->hasMany(ScheduledMessage::class);
+    }
+
     public function messageConsents(): HasMany
     {
         return $this->hasMany(MessageConsent::class);
