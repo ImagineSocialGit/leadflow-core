@@ -100,6 +100,11 @@ class SmsPayload implements SmsMessage
         return $this->messageType;
     }
 
+    public function purpose(): string
+    {
+        return $this->purpose;
+    }
+
     public function devPayload(): array
     {
         return [

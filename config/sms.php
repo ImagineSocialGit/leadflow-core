@@ -8,12 +8,18 @@ return [
 
     'managed_by' => env('SMS_MANAGED_BY', 'platform'),
 
-    'from' => env('SMS_FROM', env('TWILIO_FROM')),
+    'from' => [
+        'transactional' => env('SMS_FROM_TRANSACTIONAL', env('SMS_FROM', env('TWILIO_FROM', env('TELNYX_FROM')))),
+        'marketing' => env('SMS_FROM_MARKETING', env('SMS_FROM', env('TWILIO_FROM', env('TELNYX_FROM')))),
+    ],
 
     'providers' => [
 
         'twilio' => [
-            'from' => env('SMS_FROM', env('TWILIO_FROM')),
+            'from' => [
+                'transactional' => env('TWILIO_FROM_TRANSACTIONAL', env('SMS_FROM_TRANSACTIONAL', env('SMS_FROM', env('TWILIO_FROM')))),
+                'marketing' => env('TWILIO_FROM_MARKETING', env('SMS_FROM_MARKETING', env('SMS_FROM', env('TWILIO_FROM')))),
+            ],
 
             'webhooks' => [
                 'stop_keywords' => [
@@ -44,7 +50,10 @@ return [
         ],
 
         'telnyx' => [
-            'from' => env('TELNYX_FROM'),
+            'from' => [
+                'transactional' => env('TELNYX_FROM_TRANSACTIONAL', env('SMS_FROM_TRANSACTIONAL', env('TELNYX_FROM', env('SMS_FROM')))),
+                'marketing' => env('TELNYX_FROM_MARKETING', env('SMS_FROM_MARKETING', env('TELNYX_FROM', env('SMS_FROM')))),
+            ],
 
             'webhooks' => [
                 'stop_keywords' => [

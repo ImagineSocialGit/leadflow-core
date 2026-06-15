@@ -34,6 +34,7 @@ class SmsMessagingService
         $sourceIp = $payload->sourceIp();
         $message = $payload->message();
         $kind = $payload->kind();
+        $purpose = $payload->purpose();
 
         if (! $this->smsSendGuard->allows($to, $message, $kind, $sourceIp)) {
             return;
@@ -55,6 +56,7 @@ class SmsMessagingService
             ->defaultProvider()
             ->send($to, $message, [
                 'kind' => $kind,
+                'purpose' => $purpose,
                 'source_ip' => $sourceIp,
             ]);
 

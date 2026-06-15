@@ -16,16 +16,12 @@ class TelnyxSmsProvider implements SmsProvider
     public function send(string $to, string $message, array $meta = []): void
     {
         $apiKey = config('services.telnyx.api_key');
-        $from = config('sms.providers.telnyx.from');
+        $purpose = $this->purposeFromMeta($meta);
+        $from = $this->fromForPurpose($purpose);
 
         if (! is_string($apiKey) || trim($apiKey) === '') {
             throw new RuntimeException('Telnyx API key is not configured.');
         }
-
-        if (! is_string($from) || trim($from) === '') {
-            throw new RuntimeException('Telnyx from number is not configured.');
-        }
-
 
         $payload = [
             'from' => $from,
@@ -50,5 +46,28 @@ class TelnyxSmsProvider implements SmsProvider
                 'Telnyx SMS send failed from ['.$from.'] to ['.$to.']: '.$response->body(),
             );
         }
+    }
+
+    private function purposeFromMeta(array $meta): string
+    {
+        $purpose = $meta['purpose'] ?? null;
+
+        if (! is_string($purpose) || trim($purpose) === '') {
+            throw new RuntimeException('Telnyx SMS purpose is not configured.');
+        }
+
+        return trim($purpose);
+    }
+
+    private function fromForPurpose(string $purpose): string
+    {
+        $from = config("sms.providers.telnyx.from.{$purpose}")
+            ?: config("sms.from.{$purpose}");
+
+        if (! is_string($from) || trim($from) === '') {
+            throw new RuntimeException("Telnyx from number is not configured for purpose [{$purpose}].");
+        }
+
+        return trim($from);
     }
 }

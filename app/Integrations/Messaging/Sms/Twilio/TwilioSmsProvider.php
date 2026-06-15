@@ -3,6 +3,7 @@
 namespace App\Integrations\Messaging\Sms\Twilio;
 
 use App\Contracts\Messaging\Sms\SmsProvider;
+use RuntimeException;
 use Twilio\Rest\Client;
 
 class TwilioSmsProvider implements SmsProvider
@@ -21,9 +22,35 @@ class TwilioSmsProvider implements SmsProvider
         string $message,
         array $meta = [],
     ): void {
+        $purpose = $this->purposeFromMeta($meta);
+        $from = $this->fromForPurpose($purpose);
+
         $this->client->messages->create($to, [
-            'from' => config('sms.providers.twilio.from'),
+            'from' => $from,
             'body' => $message,
         ]);
+    }
+
+    private function purposeFromMeta(array $meta): string
+    {
+        $purpose = $meta['purpose'] ?? null;
+
+        if (! is_string($purpose) || trim($purpose) === '') {
+            throw new RuntimeException('Twilio SMS purpose is not configured.');
+        }
+
+        return trim($purpose);
+    }
+
+    private function fromForPurpose(string $purpose): string
+    {
+        $from = config("sms.providers.twilio.from.{$purpose}")
+            ?: config("sms.from.{$purpose}");
+
+        if (! is_string($from) || trim($from) === '') {
+            throw new RuntimeException("Twilio from number is not configured for purpose [{$purpose}].");
+        }
+
+        return trim($from);
     }
 }
