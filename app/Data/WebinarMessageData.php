@@ -7,6 +7,7 @@ use App\Models\Webinar;
 use App\Models\WebinarRegistration;
 use App\Models\WebinarWaitlistSignup;
 use App\Support\Webinars\WebinarJoinLinkGenerator;
+use App\Support\Webinars\WebinarPlaybackLinkGenerator;
 
 readonly class WebinarMessageData extends MessageData
 {
@@ -48,7 +49,6 @@ readonly class WebinarMessageData extends MessageData
             contact: $signup->contact,
             webinar: $webinar,
             waitlistSignup: $signup,
-            webinarJoinUrl: $webinar->join_url,
             requestIp: $signup->meta['request_ip']
                 ?? $signup->meta['ip_address']
                 ?? null,
@@ -64,6 +64,10 @@ readonly class WebinarMessageData extends MessageData
         $startsAt = $this->webinar->starts_at;
         $endsAt = $this->webinar->ends_at;
         $webinarSeries = $this->webinar->webinarSeries;
+
+        $playbackUrl = filled($this->webinar->playback_url)
+            ? app(WebinarPlaybackLinkGenerator::class)->forWebinar($this->webinar)
+            : null;
 
         return [
             ...parent::toArray(),
@@ -85,7 +89,7 @@ readonly class WebinarMessageData extends MessageData
             'webinar_platform' => $this->webinar->platform,
             'webinar_join_url' => $this->webinarJoinUrl,
             'webinar_registration_url' => $this->webinar->registration_url,
-            'webinar_playback_url' => $this->webinar->playback_url,
+            'webinar_playback_url' => $playbackUrl,
             'webinar_playback_passcode' => $this->webinar->playback_passcode,
 
             'webinar_starts_at' => $startsAt?->toIso8601String(),
@@ -112,12 +116,12 @@ readonly class WebinarMessageData extends MessageData
             'event_start_datetime' => $this->formatDateTime($startsAt, $timezone),
             'event_join_url' => $this->webinarJoinUrl,
             'event_registration_url' => $this->webinar->registration_url,
-            'event_playback_url' => $this->webinar->playback_url,
+            'event_playback_url' => $playbackUrl,
             'event_playback_passcode' => $this->webinar->playback_passcode,
 
             'join_url' => $this->webinarJoinUrl,
             'registration_url' => $this->webinar->registration_url,
-            'playback_url' => $this->webinar->playback_url,
+            'playback_url' => $playbackUrl,
             'playback_passcode' => $this->webinar->playback_passcode,
         ];
     }

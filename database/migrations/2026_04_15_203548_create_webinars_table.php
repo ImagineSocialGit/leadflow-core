@@ -26,6 +26,7 @@ return new class extends Migration
 
             $table->string('join_url')->nullable();
             $table->string('registration_url')->nullable();
+            $table->string('playback_token')->unique()->nullable();
             $table->string('playback_url')->nullable();
             $table->string('playback_passcode')->nullable();
 

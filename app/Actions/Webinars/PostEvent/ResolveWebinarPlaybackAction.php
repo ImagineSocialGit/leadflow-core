@@ -4,6 +4,7 @@ namespace App\Actions\Webinars\PostEvent;
 
 use App\Contracts\Webinars\WebinarProvider;
 use App\Models\Webinar;
+use Illuminate\Support\Str;
 
 class ResolveWebinarPlaybackAction
 {
@@ -27,6 +28,7 @@ class ResolveWebinarPlaybackAction
         }
 
         $webinar->forceFill([
+            'playback_token' => $webinar->playback_token ?: Str::random(48),
             'playback_url' => $recording->playbackUrl,
             'playback_passcode' => $recording->playbackPasscode,
             'meta' => array_replace_recursive($webinar->meta ?? [], [
