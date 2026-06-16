@@ -7,6 +7,16 @@ return [
     'confirmations' => [
         [
             'dispatch_key' => 'registration_created',
+            
+
+            'conditions' => [
+                [
+                    'field' => 'webinar.starts_at',
+                    'operator' => 'at_least_minutes_from_now',
+                    'value' => 30,
+                ],
+            ],
+
             'timing' => 'scheduled',
             'payload_class' => SmsPayload::class,
             'queue' => 'confirmation_messages',
@@ -116,6 +126,7 @@ return [
 
         [
             'dispatch_key' => 'registration_created',
+            'skip_when_join_clicked' => true,
             'timing' => 'scheduled',
             'payload_class' => SmsPayload::class,
             'queue' => 'reminders',

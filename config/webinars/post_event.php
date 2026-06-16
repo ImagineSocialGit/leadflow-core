@@ -11,8 +11,11 @@ return [
         ],
     ],
 
+    'retry_seconds' => 60,
+
     'attendance' => [
         'enabled' => true,
+        'empty_records_retry_for_minutes' => 15,
     ],
 
     'recordings' => [

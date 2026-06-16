@@ -66,7 +66,7 @@ class ProcessWebinarProviderEventJob implements ShouldQueue
                 );
 
                 if ($result === false) {
-                    $this->release(300);
+                    $this->release((int) config('webinars.post_event.retry_seconds', 300));
 
                     return;
                 }

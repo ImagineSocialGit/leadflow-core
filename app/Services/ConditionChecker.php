@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Arr;
+use Illuminate\Support\Carbon;
 use InvalidArgumentException;
 
 class ConditionChecker
@@ -118,8 +119,25 @@ class ConditionChecker
             'lt' => is_numeric($actual) && is_numeric($expected) && $actual < $expected,
             'lte' => is_numeric($actual) && is_numeric($expected) && $actual <= $expected,
 
+            'at_least_minutes_from_now' => $this->isAtLeastMinutesFromNow($actual, $expected),
+
             default => throw new InvalidArgumentException("Unsupported condition operator [{$operator}]."),
         };
+    }
+
+    private function isAtLeastMinutesFromNow(mixed $actual, mixed $expected): bool
+    {
+        if (! is_numeric($expected) || blank($actual)) {
+            return false;
+        }
+
+        try {
+            return Carbon::parse($actual)->greaterThanOrEqualTo(
+                now()->addMinutes((int) $expected)
+            );
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     /**

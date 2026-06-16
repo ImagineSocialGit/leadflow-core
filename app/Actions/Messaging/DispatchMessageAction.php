@@ -118,6 +118,7 @@ class DispatchMessageAction
                         'campaign_step' => $definition['step'] ?? null,
                         'conditions' => $definition['conditions'] ?? [],
                         'schedule' => $definition['schedule'] ?? null,
+                        'skip_when_join_clicked' => $definition['skip_when_join_clicked'] ?? false,
                         'triggered_at' => $triggeredAt->toISOString(),
                         'anchor' => $anchor?->toISOString(),
                     ],
