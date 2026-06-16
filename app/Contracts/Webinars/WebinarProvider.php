@@ -23,6 +23,8 @@ interface WebinarProvider
 
     public function registerAttendee(Webinar $webinar, WebinarRegistration $registration): ProviderRegistrationData;
 
+    public function cancelRegistration(WebinarRegistration $registration): void;
+
     public function parseWebhook(Request $request): ProviderWebhookEvent;
 
     /**

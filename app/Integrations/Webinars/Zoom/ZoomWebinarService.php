@@ -38,6 +38,21 @@ class ZoomWebinarService
         return $response->json();
     }
 
+    public function cancelRegistrant(
+        string $webinarId,
+        string $registrantId,
+        ?string $occurrenceId = null
+    ): void {
+        $response = $this->client()->delete(
+            "/webinars/{$webinarId}/registrants/".rawurlencode($registrantId),
+            array_filter([
+                'occurrence_id' => $occurrenceId,
+            ], fn (mixed $value): bool => filled($value))
+        );
+
+        $response->throw();
+    }
+
     public function listPastWebinarParticipants(string $webinarId): Collection
     {
         return Cache::remember(

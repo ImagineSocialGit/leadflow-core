@@ -8,6 +8,7 @@ use App\Models\WebinarRegistration;
 use App\Models\WebinarWaitlistSignup;
 use App\Support\Webinars\WebinarJoinLinkGenerator;
 use App\Support\Webinars\WebinarPlaybackLinkGenerator;
+use App\Support\Webinars\WebinarRegistrationCancelLinkGenerator;
 
 readonly class WebinarMessageData extends MessageData
 {
@@ -69,6 +70,10 @@ readonly class WebinarMessageData extends MessageData
             ? app(WebinarPlaybackLinkGenerator::class)->forWebinar($this->webinar)
             : null;
 
+        $cancelRegistrationUrl = $this->registration
+            ? app(WebinarRegistrationCancelLinkGenerator::class)->forRegistration($this->registration)
+            : null;
+
         return [
             ...parent::toArray(),
 
@@ -89,6 +94,7 @@ readonly class WebinarMessageData extends MessageData
             'webinar_platform' => $this->webinar->platform,
             'webinar_join_url' => $this->webinarJoinUrl,
             'webinar_registration_url' => $this->webinar->registration_url,
+            'webinar_cancel_registration_url' => $cancelRegistrationUrl,
             'webinar_playback_url' => $playbackUrl,
             'webinar_playback_passcode' => $this->webinar->playback_passcode,
 
@@ -116,11 +122,13 @@ readonly class WebinarMessageData extends MessageData
             'event_start_datetime' => $this->formatDateTime($startsAt, $timezone),
             'event_join_url' => $this->webinarJoinUrl,
             'event_registration_url' => $this->webinar->registration_url,
+            'event_cancel_registration_url' => $cancelRegistrationUrl,
             'event_playback_url' => $playbackUrl,
             'event_playback_passcode' => $this->webinar->playback_passcode,
 
             'join_url' => $this->webinarJoinUrl,
             'registration_url' => $this->webinar->registration_url,
+            'cancel_registration_url' => $cancelRegistrationUrl,
             'playback_url' => $playbackUrl,
             'playback_passcode' => $this->webinar->playback_passcode,
         ];

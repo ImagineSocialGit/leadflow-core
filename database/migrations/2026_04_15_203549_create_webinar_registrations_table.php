@@ -29,7 +29,8 @@ return new class extends Migration
 
             $table->timestamp('registered_at')->nullable();
             $table->timestamp('attended_at')->nullable()->index();
-
+            $table->timestamp('cancelled_at')->nullable()->index();
+            
             $table->timestamps();
 
             $table->unique(

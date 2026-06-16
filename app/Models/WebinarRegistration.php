@@ -26,12 +26,14 @@ class WebinarRegistration extends Model
         'meta',
         'registered_at',
         'attended_at',
+        'cancelled_at',
     ];
 
     protected $casts = [
         'meta' => 'array',
         'registered_at' => 'datetime',
         'attended_at' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
 
     public function contact(): BelongsTo

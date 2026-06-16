@@ -3,6 +3,7 @@
 use App\Http\Controllers\Public\ConsentRevocationController;
 use App\Http\Controllers\Public\WebinarJoinRedirectController;
 use App\Http\Controllers\Public\WebinarPlaybackRedirectController;
+use App\Http\Controllers\Public\WebinarRegistrationCancellationController;
 use App\Http\Controllers\Public\WebinarRegistrationController;
 use App\Http\Controllers\Public\WebinarWaitlistSignupController;
 use Illuminate\Support\Facades\Route;
@@ -15,6 +16,10 @@ Route::get('/j/{token}', WebinarJoinRedirectController::class)
 
 Route::get('/p/{token}', WebinarPlaybackRedirectController::class)
     ->name('webinar.playback.redirect');
+
+Route::get('/registrations/{registration}/cancel', WebinarRegistrationCancellationController::class)
+    ->middleware(['signed:relative', 'throttle:6,1'])
+    ->name('webinar.registration.cancel');
 
 Route::get('/unsubscribe/{contact}', [ConsentRevocationController::class, 'emailMarketingUnsubscribe'])
     ->middleware(['throttle:6,1'])

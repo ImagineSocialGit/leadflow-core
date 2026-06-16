@@ -51,6 +51,27 @@ class ZoomWebinarProvider implements WebinarProvider
         );
     }
 
+    public function cancelRegistration(WebinarRegistration $registration): void
+    {
+        $registration->loadMissing('webinar');
+
+        $webinar = $registration->webinar;
+
+        $registrantId = data_get($registration->meta, 'provider.registrant_id')
+            ?? data_get($registration->meta, 'provider.id');
+
+        if (! $webinar || blank($webinar->external_id) || blank($registrantId)) {
+            return;
+        }
+
+        $this->zoomWebinarService->cancelRegistrant(
+            webinarId: (string) $webinar->external_id,
+            registrantId: (string) $registrantId,
+            occurrenceId: data_get($registration->meta, 'provider.occurrence_id')
+                ?? data_get($registration->meta, 'provider.raw.occurrence_id')
+        );
+}
+
     public function listWebinarsByTitle(string $title): iterable
     {
         return $this->zoomWebinarService->listWebinarsByTitle($title);
