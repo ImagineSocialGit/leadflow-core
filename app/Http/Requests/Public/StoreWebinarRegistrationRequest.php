@@ -60,7 +60,7 @@ class StoreWebinarRegistrationRequest extends FormRequest
                 ) {
                     $validator->errors()->add(
                         'transactional_consent',
-                        'At least one of Email or SMS transactional messages containing links are required for this webinar.'
+                        'Consent to at least one (Email or SMS) transactional message fields are required for this webinar.'
                     );
                 }
 

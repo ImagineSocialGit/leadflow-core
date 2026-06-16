@@ -25,7 +25,11 @@ class WebinarRegistrationController extends Controller
         GetActiveWebinarSeriesAction $getActiveWebinarSeriesAction,
         GetNextUpcomingWebinarAction $getNextUpcomingWebinarAction
     ): Response {
-        if (! config('cache-keys.enabled')) {
+        if (
+            ! config('cache-keys.enabled')
+            || session()->has('errors')
+            || session()->hasOldInput()
+        ) {
             return response($this->renderShowPage(
                 $seriesSlug,
                 $getActiveWebinarSeriesAction,

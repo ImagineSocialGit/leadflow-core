@@ -28,6 +28,7 @@
     <section
         x-data="webinarRegistrationPage(@js([
             'countdownTarget' => $countdownTarget,
+            'formOpen' => $errors->any(),
         ]))"
         class="{{ $style['section'] ?? 'bg-white' }}"
         >
