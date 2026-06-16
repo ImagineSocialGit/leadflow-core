@@ -18,7 +18,12 @@ return [
 
             'payload' => [
                 'subject' => 'You’re registered: {webinar_title}',
-                'body' => 'Thanks for registering for {webinar_title}! We\'ll be sending you reminders and your join link soon!'
+                'body' => 'Thanks for registering for {webinar_title}! We\'ll be sending you reminders and your join link soon!',
+
+                'secondary_link' => [
+                    'label' => 'Need to cancel your registration?',
+                    'url' => '{cancel_registration_url}',
+                ],
             ],
         ],
     ],
@@ -51,7 +56,11 @@ return [
 
             'payload' => [
                 'subject' => 'Your webinar is coming up in 10 days',
-                'body' => 'You will be able to join at {webinar_join_url}!',
+                'body' => 'Your webinar is coming up. Use the button below to join when it’s time.',
+                'cta' => [
+                    'label' => 'Join Webinar',
+                    'url' => '{webinar_join_url}',
+                ],
             ],
         ],
         [
@@ -67,7 +76,11 @@ return [
 
             'payload' => [
                 'subject' => 'Your webinar is one week away',
-                'body' => 'You will be able to join at {webinar_join_url}!',
+                'body' => 'Your webinar is coming up. Use the button below to join when it’s time.',
+                'cta' => [
+                    'label' => 'Join Webinar',
+                    'url' => '{webinar_join_url}',
+                ],
             ],
         ],
         [
@@ -83,7 +96,11 @@ return [
 
             'payload' => [
                 'subject' => 'Your webinar is tomorrow',
-                'body' => 'You will be able to join at {webinar_join_url}!',
+                'body' => 'Your webinar is tomorrow. Use the button below to join when it’s time.',
+                'cta' => [
+                    'label' => 'Join Webinar',
+                    'url' => '{webinar_join_url}',
+                ],
             ],
         ],
         [
@@ -99,7 +116,11 @@ return [
 
             'payload' => [
                 'subject' => 'Your webinar starts in 30 minutes',
-                'body' => 'You will be able to join at {webinar_join_url}!',
+                'body' => 'Your webinar starts in 30 minutes. Use the button below to join.',
+                'cta' => [
+                    'label' => 'Join Webinar',
+                    'url' => '{webinar_join_url}',
+                ],
             ],
         ],
         [
@@ -115,7 +136,11 @@ return [
 
             'payload' => [
                 'subject' => 'Your webinar starts in 10 minutes',
-                'body' => 'You will be able to join at {webinar_join_url}!',
+                'body' => 'Your webinar starts in 10 minutes. Use the button below to join.',
+                'cta' => [
+                    'label' => 'Join Webinar',
+                    'url' => '{webinar_join_url}',
+                ],
             ],
         ],
         [
@@ -131,7 +156,11 @@ return [
 
             'payload' => [
                 'subject' => 'Your webinar is live!',
-                'body' => '{webinar_title} is live! Join here: {webinar_join_url}',
+                'body' => '{webinar_title} is live. Use the button below to join now.',
+                'cta' => [
+                    'label' => 'Join Now',
+                    'url' => '{webinar_join_url}',
+                ],
             ],
         ],
     ],
