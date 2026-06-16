@@ -7,9 +7,14 @@ return [
     'confirmations' => [
         [
             'dispatch_key' => 'registration_created',
-            'timing' => 'immediate',
+            'timing' => 'scheduled',
             'payload_class' => EmailPayload::class,
             'queue' => 'confirmation_messages',
+
+            'schedule' => [
+                'type' => 'delay',
+                'minutes' => 15,
+            ],
 
             'payload' => [
                 'subject' => 'You’re registered: {webinar_title}',

@@ -7,9 +7,14 @@ return [
     'confirmations' => [
         [
             'dispatch_key' => 'registration_created',
-            'timing' => 'immediate',
+            'timing' => 'scheduled',
             'payload_class' => SmsPayload::class,
             'queue' => 'confirmation_messages',
+
+            'schedule' => [
+                'type' => 'delay',
+                'minutes' => 15,
+            ],
 
             'payload' => [
                 'message' => "You're registered for {webinar_title} on {webinar_starts_at}. Join here: {webinar_join_url}",
@@ -25,7 +30,7 @@ return [
             'queue' => 'opt_in_messages',
 
             'payload' => [
-                'message' => 'Thanks for subscribing to receive webinar-related messages! Reply HELP for help. Message frequency may vary. Msg&data rates may apply. Reply STOP to opt out.',
+                'message' => 'Thanks for subscribing to receive webinar-related messages! You will receive confirmation details shortly. Reply HELP for help. Message frequency may vary. Msg&data rates may apply. Reply STOP to opt out.',
             ],
         ]
     ],
