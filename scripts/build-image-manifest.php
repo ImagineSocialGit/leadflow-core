@@ -22,7 +22,7 @@ if (! preg_match('/^[a-zA-Z0-9_-]+$/', $clientKey)) {
     exit(1);
 }
 
-$manifestPath = base_path('resources/images/manifest.json');
+$manifestPath = base_path("client/{$clientKey}/resources/images/manifest.json");
 $outputPath = base_path("client/{$clientKey}/config/generated/images.php");
 
 if (! file_exists($manifestPath)) {

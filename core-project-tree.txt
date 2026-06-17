@@ -17,6 +17,7 @@
 │   │   │       └── HandleInboundSmsWebhookAction.php
 │   │   └── Webinars
 │   │       ├── AddRegistrantToWebinarProviderAction.php
+│   │       ├── CancelWebinarRegistrationAction.php
 │   │       ├── CreateWebinarRegistrationAction.php
 │   │       ├── DispatchWebinarRegistrationMessagesAction.php
 │   │       ├── DispatchWebinarWaitlistMessagesAction.php
@@ -32,6 +33,7 @@
 │   │       │   ├── RecordWebinarProviderAttendanceAction.php
 │   │       │   └── ResolveWebinarPlaybackAction.php
 │   │       ├── ResolveWebinarJoinUrlAction.php
+│   │       ├── ResolveWebinarPlaybackUrlAction.php
 │   │       └── SyncWebinarSeriesFromProviderAction.php
 │   ├── Console
 │   │   └── Commands
@@ -75,6 +77,8 @@
 │   │   │   ├── Public
 │   │   │   │   ├── ConsentRevocationController.php
 │   │   │   │   ├── WebinarJoinRedirectController.php
+│   │   │   │   ├── WebinarPlaybackRedirectController.php
+│   │   │   │   ├── WebinarRegistrationCancellationController.php
 │   │   │   │   ├── WebinarRegistrationController.php
 │   │   │   │   └── WebinarWaitlistSignupController.php
 │   │   │   └── Webhooks
@@ -190,7 +194,9 @@
 │       │   └── EmailConsentRevocationLinkGenerator.php
 │       └── Webinars
 │           ├── WebinarJoinLinkGenerator.php
-│           └── WebinarRegisterPageConfig.php
+│           ├── WebinarPlaybackLinkGenerator.php
+│           ├── WebinarRegisterPageConfig.php
+│           └── WebinarRegistrationCancelLinkGenerator.php
 ├── artisan
 ├── bootstrap
 │   ├── app.php
@@ -264,6 +270,7 @@
 │       ├── public
 │       │   └── images
 │       │       └── processed
+│       │           ├── dark_logo
 │       │           ├── instructor
 │       │           └── logo
 │       ├── README.md
@@ -271,9 +278,9 @@
 │       │   ├── images
 │       │   │   ├── manifest.json
 │       │   │   └── raw
-│       │   │       ├── instructor.png
-│       │   │       └── logo.png
+│       │   │       └── dark_logo.png
 │       │   └── views
+│       │       ├── email.blade.php
 │       │       └── emails
 │       │           └── webinars
 │       └── scripts
@@ -538,4 +545,4 @@
 │   └── TestCase.php
 └── vite.config.js
 
-182 directories, 357 files
+183 directories, 363 files

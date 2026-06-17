@@ -1,9 +1,25 @@
 #!/usr/bin/env bash
 set -e
 
+CORE_ENV=".env"
+
+if [ ! -f "$CORE_ENV" ]; then
+  echo "Core .env file not found."
+  exit 1
+fi
+
+set -a
+source "$CORE_ENV"
+set +a
+
+if [ -z "${CLIENT_KEY:-}" ]; then
+  echo "CLIENT_KEY is not set in core .env."
+  exit 1
+fi
+
 RAW_DIR="resources/images/raw"
 OUT_DIR="public/images/processed"
-MANIFEST_PATH="resources/images/manifest.json"
+MANIFEST_PATH="client/${CLIENT_KEY}/resources/images/manifest.json"
 
 SIZES=(320 640 960 1280 1600)
 
@@ -79,6 +95,8 @@ find "$RAW_DIR" -type f -print0 | while IFS= read -r -d '' file; do
 
       if [ -n "$manifest_key" ]; then
         sizes_csv=$(IFS=,; echo "${processed_sizes[*]}")
+
+        mkdir -p "$(dirname "$MANIFEST_PATH")"
 
         php -r '
           $manifestPath = $argv[1];
