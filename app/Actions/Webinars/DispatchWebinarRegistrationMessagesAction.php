@@ -7,6 +7,7 @@ use App\Data\WebinarMessageData;
 use App\Enums\MessageChannel;
 use App\Enums\MessagePurpose;
 use App\Models\WebinarRegistration;
+use App\Services\Messaging\MessageEligibilityGate;
 
 class DispatchWebinarRegistrationMessagesAction
 {
@@ -14,6 +15,7 @@ class DispatchWebinarRegistrationMessagesAction
 
     public function __construct(
         private readonly DispatchMessageAction $dispatchMessageAction,
+        private readonly MessageEligibilityGate $messageEligibilityGate,
     ) {}
 
     public function handle(WebinarRegistration $registration): void
@@ -31,6 +33,16 @@ class DispatchWebinarRegistrationMessagesAction
         $messageData = WebinarMessageData::fromRegistration($registration)->toArray();
 
         foreach ([MessageChannel::Email, MessageChannel::Sms] as $channel) {
+
+            if (! $this->messageEligibilityGate->allows(
+                contact: $registration->contact,
+                channel: $channel,
+                purpose: MessagePurpose::Transactional,
+                scope: self::SCOPE,
+            )) {
+                continue;
+            }
+
             $this->dispatchMessageAction->handle(
                 contact: $registration->contact,
                 channel: $channel,
