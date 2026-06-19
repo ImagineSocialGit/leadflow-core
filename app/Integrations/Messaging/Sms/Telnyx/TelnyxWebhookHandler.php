@@ -33,10 +33,17 @@ class TelnyxWebhookHandler implements SmsWebhookHandler
             return false;
         }
 
+        $decodedSignature = base64_decode($signature, true);
+        $decodedPublicKey = base64_decode($publicKey, true);
+
+        if ($decodedSignature === false || $decodedPublicKey === false) {
+            return false;
+        }
+
         return sodium_crypto_sign_verify_detached(
-            sodium_hex2bin($signature),
+            $decodedSignature,
             $timestamp.'|'.$request->getContent(),
-            sodium_hex2bin($publicKey),
+            $decodedPublicKey,
         );
     }
 
