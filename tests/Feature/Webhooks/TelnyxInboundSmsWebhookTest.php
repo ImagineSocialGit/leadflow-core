@@ -2,19 +2,24 @@
 
 namespace Tests\Feature\Webhooks;
 
+use App\Actions\Messaging\Inbound\NotifyInternalUsersOfInboundMessageAction;
 use App\Actions\Messaging\Sms\Inbound\RespondToSmsHelpInboundMessageAction;
 use App\Actions\Messaging\Sms\Inbound\RevokeSmsConsentFromInboundMessageAction;
 use App\Contracts\Messaging\Sms\SmsWebhookHandler;
+use App\Mail\InboundMessageNotificationMail;
 use App\Models\ConsentRevocation;
 use App\Models\Contact;
 use App\Models\InboundMessage;
 use App\Models\MessageConsent;
+use App\Models\TeamMember;
+use App\Models\TeamMemberNotificationPreference;
 use App\Services\Messaging\Sms\SmsWebhookHandlerResolver;
 use App\Services\Messaging\Sms\SmsWebhookPayload;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class TelnyxInboundSmsWebhookTest extends TestCase
@@ -37,7 +42,14 @@ class TelnyxInboundSmsWebhookTest extends TestCase
             InboundMessage::CLASSIFICATION_HELP => [
                 RespondToSmsHelpInboundMessageAction::class,
             ],
-            InboundMessage::CLASSIFICATION_NORMAL_REPLY => [],
+            InboundMessage::CLASSIFICATION_NORMAL_REPLY => [
+                NotifyInternalUsersOfInboundMessageAction::class,
+            ],
+        ]);
+
+        config()->set('messaging.internal_notifications.inbound_replies', [
+            'default_team_member_email' => null,
+            'fallback_admin_email' => null,
         ]);
 
         config()->set('messaging.sms.inbound', [
@@ -118,10 +130,20 @@ class TelnyxInboundSmsWebhookTest extends TestCase
         $this->assertDatabaseCount('consent_revocations', 0);
     }
 
-    public function test_telnyx_inbound_normal_reply_stores_inbound_message_only(): void
+    public function test_telnyx_inbound_normal_reply_stores_inbound_message_and_sends_internal_email_notification(): void
     {
+        Mail::fake();
+
+        $teamMember = TeamMember::factory()->create([
+            'name' => 'Loan Officer',
+            'email' => 'loan-officer@example.com',
+        ]);
+
         $contact = Contact::factory()->create([
+            'first_name' => 'Test',
+            'last_name' => 'Contact',
             'phone' => '+15551234567',
+            'assigned_to' => $teamMember->email,
         ]);
 
         $this->postTelnyxWebhook([
@@ -130,6 +152,8 @@ class TelnyxInboundSmsWebhookTest extends TestCase
             'to' => '+15550001111',
             'body' => 'I am interested',
         ])->assertOk();
+
+        $inboundMessage = InboundMessage::query()->first();
 
         $this->assertDatabaseHas('inbound_messages', [
             'recipient_type' => Contact::class,
@@ -144,10 +168,156 @@ class TelnyxInboundSmsWebhookTest extends TestCase
             'body' => 'I am interested',
             'classification' => InboundMessage::CLASSIFICATION_NORMAL_REPLY,
             'purpose' => 'marketing',
-            'processed_at' => null,
         ]);
 
+        $this->assertNotNull($inboundMessage?->processed_at);
         $this->assertDatabaseCount('consent_revocations', 0);
+
+        Mail::assertSent(
+            InboundMessageNotificationMail::class,
+            fn (InboundMessageNotificationMail $mail): bool => $mail->hasTo($teamMember->email)
+                && $mail->inboundMessage->is($inboundMessage)
+        );
+    }
+
+    public function test_telnyx_inbound_normal_reply_without_contact_falls_back_to_default_team_member(): void
+    {
+        Mail::fake();
+
+        $teamMember = TeamMember::factory()->create([
+            'email' => 'default@example.com',
+        ]);
+
+        config()->set(
+            'messaging.internal_notifications.inbound_replies.default_team_member_email',
+            $teamMember->email,
+        );
+
+        $this->postTelnyxWebhook([
+            'provider_context_id' => self::MARKETING_PROFILE_ID,
+            'from' => '+15551234567',
+            'to' => '+15550001111',
+            'body' => 'Can someone call me?',
+        ])->assertOk();
+
+        $inboundMessage = InboundMessage::query()->first();
+
+        $this->assertDatabaseHas('inbound_messages', [
+            'recipient_type' => null,
+            'recipient_id' => null,
+            'channel' => 'sms',
+            'provider' => 'telnyx',
+            'from_value' => '+15551234567',
+            'body' => 'Can someone call me?',
+            'classification' => InboundMessage::CLASSIFICATION_NORMAL_REPLY,
+            'purpose' => 'marketing',
+        ]);
+
+        $this->assertNotNull($inboundMessage?->processed_at);
+
+        Mail::assertSent(
+            InboundMessageNotificationMail::class,
+            fn (InboundMessageNotificationMail $mail): bool => $mail->hasTo($teamMember->email)
+                && $mail->inboundMessage->is($inboundMessage)
+        );
+    }
+
+    public function test_telnyx_inbound_normal_reply_does_not_notify_inactive_assigned_team_member(): void
+    {
+        Mail::fake();
+
+        $inactiveTeamMember = TeamMember::factory()->inactive()->create([
+            'email' => 'inactive@example.com',
+        ]);
+
+        $defaultTeamMember = TeamMember::factory()->create([
+            'email' => 'default@example.com',
+        ]);
+
+        config()->set(
+            'messaging.internal_notifications.inbound_replies.default_team_member_email',
+            $defaultTeamMember->email,
+        );
+
+        Contact::factory()->create([
+            'phone' => '+15551234567',
+            'assigned_to' => $inactiveTeamMember->email,
+        ]);
+
+        $this->postTelnyxWebhook([
+            'from' => '+15551234567',
+            'body' => 'Please call me',
+        ])->assertOk();
+
+        Mail::assertNotSent(
+            InboundMessageNotificationMail::class,
+            fn (InboundMessageNotificationMail $mail): bool => $mail->hasTo($inactiveTeamMember->email)
+        );
+
+        Mail::assertSent(
+            InboundMessageNotificationMail::class,
+            fn (InboundMessageNotificationMail $mail): bool => $mail->hasTo($defaultTeamMember->email)
+        );
+    }
+
+    public function test_telnyx_inbound_normal_reply_respects_team_member_email_preference(): void
+    {
+        Mail::fake();
+
+        $assignedTeamMember = TeamMember::factory()->create([
+            'email' => 'assigned@example.com',
+        ]);
+
+        TeamMemberNotificationPreference::factory()
+            ->for($assignedTeamMember)
+            ->email()
+            ->inboundReplies()
+            ->disabled()
+            ->create();
+
+        Contact::factory()->create([
+            'phone' => '+15551234567',
+            'assigned_to' => $assignedTeamMember->email,
+        ]);
+
+        $this->postTelnyxWebhook([
+            'from' => '+15551234567',
+            'body' => 'I have a question',
+        ])->assertOk();
+
+        $inboundMessage = InboundMessage::query()->first();
+
+        $this->assertNotNull($inboundMessage?->processed_at);
+
+        Mail::assertNotSent(
+            InboundMessageNotificationMail::class,
+            fn (InboundMessageNotificationMail $mail): bool => $mail->hasTo($assignedTeamMember->email)
+        );
+    }
+
+    public function test_telnyx_inbound_normal_reply_assigned_to_string_can_match_active_team_member_name(): void
+    {
+        Mail::fake();
+
+        $teamMember = TeamMember::factory()->create([
+            'name' => 'Jane Loan Officer',
+            'email' => 'jane@example.com',
+        ]);
+
+        Contact::factory()->create([
+            'phone' => '+15551234567',
+            'assigned_to' => 'Jane Loan Officer',
+        ]);
+
+        $this->postTelnyxWebhook([
+            'from' => '+15551234567',
+            'body' => 'Sounds good',
+        ])->assertOk();
+
+        Mail::assertSent(
+            InboundMessageNotificationMail::class,
+            fn (InboundMessageNotificationMail $mail): bool => $mail->hasTo($teamMember->email)
+        );
     }
 
     public function test_telnyx_stop_from_marketing_profile_revokes_marketing_sms_only(): void

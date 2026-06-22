@@ -24,6 +24,13 @@ return [
         'dedupe_enabled' => true,
     ],
 
+    'internal_notifications' => [
+        'inbound_replies' => [
+            'default_team_member_email' => env('INBOUND_REPLY_DEFAULT_TEAM_MEMBER_EMAIL'),
+            'fallback_admin_email' => env('INBOUND_REPLY_FALLBACK_ADMIN_EMAIL', env('MAIL_FROM_ADDRESS')),
+        ],
+    ],
+
     'inbound' => [
         'handlers' => [
             'sms' => [
@@ -36,7 +43,7 @@ return [
                 ],
 
                 'normal_reply' => [
-                    //
+                    App\Actions\Messaging\Inbound\NotifyInternalUsersOfInboundMessageAction::class,
                 ],
             ],
         ],

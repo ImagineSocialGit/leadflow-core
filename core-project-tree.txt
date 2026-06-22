@@ -12,6 +12,8 @@
 │   │   │   ├── Email
 │   │   │   │   └── HandleInboundEmailWebhookAction.php
 │   │   │   ├── GrantMessageConsentAction.php
+│   │   │   ├── Inbound
+│   │   │   │   └── NotifyInternalUsersOfInboundMessageAction.php
 │   │   │   ├── RecordInboundMessageAction.php
 │   │   │   ├── RevokeMessageConsentAction.php
 │   │   │   └── Sms
@@ -136,6 +138,8 @@
 │   │           ├── ProcessPostWebinarEventJob.php
 │   │           ├── ProcessWebinarProviderEventJob.php
 │   │           └── RoutePostWebinarRegistrationJob.php
+│   ├── Mail
+│   │   └── InboundMessageNotificationMail.php
 │   ├── Messaging
 │   │   └── Payloads
 │   │       ├── EmailPayload.php
@@ -181,6 +185,7 @@
 │   │   │   │   ├── EmailProviderManager.php
 │   │   │   │   ├── EmailWebhookHandlerResolver.php
 │   │   │   │   └── EmailWebhookPayload.php
+│   │   │   ├── InboundMessageNotificationRecipientResolver.php
 │   │   │   ├── InboundMessageRouter.php
 │   │   │   ├── MessageDefinitionResolver.php
 │   │   │   ├── MessageEligibilityGate.php
@@ -569,4 +574,4 @@
 │   └── TestCase.php
 └── vite.config.js
 
-185 directories, 385 files
+187 directories, 388 files
