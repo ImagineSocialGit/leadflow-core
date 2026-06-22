@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('inbound_messages', function (Blueprint $table) {
             $table->id();
 
-            $table->nullableMorphs('recipient');
+            $table->nullableMorphs('sender');
 
             $table->string('client_key')->nullable()->index();
 
@@ -42,11 +42,11 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index([
-                'recipient_type',
-                'recipient_id',
+                'sender_type',
+                'sender_id',
                 'provider',
                 'classification',
-            ], 'inbound_messages_recipient_provider_classification_index');
+            ], 'inbound_messages_sender_provider_classification_index');
         });
     }
 

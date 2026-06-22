@@ -15,8 +15,8 @@ class InboundMessage extends Model
     public const CLASSIFICATION_IGNORED = 'ignored';
 
     protected $fillable = [
-        'recipient_type',
-        'recipient_id',
+        'sender_type',
+        'sender_id',
         'client_key',
         'channel',
         'provider',
@@ -39,7 +39,7 @@ class InboundMessage extends Model
     protected function casts(): array
     {
         return [
-            'recipient_id' => 'integer',
+            'sender_id' => 'integer',
             'channel' => MessageChannel::class,
             'purpose' => MessagePurpose::class,
             'received_at' => 'datetime',
@@ -58,7 +58,7 @@ class InboundMessage extends Model
         ];
     }
 
-    public function recipient(): MorphTo
+    public function sender(): MorphTo
     {
         return $this->morphTo();
     }

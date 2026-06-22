@@ -43,13 +43,13 @@ class ScheduleNextCampaignStepAction
         $nextStep = ((int) $enrollment->current_step) + 1;
 
         $scheduledMessages = $this->dispatchMessageAction->handle(
-            contact: $enrollment->contact,
+            recipient: $enrollment->contact,
             channel: $enrollment->channel,
             purpose: $enrollment->purpose,
             scope: $enrollment->scope,
             dispatchKeys: $dispatchKey,
             payload: $payload,
-            context: $context ?? $enrollment->source,
+            context: $context,
             meta: array_merge([
                 'campaign_enrollment_id' => $enrollment->id,
                 'campaign_key' => $enrollment->campaign_key,

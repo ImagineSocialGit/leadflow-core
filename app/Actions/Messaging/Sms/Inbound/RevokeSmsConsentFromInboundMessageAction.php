@@ -19,9 +19,9 @@ class RevokeSmsConsentFromInboundMessageAction implements InboundMessageHandler
 
     public function handle(InboundMessage $inboundMessage): ?string
     {
-        $recipient = $inboundMessage->recipient;
+        $sender = $inboundMessage->sender;
 
-        if (! $recipient instanceof Contact) {
+        if (! $sender instanceof Contact) {
             return $this->stopResponse($inboundMessage);
         }
 
@@ -30,7 +30,7 @@ class RevokeSmsConsentFromInboundMessageAction implements InboundMessageHandler
         if ($purpose !== null) {
             $this->revokePurpose(
                 inboundMessage: $inboundMessage,
-                contact: $recipient,
+                contact: $sender,
                 purpose: $purpose,
                 scope: null,
             );
@@ -40,8 +40,8 @@ class RevokeSmsConsentFromInboundMessageAction implements InboundMessageHandler
             return $this->stopResponse($inboundMessage);
         }
 
-        $this->logUnknownProviderContext($inboundMessage, $recipient);
-        $this->revokeAllSmsConsent($inboundMessage, $recipient);
+        $this->logUnknownProviderContext($inboundMessage, $sender);
+        $this->revokeAllSmsConsent($inboundMessage, $sender);
 
         $inboundMessage->markProcessed();
 

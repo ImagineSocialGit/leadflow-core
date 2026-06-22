@@ -9,6 +9,7 @@ use App\Jobs\Messaging\SendScheduledMessageJob;
 use App\Messaging\Payloads\EmailPayload;
 use App\Messaging\Payloads\SmsPayload;
 use App\Models\Contact;
+use App\Models\MessageConsent;
 use App\Models\ScheduledMessage;
 use App\Models\Webinar;
 use App\Models\WebinarSeries;
@@ -46,7 +47,8 @@ class DispatchWebinarWaitlistMessagesActionTest extends TestCase
         $this->assertSame(2, ScheduledMessage::query()->count());
 
         $this->assertDatabaseHas('scheduled_messages', [
-            'contact_id' => $contact->id,
+            'recipient_type' => Contact::class,
+            'recipient_id' => $contact->id,
             'context_type' => $signup->getMorphClass(),
             'context_id' => $signup->id,
             'channel' => MessageChannel::Email->value,
@@ -58,7 +60,8 @@ class DispatchWebinarWaitlistMessagesActionTest extends TestCase
         ]);
 
         $this->assertDatabaseHas('scheduled_messages', [
-            'contact_id' => $contact->id,
+            'recipient_type' => Contact::class,
+            'recipient_id' => $contact->id,
             'context_type' => $signup->getMorphClass(),
             'context_id' => $signup->id,
             'channel' => MessageChannel::Sms->value,
@@ -157,7 +160,7 @@ class DispatchWebinarWaitlistMessagesActionTest extends TestCase
 
     private function createContact(): Contact
     {
-        return Contact::query()->create([
+        $contact = Contact::query()->create([
             'first_name' => 'Jeff',
             'last_name' => 'Yarnall',
             'name' => 'Jeff Yarnall',
@@ -166,5 +169,18 @@ class DispatchWebinarWaitlistMessagesActionTest extends TestCase
             'status' => 'new',
             'source' => 'webinar_waitlist',
         ]);
+
+        foreach ([MessageChannel::Email->value, MessageChannel::Sms->value] as $channel) {
+            MessageConsent::query()->create([
+                'contact_id' => $contact->id,
+                'channel' => $channel,
+                'purpose' => MessagePurpose::Marketing->value,
+                'scope' => 'webinar_waitlist',
+                'consented_at' => now()->subMinute(),
+                'source' => 'test',
+            ]);
+        }
+
+        return $contact;
     }
 }

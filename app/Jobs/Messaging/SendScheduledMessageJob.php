@@ -9,13 +9,10 @@ use App\Enums\MessageChannel;
 use App\Models\CampaignEnrollment;
 use App\Models\ScheduledMessage;
 use App\Services\Messaging\Email\EmailMessagingService;
-use App\Services\ConditionChecker;
-use App\Services\Messaging\MessageEligibilityGate;
+use App\Services\Messaging\ScheduledMessageGate;
 use App\Services\Messaging\Sms\SmsMessagingService;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Throwable;
 
@@ -23,52 +20,30 @@ class SendScheduledMessageJob implements ShouldQueue
 {
     use Queueable;
 
+    /**
+     * @param  array<string, mixed>  $horizon
+     */
     public function __construct(
         public int $scheduledMessageId,
         public array $horizon = [],
     ) {}
 
     public function handle(
-        ConditionChecker $conditionChecker,
-        MessageEligibilityGate $messageEligibilityGate,
+        ScheduledMessageGate $scheduledMessageGate,
         EmailMessagingService $emailMessagingService,
         SmsMessagingService $smsMessagingService,
         ScheduleNextCampaignStepAction $scheduleNextCampaignStepAction,
     ): void {
         $scheduledMessage = ScheduledMessage::query()
-            ->with(['contact', 'context'])
+            ->with(['recipient', 'context'])
             ->find($this->scheduledMessageId);
 
         if (! $scheduledMessage || $scheduledMessage->status !== 'pending') {
             return;
         }
 
-        $contact = $scheduledMessage->contact;
-
-        if (! $contact) {
-            $this->markSkipped($scheduledMessage, 'Contact not found.');
-
-            return;
-        }
-
-        if (! $conditionChecker->passes(
-            conditions: $scheduledMessage->meta['conditions'] ?? [],
-            context: $this->conditionContext($scheduledMessage),
-        )) {
-            $this->markSkipped($scheduledMessage, 'Message conditions no longer pass.');
-
-            return;
-        }
-
-        if (! $messageEligibilityGate->allows(
-            contact: $contact,
-            channel: $scheduledMessage->channel,
-            purpose: $scheduledMessage->purpose,
-            scope: $scheduledMessage->scope,
-            messageKey: $scheduledMessage->message_type,
-            definitionConfigPath: $scheduledMessage->meta['definition_config_path'] ?? null,
-        )) {
-            $this->markSkipped($scheduledMessage, 'Message eligibility gate denied send.');
+        if ($denialReason = $scheduledMessageGate->denialReason($scheduledMessage)) {
+            $this->markSkipped($scheduledMessage, $denialReason);
 
             return;
         }
@@ -104,11 +79,16 @@ class SendScheduledMessageJob implements ShouldQueue
         }
     }
 
+    /**
+     * @return array<int, string>
+     */
     public function tags(): array
     {
         return array_values(array_filter([
             'scheduled-message:'.$this->scheduledMessageId,
-            isset($this->horizon['contact_id']) ? 'contact:'.$this->horizon['contact_id'] : null,
+            isset($this->horizon['recipient_type'], $this->horizon['recipient_id'])
+                ? 'recipient:'.$this->horizon['recipient_type'].':'.$this->horizon['recipient_id']
+                : null,
             isset($this->horizon['channel']) ? 'channel:'.$this->horizon['channel'] : null,
             isset($this->horizon['purpose']) ? 'purpose:'.$this->horizon['purpose'] : null,
             isset($this->horizon['scope']) ? 'scope:'.$this->horizon['scope'] : null,
@@ -170,31 +150,6 @@ class SendScheduledMessageJob implements ShouldQueue
         }
 
         return $payload;
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function conditionContext(ScheduledMessage $scheduledMessage): array
-    {
-        $context = [
-            'contact' => $scheduledMessage->contact?->toArray() ?? [],
-        ];
-
-        $relatedContext = $scheduledMessage->context;
-
-        if ($relatedContext instanceof Model) {
-            $context[Str::snake(class_basename($relatedContext))] = $relatedContext->toArray();
-        }
-
-        $payload = $scheduledMessage->payload ?? [];
-
-        return array_replace_recursive(
-            $context,
-            is_array($payload['runtime_context'] ?? null) ? $payload['runtime_context'] : [],
-            is_array($payload['context'] ?? null) ? $payload['context'] : [],
-            is_array($payload['tokens'] ?? null) ? $payload['tokens'] : [],
-        );
     }
 
     private function sendEmail(

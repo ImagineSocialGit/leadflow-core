@@ -6,6 +6,7 @@ use App\Actions\Campaigns\EnrollContactInCampaignAction;
 use App\Messaging\Payloads\EmailPayload;
 use App\Models\CampaignEnrollment;
 use App\Models\Contact;
+use App\Models\MessageConsent;
 use App\Models\ScheduledMessage;
 use App\Models\WebinarRegistration;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -43,7 +44,8 @@ class EnrollContactInCampaignActionTest extends TestCase
             ],
         ]);
 
-        $contact = Contact::factory()->create();
+        $contact = $this->contactWithMarketingEmailConsent();
+
         $registration = WebinarRegistration::factory()->create([
             'contact_id' => $contact->id,
         ]);
@@ -72,6 +74,9 @@ class EnrollContactInCampaignActionTest extends TestCase
         $scheduledMessage = ScheduledMessage::first();
 
         $this->assertNotNull($scheduledMessage);
+        $this->assertSame(Contact::class, $scheduledMessage->recipient_type);
+        $this->assertSame($contact->id, $scheduledMessage->recipient_id);
+        $this->assertTrue($scheduledMessage->recipient->is($contact));
         $this->assertSame($scheduledMessage->id, $enrollment->last_scheduled_message_id);
         $this->assertSame('step_1', $scheduledMessage->message_type);
         $this->assertSame('email', $scheduledMessage->channel);
@@ -106,7 +111,7 @@ class EnrollContactInCampaignActionTest extends TestCase
             ],
         ]);
 
-        $contact = Contact::factory()->create();
+        $contact = $this->contactWithMarketingEmailConsent();
 
         $existingEnrollment = CampaignEnrollment::create([
             'contact_id' => $contact->id,
@@ -137,7 +142,7 @@ class EnrollContactInCampaignActionTest extends TestCase
     {
         Queue::fake();
 
-        $contact = Contact::factory()->create();
+        $contact = $this->contactWithMarketingEmailConsent();
 
         $existingEnrollment = CampaignEnrollment::create([
             'contact_id' => $contact->id,
@@ -173,7 +178,7 @@ class EnrollContactInCampaignActionTest extends TestCase
 
         Config::set('messaging.email.marketing.webinar', []);
 
-        $contact = Contact::factory()->create();
+        $contact = $this->contactWithMarketingEmailConsent();
 
         $enrollment = app(EnrollContactInCampaignAction::class)->handle(
             contact: $contact,
@@ -189,5 +194,30 @@ class EnrollContactInCampaignActionTest extends TestCase
         $this->assertNotNull($enrollment->completed_at);
         $this->assertNull($enrollment->last_scheduled_message_id);
         $this->assertDatabaseCount('scheduled_messages', 0);
+    }
+
+    private function contactWithMarketingEmailConsent(): Contact
+    {
+        $contact = Contact::factory()->create([
+            'email' => 'person@example.com',
+        ]);
+
+        MessageConsent::query()->create([
+            'contact_id' => $contact->id,
+            'channel' => 'email',
+            'purpose' => 'marketing',
+            'scope' => 'webinar',
+            'consented_at' => now()->subMinute(),
+            'source' => 'test',
+        ]);
+
+        return $contact;
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+
+        parent::tearDown();
     }
 }

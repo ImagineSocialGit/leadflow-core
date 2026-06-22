@@ -10,7 +10,7 @@ class RecordInboundMessageAction
     /**
      * @param  array<string, mixed>  $data
      */
-    public function handle(array $data, ?Model $recipient = null): InboundMessage
+    public function handle(array $data, ?Model $sender = null): InboundMessage
     {
         $inboundMessage = new InboundMessage([
             'client_key' => $data['client_key'] ?? config('client.key'),
@@ -38,8 +38,8 @@ class RecordInboundMessageAction
             'meta' => $data['meta'] ?? null,
         ]);
 
-        if ($recipient) {
-            $inboundMessage->recipient()->associate($recipient);
+        if ($sender) {
+            $inboundMessage->sender()->associate($sender);
         }
 
         $inboundMessage->save();

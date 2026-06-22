@@ -40,6 +40,14 @@ class TelnyxWebhookHandler implements SmsWebhookHandler
             return false;
         }
 
+        if (strlen($decodedSignature) !== SODIUM_CRYPTO_SIGN_BYTES) {
+            return false;
+        }
+
+        if (strlen($decodedPublicKey) !== SODIUM_CRYPTO_SIGN_PUBLICKEYBYTES) {
+            return false;
+        }
+
         return sodium_crypto_sign_verify_detached(
             $decodedSignature,
             $timestamp.'|'.$request->getContent(),

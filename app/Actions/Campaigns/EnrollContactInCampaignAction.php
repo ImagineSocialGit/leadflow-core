@@ -99,7 +99,7 @@ class EnrollContactInCampaignAction
         ?array $meta,
     ): ?ScheduledMessage {
         $scheduledMessages = $this->dispatchMessageAction->handle(
-            contact: $contact,
+            recipient: $contact,
             channel: $enrollment->channel,
             purpose: $enrollment->purpose,
             scope: $enrollment->scope,

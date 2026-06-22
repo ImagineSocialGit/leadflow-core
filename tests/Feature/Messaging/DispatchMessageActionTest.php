@@ -6,6 +6,7 @@ use App\Actions\Messaging\DispatchMessageAction;
 use App\Jobs\Messaging\SendScheduledMessageJob;
 use App\Messaging\Payloads\EmailPayload;
 use App\Models\Contact;
+use App\Models\MessageConsent;
 use App\Models\ScheduledMessage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -36,10 +37,10 @@ class DispatchMessageActionTest extends TestCase
             ],
         ]);
 
-        $contact = Contact::factory()->create();
+        $contact = $this->contactWithConsent();
 
         $messages = app(DispatchMessageAction::class)->handle(
-            contact: $contact,
+            recipient: $contact,
             channel: 'email',
             purpose: 'transactional',
             scope: 'webinar',
@@ -56,6 +57,10 @@ class DispatchMessageActionTest extends TestCase
         $this->assertSame('transactional', $message->purpose);
         $this->assertSame('webinar', $message->scope);
         $this->assertSame('confirmation', $message->message_type);
+
+        $this->assertSame(Contact::class, $message->recipient_type);
+        $this->assertSame($contact->id, $message->recipient_id);
+        $this->assertTrue($message->recipient->is($contact));
 
         Queue::assertPushed(SendScheduledMessageJob::class);
     }
@@ -78,7 +83,7 @@ class DispatchMessageActionTest extends TestCase
         ]);
 
         app(DispatchMessageAction::class)->handle(
-            contact: Contact::factory()->create(),
+            recipient: $this->contactWithConsent(),
             channel: 'email',
             purpose: 'transactional',
             scope: 'webinar',
@@ -122,7 +127,7 @@ class DispatchMessageActionTest extends TestCase
         $triggeredAt = Carbon::parse('2026-06-11 10:00:00');
 
         app(DispatchMessageAction::class)->handle(
-            contact: Contact::factory()->create(),
+            recipient: $this->contactWithConsent(),
             channel: 'email',
             purpose: 'transactional',
             scope: 'webinar',
@@ -171,7 +176,7 @@ class DispatchMessageActionTest extends TestCase
         $anchor = Carbon::parse('2026-06-11 15:00:00');
 
         app(DispatchMessageAction::class)->handle(
-            contact: Contact::factory()->create(),
+            recipient: $this->contactWithConsent(),
             channel: 'email',
             purpose: 'transactional',
             scope: 'webinar',
@@ -215,7 +220,7 @@ class DispatchMessageActionTest extends TestCase
         ]);
 
         app(DispatchMessageAction::class)->handle(
-            contact: Contact::factory()->create([
+            recipient: $this->contactWithConsent(attributes: [
                 'status' => 'new',
             ]),
             channel: 'email',
@@ -252,7 +257,7 @@ class DispatchMessageActionTest extends TestCase
         ]);
 
         app(DispatchMessageAction::class)->handle(
-            contact: Contact::factory()->create(),
+            recipient: $this->contactWithConsent(),
             channel: 'email',
             purpose: 'transactional',
             scope: 'webinar',
@@ -275,6 +280,8 @@ class DispatchMessageActionTest extends TestCase
             'Registered',
             $message->payload['subject'],
         );
+
+        $this->assertSame('person@example.com', $message->payload['to']);
 
         $this->assertSame(
             'messaging.email.transactional.webinar.confirmation',
@@ -323,7 +330,7 @@ class DispatchMessageActionTest extends TestCase
         ]);
 
         app(DispatchMessageAction::class)->handle(
-            contact: Contact::factory()->create(),
+            recipient: $this->contactWithConsent('marketing'),
             channel: 'email',
             purpose: 'marketing',
             scope: 'webinar',
@@ -368,7 +375,7 @@ class DispatchMessageActionTest extends TestCase
         ]);
 
         $messages = app(DispatchMessageAction::class)->handle(
-            contact: Contact::factory()->create(),
+            recipient: $this->contactWithConsent('marketing'),
             channel: 'email',
             purpose: 'marketing',
             scope: 'webinar',
@@ -427,7 +434,7 @@ class DispatchMessageActionTest extends TestCase
         $this->expectExceptionMessage('Dispatch criteria matched multiple message definitions.');
 
         app(DispatchMessageAction::class)->handle(
-            contact: Contact::factory()->create(),
+            recipient: $this->contactWithConsent('marketing'),
             channel: 'email',
             purpose: 'marketing',
             scope: 'webinar',
@@ -437,6 +444,28 @@ class DispatchMessageActionTest extends TestCase
                 'step' => 2,
             ],
         );
+    }
+    
+    private function contactWithConsent(
+        string $purpose = 'transactional',
+        string $scope = 'webinar',
+        array $attributes = [],
+    ): Contact {
+        $contact = Contact::factory()->create([
+            'email' => 'person@example.com',
+            ...$attributes,
+        ]);
+
+        MessageConsent::query()->create([
+            'contact_id' => $contact->id,
+            'channel' => 'email',
+            'purpose' => $purpose,
+            'scope' => $scope,
+            'consented_at' => now()->subMinute(),
+            'source' => 'test',
+        ]);
+
+        return $contact;
     }
 
     protected function tearDown(): void

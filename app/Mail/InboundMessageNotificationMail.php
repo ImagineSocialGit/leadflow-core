@@ -50,9 +50,9 @@ class InboundMessageNotificationMail extends Mailable
 
     private function contact(): ?Contact
     {
-        $recipient = $this->inboundMessage->recipient;
+        $sender = $this->inboundMessage->sender;
 
-        return $recipient instanceof Contact ? $recipient : null;
+        return $sender instanceof Contact ? $sender : null;
     }
 
     private function contactName(?Contact $contact): ?string

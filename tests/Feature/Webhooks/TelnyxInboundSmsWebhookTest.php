@@ -111,8 +111,8 @@ class TelnyxInboundSmsWebhookTest extends TestCase
             ->assertSee('Reply STOP to opt out of SMS messages.');
 
         $this->assertDatabaseHas('inbound_messages', [
-            'recipient_type' => Contact::class,
-            'recipient_id' => $contact->id,
+            'sender_type' => Contact::class,
+            'sender_id' => $contact->id,
             'client_key' => 'test-client',
             'channel' => 'sms',
             'provider' => 'telnyx',
@@ -156,8 +156,8 @@ class TelnyxInboundSmsWebhookTest extends TestCase
         $inboundMessage = InboundMessage::query()->first();
 
         $this->assertDatabaseHas('inbound_messages', [
-            'recipient_type' => Contact::class,
-            'recipient_id' => $contact->id,
+            'sender_type' => Contact::class,
+            'sender_id' => $contact->id,
             'channel' => 'sms',
             'provider' => 'telnyx',
             'provider_context_id' => self::MARKETING_PROFILE_ID,
@@ -203,8 +203,8 @@ class TelnyxInboundSmsWebhookTest extends TestCase
         $inboundMessage = InboundMessage::query()->first();
 
         $this->assertDatabaseHas('inbound_messages', [
-            'recipient_type' => null,
-            'recipient_id' => null,
+            'sender_type' => null,
+            'sender_id' => null,
             'channel' => 'sms',
             'provider' => 'telnyx',
             'from_value' => '+15551234567',
@@ -440,8 +440,8 @@ class TelnyxInboundSmsWebhookTest extends TestCase
         ])->assertOk();
 
         $this->assertDatabaseHas('inbound_messages', [
-            'recipient_type' => null,
-            'recipient_id' => null,
+            'sender_type' => null,
+            'sender_id' => null,
             'channel' => 'sms',
             'provider' => 'telnyx',
             'provider_context_id' => self::MARKETING_PROFILE_ID,

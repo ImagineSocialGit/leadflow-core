@@ -7,7 +7,7 @@ use App\Enums\MessageChannel;
 use App\Services\Messaging\InboundMessageRouter;
 use App\Services\Messaging\Sms\InboundSmsMessageClassifier;
 use App\Services\Messaging\Sms\InboundSmsPurposeResolver;
-use App\Services\Messaging\Sms\InboundSmsRecipientResolver;
+use App\Services\Messaging\Sms\InboundSmsSenderResolver;
 use App\Services\Messaging\Sms\SmsWebhookPayload;
 
 class HandleInboundSmsWebhookAction
@@ -17,7 +17,7 @@ class HandleInboundSmsWebhookAction
         private readonly InboundMessageRouter $inboundMessageRouter,
         private readonly InboundSmsMessageClassifier $inboundSmsMessageClassifier,
         private readonly InboundSmsPurposeResolver $inboundSmsPurposeResolver,
-        private readonly InboundSmsRecipientResolver $inboundSmsRecipientResolver,
+        private readonly InboundSmsSenderResolver $inboundSmsSenderResolver,
     ) {}
 
     public function handle(SmsWebhookPayload $payload): ?string
@@ -26,9 +26,9 @@ class HandleInboundSmsWebhookAction
             return null;
         }
 
-        $from = $this->inboundSmsRecipientResolver->normalizePhone($payload->from);
-        $to = $this->inboundSmsRecipientResolver->normalizePhone($payload->to);
-        $recipient = $this->inboundSmsRecipientResolver->resolve($payload->from);
+        $from = $this->inboundSmsSenderResolver->normalizePhone($payload->from);
+        $to = $this->inboundSmsSenderResolver->normalizePhone($payload->to);
+        $sender = $this->inboundSmsSenderResolver->resolve($payload->from);
 
         $inboundMessage = $this->recordInboundMessageAction->handle(
             data: [
@@ -57,7 +57,7 @@ class HandleInboundSmsWebhookAction
                     'raw' => $payload->raw,
                 ],
             ],
-            recipient: $recipient,
+            sender: $sender,
         );
 
         return $this->inboundMessageRouter->route($inboundMessage);

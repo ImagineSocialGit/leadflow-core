@@ -46,7 +46,7 @@ class DispatchWebinarWaitlistMessagesAction
 
         foreach ([MessageChannel::Email, MessageChannel::Sms] as $channel) {
             $this->dispatchMessageAction->handle(
-                contact: $signup->contact,
+                recipient: $signup->contact,
                 channel: $channel,
                 purpose: MessagePurpose::Marketing,
                 scope: self::SCOPE,

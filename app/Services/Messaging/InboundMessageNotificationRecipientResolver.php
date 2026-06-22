@@ -43,13 +43,13 @@ class InboundMessageNotificationRecipientResolver
 
     private function resolveFromContact(InboundMessage $inboundMessage): ?TeamMember
     {
-        $recipient = $inboundMessage->recipient;
+        $sender = $inboundMessage->sender;
 
-        if (! $recipient instanceof Contact) {
+        if (! $sender instanceof Contact) {
             return null;
         }
 
-        $assignedTo = trim((string) $recipient->assigned_to);
+        $assignedTo = trim((string) $sender->assigned_to);
 
         if ($assignedTo === '') {
             return null;

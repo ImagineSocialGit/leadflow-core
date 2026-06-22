@@ -9,6 +9,7 @@ use App\Jobs\Messaging\SendScheduledMessageJob;
 use App\Messaging\Payloads\EmailPayload;
 use App\Messaging\Payloads\SmsPayload;
 use App\Models\Contact;
+use App\Models\MessageConsent;
 use App\Models\ScheduledMessage;
 use App\Models\Webinar;
 use App\Models\WebinarRegistration;
@@ -35,10 +36,7 @@ class DispatchWebinarRegistrationMessagesActionTest extends TestCase
             'starts_at' => now()->addDay(),
         ]);
 
-        $contact = Contact::factory()->create([
-            'email' => 'jeff@example.com',
-            'phone' => '+15555550123',
-        ]);
+        $contact = $this->contactWithTransactionalConsent();
 
         $registration = WebinarRegistration::query()->create([
             'contact_id' => $contact->id,
@@ -57,7 +55,8 @@ class DispatchWebinarRegistrationMessagesActionTest extends TestCase
         app(DispatchWebinarRegistrationMessagesAction::class)->handle($registration);
 
         $this->assertDatabaseHas('scheduled_messages', [
-            'contact_id' => $contact->id,
+            'recipient_type' => Contact::class,
+            'recipient_id' => $contact->id,
             'context_type' => $registration->getMorphClass(),
             'context_id' => $registration->id,
             'channel' => MessageChannel::Email->value,
@@ -69,7 +68,8 @@ class DispatchWebinarRegistrationMessagesActionTest extends TestCase
         ]);
 
         $this->assertDatabaseHas('scheduled_messages', [
-            'contact_id' => $contact->id,
+            'recipient_type' => Contact::class,
+            'recipient_id' => $contact->id,
             'context_type' => $registration->getMorphClass(),
             'context_id' => $registration->id,
             'channel' => MessageChannel::Sms->value,
@@ -81,13 +81,15 @@ class DispatchWebinarRegistrationMessagesActionTest extends TestCase
         ]);
 
         $this->assertDatabaseHas('scheduled_messages', [
-            'contact_id' => $contact->id,
+            'recipient_type' => Contact::class,
+            'recipient_id' => $contact->id,
             'channel' => MessageChannel::Email->value,
             'message_type' => 'reminder',
         ]);
 
         $this->assertDatabaseHas('scheduled_messages', [
-            'contact_id' => $contact->id,
+            'recipient_type' => Contact::class,
+            'recipient_id' => $contact->id,
             'channel' => MessageChannel::Sms->value,
             'message_type' => 'reminder',
         ]);
@@ -152,5 +154,26 @@ class DispatchWebinarRegistrationMessagesActionTest extends TestCase
                 ],
             ],
         ]);
+    }
+
+    private function contactWithTransactionalConsent(): Contact
+    {
+        $contact = Contact::factory()->create([
+            'email' => 'jeff@example.com',
+            'phone' => '+15555550123',
+        ]);
+
+        foreach ([MessageChannel::Email->value, MessageChannel::Sms->value] as $channel) {
+            MessageConsent::query()->create([
+                'contact_id' => $contact->id,
+                'channel' => $channel,
+                'purpose' => MessagePurpose::Transactional->value,
+                'scope' => 'webinar',
+                'consented_at' => now()->subMinute(),
+                'source' => 'test',
+            ]);
+        }
+
+        return $contact;
     }
 }

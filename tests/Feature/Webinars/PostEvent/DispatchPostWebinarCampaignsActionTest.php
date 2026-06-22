@@ -11,6 +11,7 @@ use App\Messaging\Payloads\EmailPayload;
 use App\Messaging\Payloads\SmsPayload;
 use App\Models\CampaignEnrollment;
 use App\Models\Contact;
+use App\Models\MessageConsent;
 use App\Models\ScheduledMessage;
 use App\Models\Webinar;
 use App\Models\WebinarRegistration;
@@ -136,7 +137,8 @@ class DispatchPostWebinarCampaignsActionTest extends TestCase
         );
 
         $this->assertSame(2, ScheduledMessage::query()
-            ->where('contact_id', $attendedRegistration->contact_id)
+            ->where('recipient_type', Contact::class)
+            ->where('recipient_id', $attendedRegistration->contact_id)
             ->where('purpose', MessagePurpose::Marketing->value)
             ->where('scope', 'webinar')
             ->count()
@@ -233,15 +235,15 @@ class DispatchPostWebinarCampaignsActionTest extends TestCase
             'meta' => [],
         ]);
 
-        $attendedContact = Contact::factory()->create([
-            'email' => 'attended@example.com',
-            'phone' => '+15555550123',
-        ]);
+        $attendedContact = $this->contactWithMarketingConsent(
+            email: 'attended@example.com',
+            phone: '+15555550123',
+        );
 
-        $missedContact = Contact::factory()->create([
-            'email' => 'missed@example.com',
-            'phone' => '+15555550124',
-        ]);
+        $missedContact = $this->contactWithMarketingConsent(
+            email: 'missed@example.com',
+            phone: '+15555550124',
+        );
 
         $attendedRegistration = WebinarRegistration::factory()
             ->for($webinar)
@@ -260,6 +262,27 @@ class DispatchPostWebinarCampaignsActionTest extends TestCase
             ]);
 
         return [$webinar, $attendedRegistration, $missedRegistration];
+    }
+
+    private function contactWithMarketingConsent(string $email, string $phone): Contact
+    {
+        $contact = Contact::factory()->create([
+            'email' => $email,
+            'phone' => $phone,
+        ]);
+
+        foreach ([MessageChannel::Email->value, MessageChannel::Sms->value] as $channel) {
+            MessageConsent::query()->create([
+                'contact_id' => $contact->id,
+                'channel' => $channel,
+                'purpose' => MessagePurpose::Marketing->value,
+                'scope' => 'webinar',
+                'consented_at' => now()->subMinute(),
+                'source' => 'test',
+            ]);
+        }
+
+        return $contact;
     }
 
     private function assertCampaignEnrollmentCreated(
@@ -283,7 +306,9 @@ class DispatchPostWebinarCampaignsActionTest extends TestCase
         $scheduledMessage = $enrollment->lastScheduledMessage;
 
         $this->assertNotNull($scheduledMessage);
-        $this->assertSame($registration->contact_id, $scheduledMessage->contact_id);
+        $this->assertSame(Contact::class, $scheduledMessage->recipient_type);
+        $this->assertSame($registration->contact_id, $scheduledMessage->recipient_id);
+        $this->assertTrue($scheduledMessage->recipient->is($registration->contact));
         $this->assertSame($channel, $scheduledMessage->channel);
         $this->assertSame(MessagePurpose::Marketing->value, $scheduledMessage->purpose);
         $this->assertSame('webinar', $scheduledMessage->scope);

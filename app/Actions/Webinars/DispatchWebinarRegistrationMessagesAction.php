@@ -44,7 +44,7 @@ class DispatchWebinarRegistrationMessagesAction
             }
 
             $this->dispatchMessageAction->handle(
-                contact: $registration->contact,
+                recipient: $registration->contact,
                 channel: $channel,
                 purpose: MessagePurpose::Transactional,
                 scope: self::SCOPE,

@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class ScheduledMessage extends Model
@@ -12,7 +11,8 @@ class ScheduledMessage extends Model
     use HasFactory;
 
     protected $fillable = [
-        'contact_id',
+        'recipient_type',
+        'recipient_id',
         'context_type',
         'context_id',
         'channel',
@@ -34,7 +34,7 @@ class ScheduledMessage extends Model
     protected function casts(): array
     {
         return [
-            'contact_id' => 'integer',
+            'recipient_id' => 'integer',
             'context_id' => 'integer',
             'payload' => 'array',
             'send_at' => 'datetime',
@@ -45,14 +45,13 @@ class ScheduledMessage extends Model
         ];
     }
 
-    public function contact(): BelongsTo
+    public function recipient(): MorphTo
     {
-        return $this->belongsTo(Contact::class);
+        return $this->morphTo();
     }
 
     public function context(): MorphTo
     {
         return $this->morphTo();
     }
-
 }

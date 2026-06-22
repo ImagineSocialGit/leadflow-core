@@ -12,7 +12,7 @@ use App\Models\Contact;
 use App\Models\MessageConsent;
 use App\Models\ScheduledMessage;
 use App\Services\Messaging\Email\EmailMessagingService;
-use App\Services\Messaging\MessageEligibilityGate;
+use App\Services\Messaging\ScheduledMessageGate;
 use App\Services\Messaging\Sms\SmsMessagingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Mail\Mailable;
@@ -34,7 +34,8 @@ class SendScheduledMessageJobTest extends TestCase
         $this->grantConsent($contact, 'email', 'transactional');
 
         $scheduledMessage = ScheduledMessage::factory()->create([
-            'contact_id' => $contact->id,
+            'recipient_type' => Contact::class,
+            'recipient_id' => $contact->id,
             'channel' => 'email',
             'purpose' => 'transactional',
             'scope' => 'webinar',
@@ -46,7 +47,6 @@ class SendScheduledMessageJobTest extends TestCase
             'status' => 'pending',
             'meta' => [
                 'conditions' => [],
-                'definition_config_path' => 'messaging.email.transactional.webinar.confirmation',
             ],
         ]);
 
@@ -59,8 +59,7 @@ class SendScheduledMessageJobTest extends TestCase
         app()->instance(EmailMessagingService::class, $emailService);
 
         (new SendScheduledMessageJob($scheduledMessage->id))->handle(
-            conditionChecker: app(\App\Services\ConditionChecker::class),
-            messageEligibilityGate: $this->messageEligibilityGate(),
+            scheduledMessageGate: app(ScheduledMessageGate::class),
             emailMessagingService: app(EmailMessagingService::class),
             smsMessagingService: app(SmsMessagingService::class),
             scheduleNextCampaignStepAction: app(ScheduleNextCampaignStepAction::class),
@@ -81,7 +80,8 @@ class SendScheduledMessageJobTest extends TestCase
         $this->grantConsent($contact, 'sms', 'transactional');
 
         $scheduledMessage = ScheduledMessage::factory()->create([
-            'contact_id' => $contact->id,
+            'recipient_type' => Contact::class,
+            'recipient_id' => $contact->id,
             'channel' => 'sms',
             'purpose' => 'transactional',
             'scope' => 'webinar',
@@ -94,7 +94,6 @@ class SendScheduledMessageJobTest extends TestCase
             'status' => 'pending',
             'meta' => [
                 'conditions' => [],
-                'definition_config_path' => 'messaging.sms.transactional.webinar.confirmation',
             ],
         ]);
 
@@ -107,8 +106,7 @@ class SendScheduledMessageJobTest extends TestCase
         app()->instance(SmsMessagingService::class, $smsService);
 
         (new SendScheduledMessageJob($scheduledMessage->id))->handle(
-            conditionChecker: app(\App\Services\ConditionChecker::class),
-            messageEligibilityGate: $this->messageEligibilityGate(),
+            scheduledMessageGate: app(ScheduledMessageGate::class),
             emailMessagingService: app(EmailMessagingService::class),
             smsMessagingService: app(SmsMessagingService::class),
             scheduleNextCampaignStepAction: app(ScheduleNextCampaignStepAction::class),
@@ -130,7 +128,8 @@ class SendScheduledMessageJobTest extends TestCase
         $this->grantConsent($contact, 'email', 'transactional');
 
         $scheduledMessage = ScheduledMessage::factory()->create([
-            'contact_id' => $contact->id,
+            'recipient_type' => Contact::class,
+            'recipient_id' => $contact->id,
             'channel' => 'email',
             'purpose' => 'transactional',
             'scope' => 'webinar',
@@ -146,7 +145,6 @@ class SendScheduledMessageJobTest extends TestCase
                         'converted',
                     ],
                 ],
-                'definition_config_path' => 'messaging.email.transactional.webinar.follow_up',
             ],
         ]);
 
@@ -156,8 +154,7 @@ class SendScheduledMessageJobTest extends TestCase
         app()->instance(EmailMessagingService::class, $emailService);
 
         (new SendScheduledMessageJob($scheduledMessage->id))->handle(
-            conditionChecker: app(\App\Services\ConditionChecker::class),
-            messageEligibilityGate: app(\App\Services\Messaging\MessageEligibilityGate::class),
+            scheduledMessageGate: app(ScheduledMessageGate::class),
             emailMessagingService: app(EmailMessagingService::class),
             smsMessagingService: app(SmsMessagingService::class),
             scheduleNextCampaignStepAction: app(ScheduleNextCampaignStepAction::class),
@@ -179,7 +176,8 @@ class SendScheduledMessageJobTest extends TestCase
         ]);
 
         $scheduledMessage = ScheduledMessage::factory()->create([
-            'contact_id' => $contact->id,
+            'recipient_type' => Contact::class,
+            'recipient_id' => $contact->id,
             'channel' => 'email',
             'purpose' => 'marketing',
             'scope' => 'webinar',
@@ -191,7 +189,6 @@ class SendScheduledMessageJobTest extends TestCase
             'status' => 'pending',
             'meta' => [
                 'conditions' => [],
-                'definition_config_path' => 'messaging.email.marketing.webinar.follow_up',
             ],
         ]);
 
@@ -201,8 +198,7 @@ class SendScheduledMessageJobTest extends TestCase
         app()->instance(EmailMessagingService::class, $emailService);
 
         (new SendScheduledMessageJob($scheduledMessage->id))->handle(
-            conditionChecker: app(\App\Services\ConditionChecker::class),
-            messageEligibilityGate: $this->messageEligibilityGate(false),
+            scheduledMessageGate: $this->scheduledMessageGate('Message eligibility gate denied send.'),
             emailMessagingService: app(EmailMessagingService::class),
             smsMessagingService: app(SmsMessagingService::class),
             scheduleNextCampaignStepAction: app(ScheduleNextCampaignStepAction::class),
@@ -226,7 +222,8 @@ class SendScheduledMessageJobTest extends TestCase
         $this->grantConsent($contact, 'email', 'transactional');
 
         $scheduledMessage = ScheduledMessage::factory()->create([
-            'contact_id' => $contact->id,
+            'recipient_type' => Contact::class,
+            'recipient_id' => $contact->id,
             'channel' => 'email',
             'purpose' => 'transactional',
             'scope' => 'webinar',
@@ -238,7 +235,6 @@ class SendScheduledMessageJobTest extends TestCase
             'status' => 'pending',
             'meta' => [
                 'conditions' => [],
-                'definition_config_path' => 'messaging.email.transactional.webinar.confirmation',
             ],
         ]);
 
@@ -246,8 +242,7 @@ class SendScheduledMessageJobTest extends TestCase
 
         try {
             (new SendScheduledMessageJob($scheduledMessage->id))->handle(
-                conditionChecker: app(\App\Services\ConditionChecker::class),
-                messageEligibilityGate: $this->messageEligibilityGate(),
+                scheduledMessageGate: app(ScheduledMessageGate::class),
                 emailMessagingService: app(EmailMessagingService::class),
                 smsMessagingService: app(SmsMessagingService::class),
                 scheduleNextCampaignStepAction: app(ScheduleNextCampaignStepAction::class),
@@ -320,7 +315,8 @@ class SendScheduledMessageJobTest extends TestCase
         ]);
 
         $message = ScheduledMessage::factory()->create([
-            'contact_id' => $contact->id,
+            'recipient_type' => Contact::class,
+            'recipient_id' => $contact->id,
             'channel' => 'email',
             'purpose' => 'marketing',
             'scope' => 'webinar',
@@ -352,8 +348,7 @@ class SendScheduledMessageJobTest extends TestCase
         app()->instance(EmailMessagingService::class, $emailService);
 
         (new SendScheduledMessageJob($message->id))->handle(
-            conditionChecker: app(\App\Services\ConditionChecker::class),
-            messageEligibilityGate: app(\App\Services\Messaging\MessageEligibilityGate::class),
+            scheduledMessageGate: app(ScheduledMessageGate::class),
             emailMessagingService: app(EmailMessagingService::class),
             smsMessagingService: app(SmsMessagingService::class),
             scheduleNextCampaignStepAction: app(ScheduleNextCampaignStepAction::class),
@@ -369,14 +364,37 @@ class SendScheduledMessageJobTest extends TestCase
 
     public function test_it_does_not_progress_without_campaign_metadata(): void
     {
+        $contact = Contact::factory()->create([
+            'email' => 'test@example.com',
+        ]);
+
+        $this->grantConsent($contact, 'email', 'transactional');
+
         $message = ScheduledMessage::factory()->create([
+            'recipient_type' => Contact::class,
+            'recipient_id' => $contact->id,
+            'channel' => 'email',
+            'purpose' => 'transactional',
+            'scope' => 'webinar',
+            'message_type' => 'confirmation',
+            'payload_class' => FakeJobEmailPayload::class,
+            'payload' => [
+                'to' => 'test@example.com',
+            ],
             'status' => 'pending',
             'meta' => [],
         ]);
 
+        $emailService = Mockery::mock(EmailMessagingService::class);
+        $emailService
+            ->shouldReceive('send')
+            ->once()
+            ->with(Mockery::type(FakeJobEmailPayload::class));
+
+        app()->instance(EmailMessagingService::class, $emailService);
+
         (new SendScheduledMessageJob($message->id))->handle(
-            conditionChecker: app(\App\Services\ConditionChecker::class),
-            messageEligibilityGate: app(\App\Services\Messaging\MessageEligibilityGate::class),
+            scheduledMessageGate: app(ScheduledMessageGate::class),
             emailMessagingService: app(EmailMessagingService::class),
             smsMessagingService: app(SmsMessagingService::class),
             scheduleNextCampaignStepAction: app(ScheduleNextCampaignStepAction::class),
@@ -424,7 +442,8 @@ class SendScheduledMessageJobTest extends TestCase
         ]);
 
         $message = ScheduledMessage::factory()->create([
-            'contact_id' => $contact->id,
+            'recipient_type' => Contact::class,
+            'recipient_id' => $contact->id,
             'channel' => 'email',
             'purpose' => 'marketing',
             'scope' => 'webinar',
@@ -456,8 +475,7 @@ class SendScheduledMessageJobTest extends TestCase
         app()->instance(EmailMessagingService::class, $emailService);
 
         (new SendScheduledMessageJob($message->id))->handle(
-            conditionChecker: app(\App\Services\ConditionChecker::class),
-            messageEligibilityGate: app(\App\Services\Messaging\MessageEligibilityGate::class),
+            scheduledMessageGate: app(ScheduledMessageGate::class),
             emailMessagingService: app(EmailMessagingService::class),
             smsMessagingService: app(SmsMessagingService::class),
             scheduleNextCampaignStepAction: app(ScheduleNextCampaignStepAction::class),
@@ -475,23 +493,23 @@ class SendScheduledMessageJobTest extends TestCase
             'channel' => $channel,
             'purpose' => $purpose,
             'scope' => 'webinar',
-            'consented_at' => now(),
+            'consented_at' => now()->subMinute(),
             'source' => 'test',
         ]);
     }
 
-    private function messageEligibilityGate(bool $allowed = true): MessageEligibilityGate
+    private function scheduledMessageGate(?string $denialReason = null): ScheduledMessageGate
     {
-        $gate = Mockery::mock(MessageEligibilityGate::class);
+        $gate = Mockery::mock(ScheduledMessageGate::class);
 
         $gate
-            ->shouldReceive('allows')
+            ->shouldReceive('denialReason')
             ->once()
-            ->andReturn($allowed);
+            ->with(Mockery::type(ScheduledMessage::class))
+            ->andReturn($denialReason);
 
         return $gate;
     }
-    
 }
 
 class FakeJobEmailPayload implements EmailMessage

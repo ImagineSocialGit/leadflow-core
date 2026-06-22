@@ -75,7 +75,7 @@ class DispatchWebinarOutcomeMessagesAction
 
         foreach ([MessageChannel::Email, MessageChannel::Sms] as $channel) {
             $this->dispatchMessageAction->handle(
-                contact: $registration->contact,
+                recipient: $registration->contact,
                 channel: $channel,
                 purpose: MessagePurpose::Transactional,
                 scope: self::SCOPE,

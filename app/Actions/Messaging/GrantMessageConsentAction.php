@@ -81,7 +81,7 @@ class GrantMessageConsentAction
 
             DB::afterCommit(function () use ($contact, $channel, $purpose, $scope, $optInPayload, $context, $resolverContext): void {
                 $this->dispatchMessageAction->handle(
-                    contact: $contact,
+                    recipient: $contact,
                     channel: $channel,
                     purpose: $purpose,
                     scope: $scope,

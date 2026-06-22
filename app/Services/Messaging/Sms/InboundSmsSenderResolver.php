@@ -6,7 +6,7 @@ use App\Models\Contact;
 use App\Services\Messaging\PhoneNumberNormalizer;
 use InvalidArgumentException;
 
-class InboundSmsRecipientResolver
+class InboundSmsSenderResolver
 {
     public function __construct(
         private readonly PhoneNumberNormalizer $phoneNumberNormalizer,

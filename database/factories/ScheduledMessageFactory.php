@@ -4,7 +4,9 @@ namespace Database\Factories;
 
 use App\Models\Contact;
 use App\Models\ScheduledMessage;
+use App\Models\TeamMember;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Eloquent\Model;
 
 class ScheduledMessageFactory extends Factory
 {
@@ -13,7 +15,8 @@ class ScheduledMessageFactory extends Factory
     public function definition(): array
     {
         return [
-            'contact_id' => Contact::factory(),
+            'recipient_type' => Contact::class,
+            'recipient_id' => Contact::factory(),
 
             'context_type' => null,
             'context_id' => null,
@@ -46,6 +49,24 @@ class ScheduledMessageFactory extends Factory
 
             'failure_reason' => null,
         ];
+    }
+
+    public function forRecipient(Model $recipient): static
+    {
+        return $this->state(fn () => [
+            'recipient_type' => $recipient->getMorphClass(),
+            'recipient_id' => $recipient->getKey(),
+        ]);
+    }
+
+    public function forContact(?Contact $contact = null): static
+    {
+        return $this->forRecipient($contact ?? Contact::factory()->create());
+    }
+
+    public function forTeamMember(?TeamMember $teamMember = null): static
+    {
+        return $this->forRecipient($teamMember ?? TeamMember::factory()->create());
     }
 
     public function email(): static

@@ -6,6 +6,7 @@ use App\Actions\Campaigns\ScheduleNextCampaignStepAction;
 use App\Messaging\Payloads\EmailPayload;
 use App\Models\CampaignEnrollment;
 use App\Models\Contact;
+use App\Models\MessageConsent;
 use App\Models\ScheduledMessage;
 use App\Models\WebinarRegistration;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -43,7 +44,8 @@ class ScheduleNextCampaignStepActionTest extends TestCase
             ],
         ]);
 
-        $contact = Contact::factory()->create();
+        $contact = $this->contactWithMarketingEmailConsent();
+
         $registration = WebinarRegistration::factory()->create([
             'contact_id' => $contact->id,
         ]);
@@ -66,7 +68,9 @@ class ScheduleNextCampaignStepActionTest extends TestCase
         $this->assertInstanceOf(ScheduledMessage::class, $scheduledMessage);
 
         $this->assertSame('step_2', $scheduledMessage->message_type);
-        $this->assertSame($contact->id, $scheduledMessage->contact_id);
+        $this->assertSame(Contact::class, $scheduledMessage->recipient_type);
+        $this->assertSame($contact->id, $scheduledMessage->recipient_id);
+        $this->assertTrue($scheduledMessage->recipient->is($contact));
         $this->assertSame('email', $scheduledMessage->channel);
         $this->assertSame('marketing', $scheduledMessage->purpose);
         $this->assertSame('webinar', $scheduledMessage->scope);
@@ -90,7 +94,7 @@ class ScheduleNextCampaignStepActionTest extends TestCase
 
         Config::set('messaging.email.marketing.webinar', []);
 
-        $contact = Contact::factory()->create();
+        $contact = $this->contactWithMarketingEmailConsent();
 
         $enrollment = CampaignEnrollment::create([
             'contact_id' => $contact->id,
@@ -138,8 +142,10 @@ class ScheduleNextCampaignStepActionTest extends TestCase
             ],
         ]);
 
+        $contact = $this->contactWithMarketingEmailConsent();
+
         $enrollment = CampaignEnrollment::create([
-            'contact_id' => Contact::factory()->create()->id,
+            'contact_id' => $contact->id,
             'campaign_key' => 'webinar_attended',
             'channel' => 'email',
             'purpose' => 'marketing',
@@ -185,7 +191,7 @@ class ScheduleNextCampaignStepActionTest extends TestCase
             ],
         ]);
 
-        $contact = Contact::factory()->create([
+        $contact = $this->contactWithMarketingEmailConsent([
             'converted_at' => now(),
         ]);
 
@@ -218,5 +224,31 @@ class ScheduleNextCampaignStepActionTest extends TestCase
         $this->assertNotNull($enrollment->completed_at);
 
         $this->assertDatabaseCount('scheduled_messages', 0);
+    }
+
+    private function contactWithMarketingEmailConsent(array $attributes = []): Contact
+    {
+        $contact = Contact::factory()->create([
+            'email' => 'person@example.com',
+            ...$attributes,
+        ]);
+
+        MessageConsent::query()->create([
+            'contact_id' => $contact->id,
+            'channel' => 'email',
+            'purpose' => 'marketing',
+            'scope' => 'webinar',
+            'consented_at' => now()->subMinute(),
+            'source' => 'test',
+        ]);
+
+        return $contact;
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+
+        parent::tearDown();
     }
 }

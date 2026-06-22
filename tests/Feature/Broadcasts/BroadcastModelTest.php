@@ -78,7 +78,8 @@ class BroadcastModelTest extends TestCase
         $contact = Contact::factory()->create();
 
         $scheduledMessage = ScheduledMessage::factory()->create([
-            'contact_id' => $contact->id,
+            'recipient_type' => Contact::class,
+            'recipient_id' => $contact->id,
             'context_type' => $broadcast->getMorphClass(),
             'context_id' => $broadcast->id,
         ]);

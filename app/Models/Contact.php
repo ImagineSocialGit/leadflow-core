@@ -62,9 +62,9 @@ class Contact extends Model
         return $this->hasMany(ContactMortgageProfile::class);
     }
 
-    public function scheduledMessages(): HasMany
+    public function scheduledMessages(): MorphMany
     {
-        return $this->hasMany(ScheduledMessage::class);
+        return $this->morphMany(ScheduledMessage::class, 'recipient');
     }
 
     public function messageConsents(): HasMany
@@ -84,6 +84,6 @@ class Contact extends Model
 
     public function inboundMessages(): MorphMany
     {
-        return $this->morphMany(InboundMessage::class, 'recipient');
+        return $this->morphMany(InboundMessage::class, 'sender');
     }
 }

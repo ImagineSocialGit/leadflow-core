@@ -5,23 +5,23 @@ namespace App\Actions\Messaging;
 use App\Enums\MessageChannel;
 use App\Enums\MessagePurpose;
 use App\Jobs\Messaging\SendScheduledMessageJob;
-use App\Models\Contact;
 use App\Models\ScheduledMessage;
-use App\Services\ConditionChecker;
 use App\Services\Messaging\MessageDefinitionResolver;
+use App\Services\Messaging\MessagePlanningGate;
+use App\Services\Messaging\MessageRecipientPayloadResolver;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 class DispatchMessageAction
 {
     public function __construct(
         private readonly MessageDefinitionResolver $messageDefinitionResolver,
-        private readonly ConditionChecker $conditionChecker,
+        private readonly MessageRecipientPayloadResolver $payloadResolver,
+        private readonly MessagePlanningGate $planningGate,
     ) {}
 
-        /**
+    /**
      * @param  string|array<int, string>  $dispatchKeys
      * @param  array<string, mixed>  $payload
      * @param  array<string, mixed>|null  $meta
@@ -29,7 +29,7 @@ class DispatchMessageAction
      * @return array<int, ScheduledMessage>
      */
     public function handle(
-        Contact $contact,
+        Model $recipient,
         MessageChannel|string $channel,
         MessagePurpose|string $purpose,
         string $scope,
@@ -71,23 +71,28 @@ class DispatchMessageAction
         $scheduledMessages = [];
 
         foreach ($definitions as $definition) {
-            if (! $this->definitionMatchesDispatchKeys($definition, $dispatchKeys)) {
-                continue;
-            }
-
-            if (! $this->definitionMatchesCriteria($definition, $criteria)) {
-                continue;
-            }
-
-            $mergedPayload = $this->buildPayload(
-                contact: $contact,
-                definition: $definition,
+            $resolvedPayload = $this->payloadResolver->resolve(
+                recipient: $recipient,
+                channel: $channel,
+                purpose: $purpose,
+                scope: $scope,
+                messageType: $definition['message_type'],
+                definitionPayload: $definition['payload'] ?? [],
                 payload: $payload,
             );
 
-            if (! $this->conditionChecker->passes(
-                conditions: $definition['conditions'] ?? [],
-                context: $this->conditionContext($contact, $context, $mergedPayload),
+            if (! $resolvedPayload) {
+                continue;
+            }
+
+            if (! $this->planningGate->allows(
+                recipient: $recipient,
+                channel: $channel,
+                purpose: $purpose,
+                scope: $scope,
+                definition: $definition,
+                payload: $resolvedPayload,
+                context: $context,
             )) {
                 continue;
             }
@@ -103,12 +108,12 @@ class DispatchMessageAction
             }
 
             $scheduledMessages[] = $this->createScheduledMessage(
-                contact: $contact,
+                recipient: $recipient,
                 definition: $definition,
-                payload: $mergedPayload,
+                payload: $resolvedPayload,
                 sendAt: $sendAt,
                 context: $context,
-                dedupeKey: $this->dedupeKey($contact, $definition, $context, $sendAt),
+                dedupeKey: $this->dedupeKey($recipient, $definition, $context, $sendAt),
                 meta: array_replace_recursive(
                     [
                         'queue' => $definition['queue'],
@@ -119,6 +124,7 @@ class DispatchMessageAction
                         'conditions' => $definition['conditions'] ?? [],
                         'schedule' => $definition['schedule'] ?? null,
                         'skip_when_join_clicked' => $definition['skip_when_join_clicked'] ?? false,
+                        'notification_type' => $definition['notification_type'] ?? null,
                         'triggered_at' => $triggeredAt->toISOString(),
                         'anchor' => $anchor?->toISOString(),
                     ],
@@ -128,62 +134,6 @@ class DispatchMessageAction
         }
 
         return $scheduledMessages;
-    }
-
-    /**
-     * @param  array<string, mixed>  $definition
-     * @param  array<string, mixed>  $payload
-     * @return array<string, mixed>
-     */
-    private function buildPayload(Contact $contact, array $definition, array $payload): array
-    {
-        return array_replace_recursive(
-            $definition['payload'] ?? [],
-            $payload,
-            [
-                'to' => $payload['to']
-                    ?? $payload['email']
-                    ?? $payload['phone']
-                    ?? $this->destinationForChannel($contact, $definition['channel']),
-
-                'contact_id' => $contact->getKey(),
-                'channel' => $definition['channel'],
-                'purpose' => $definition['purpose'],
-                'scope' => $definition['scope'],
-                'message_type' => $definition['message_type'],
-            ],
-        );
-    }
-
-    private function destinationForChannel(Contact $contact, string $channel): ?string
-    {
-        return match ($channel) {
-            MessageChannel::Email->value => $contact->email,
-            MessageChannel::Sms->value => $contact->phone,
-            default => $contact->email ?? $contact->phone,
-        };
-    }
-
-    /**
-     * @param  array<string, mixed>  $payload
-     * @return array<string, mixed>
-     */
-    private function conditionContext(Contact $contact, ?Model $context, array $payload): array
-    {
-        $conditionContext = [
-            'contact' => $contact->toArray(),
-        ];
-
-        if ($context) {
-            $conditionContext[Str::snake(class_basename($context))] = $context->toArray();
-        }
-
-        return array_replace_recursive(
-            $conditionContext,
-            is_array($payload['runtime_context'] ?? null) ? $payload['runtime_context'] : [],
-            is_array($payload['context'] ?? null) ? $payload['context'] : [],
-            is_array($payload['tokens'] ?? null) ? $payload['tokens'] : [],
-        );
     }
 
     /**
@@ -225,7 +175,7 @@ class DispatchMessageAction
      * @param  array<string, mixed>  $meta
      */
     private function createScheduledMessage(
-        Contact $contact,
+        Model $recipient,
         array $definition,
         array $payload,
         Carbon $sendAt,
@@ -234,7 +184,8 @@ class DispatchMessageAction
         array $meta,
     ): ScheduledMessage {
         $attributes = [
-            'contact_id' => $contact->getKey(),
+            'recipient_type' => $recipient->getMorphClass(),
+            'recipient_id' => $recipient->getKey(),
             'channel' => $definition['channel'],
             'message_type' => $definition['message_type'],
             'purpose' => $definition['purpose'],
@@ -294,7 +245,8 @@ class DispatchMessageAction
     ): array {
         return array_filter([
             'scheduled_message_id' => $scheduledMessage->id,
-            'contact_id' => $scheduledMessage->contact_id,
+            'recipient_type' => class_basename((string) $scheduledMessage->recipient_type),
+            'recipient_id' => $scheduledMessage->recipient_id,
             'channel' => $scheduledMessage->channel,
             'purpose' => $scheduledMessage->purpose,
             'scope' => $scheduledMessage->scope,
@@ -342,7 +294,7 @@ class DispatchMessageAction
         throw new InvalidArgumentException('Dispatch criteria matched multiple message definitions.');
     }
 
-        /**
+    /**
      * @param  array<string, mixed>  $definition
      * @param  array<string, mixed>  $criteria
      */
@@ -410,16 +362,15 @@ class DispatchMessageAction
      * @param  array<string, mixed>  $definition
      */
     private function dedupeKey(
-        Contact $contact,
+        Model $recipient,
         array $definition,
         ?Model $context,
         Carbon $sendAt,
     ): string {
-        $schedule = $definition['schedule'] ?? [];
-
         return implode(':', array_filter([
             'message',
-            $contact->getKey(),
+            $recipient->getMorphClass(),
+            $recipient->getKey(),
             $definition['channel'],
             $definition['purpose'],
             $definition['scope'],

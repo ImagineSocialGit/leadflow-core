@@ -9,6 +9,7 @@ use App\Jobs\Messaging\SendScheduledMessageJob;
 use App\Messaging\Payloads\EmailPayload;
 use App\Messaging\Payloads\SmsPayload;
 use App\Models\Contact;
+use App\Models\MessageConsent;
 use App\Models\ScheduledMessage;
 use App\Models\Webinar;
 use App\Models\WebinarRegistration;
@@ -52,7 +53,8 @@ class DispatchWebinarOutcomeMessagesActionTest extends TestCase
         $this->assertScheduled($registration, MessageChannel::Sms->value, 'attended_follow_up');
 
         $this->assertDatabaseMissing('scheduled_messages', [
-            'contact_id' => $contact->id,
+            'recipient_type' => Contact::class,
+            'recipient_id' => $contact->id,
             'message_type' => 'missed_follow_up',
         ]);
 
@@ -90,7 +92,8 @@ class DispatchWebinarOutcomeMessagesActionTest extends TestCase
         $this->assertScheduled($registration, MessageChannel::Sms->value, 'missed_follow_up');
 
         $this->assertDatabaseMissing('scheduled_messages', [
-            'contact_id' => $contact->id,
+            'recipient_type' => Contact::class,
+            'recipient_id' => $contact->id,
             'message_type' => 'attended_follow_up',
         ]);
 
@@ -199,7 +202,7 @@ class DispatchWebinarOutcomeMessagesActionTest extends TestCase
 
     private function createContact(): Contact
     {
-        return Contact::query()->create([
+        $contact = Contact::query()->create([
             'first_name' => 'Jeff',
             'last_name' => 'Yarnall',
             'name' => 'Jeff Yarnall',
@@ -208,6 +211,19 @@ class DispatchWebinarOutcomeMessagesActionTest extends TestCase
             'status' => 'new',
             'source' => 'webinar',
         ]);
+
+        foreach ([MessageChannel::Email->value, MessageChannel::Sms->value] as $channel) {
+            MessageConsent::query()->create([
+                'contact_id' => $contact->id,
+                'channel' => $channel,
+                'purpose' => MessagePurpose::Transactional->value,
+                'scope' => 'webinar',
+                'consented_at' => now()->subMinute(),
+                'source' => 'test',
+            ]);
+        }
+
+        return $contact;
     }
 
     private function assertScheduled(
@@ -216,7 +232,8 @@ class DispatchWebinarOutcomeMessagesActionTest extends TestCase
         string $messageType,
     ): void {
         $scheduledMessage = ScheduledMessage::query()
-            ->where('contact_id', $registration->contact->getKey())
+            ->where('recipient_type', Contact::class)
+            ->where('recipient_id', $registration->contact->getKey())
             ->whereMorphedTo('context', $registration)
             ->where('channel', $channel)
             ->where('message_type', $messageType)
@@ -225,6 +242,7 @@ class DispatchWebinarOutcomeMessagesActionTest extends TestCase
             ->first();
 
         $this->assertNotNull($scheduledMessage);
+        $this->assertTrue($scheduledMessage->recipient->is($registration->contact));
         $this->assertSame('pending', $scheduledMessage->status);
         $this->assertSame(['webinar_ended'], $scheduledMessage->meta['dispatch_keys']);
         $this->assertArrayHasKey('conditions', $scheduledMessage->meta);
