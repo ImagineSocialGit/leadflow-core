@@ -70,7 +70,7 @@ class NotifyInternalUsersOfInboundMessageAction implements InboundMessageHandler
             return;
         }
 
-        Mail::to($teamMember->email, $teamMember->name)
+        Mail::to($teamMember->email)
             ->send(new InboundMessageNotificationMail(
                 inboundMessage: $inboundMessage,
                 recipientSource: $recipientSource,
