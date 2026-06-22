@@ -25,6 +25,16 @@ return [
     ],
 
     'internal_notifications' => [
+
+        'email' => [
+            'from_address' => env('FROM_EMAIL_NOTIFICATIONS', env('MAIL_FROM_ADDRESS')),
+            'from_name' => env('FROM_EMAIL_NOTIFICATIONS_NAME', env('MAIL_FROM_NAME', config('app.name'))),
+        ],
+
+        'sms' => [
+            'from' => env('TELNYX_FROM_NOTIFICATIONS'),
+        ],
+
         'inbound_replies' => [
             'default_team_member_email' => env('INBOUND_REPLY_DEFAULT_TEAM_MEMBER_EMAIL'),
             'fallback_admin_email' => env('INBOUND_REPLY_FALLBACK_ADMIN_EMAIL', env('MAIL_FROM_ADDRESS')),

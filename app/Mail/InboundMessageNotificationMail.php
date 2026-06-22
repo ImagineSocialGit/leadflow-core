@@ -23,6 +23,10 @@ class InboundMessageNotificationMail extends Mailable
         $channelLabel = $this->channelLabel();
 
         return $this
+            ->from(
+                config('messaging.internal_notifications.email.from_address'),
+                config('messaging.internal_notifications.email.from_name')
+            )
             ->subject('New inbound '.$channelLabel.' message from '.$this->subjectSender($contactName, $sender))
             ->view('email', [
                 'subject' => 'New inbound message',
