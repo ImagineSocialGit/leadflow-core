@@ -3,17 +3,20 @@
 namespace App\Actions\Messaging\Inbound;
 
 use App\Contracts\Messaging\InboundMessageHandler;
+use App\Enums\MessageChannel;
 use App\Mail\InboundMessageNotificationMail;
 use App\Models\InboundMessage;
 use App\Models\TeamMember;
 use App\Models\TeamMemberNotificationPreference;
 use App\Services\Messaging\InboundMessageNotificationRecipientResolver;
+use App\Services\Messaging\InternalNotificationChannelResolver;
 use Illuminate\Support\Facades\Mail;
 
 class NotifyInternalUsersOfInboundMessageAction implements InboundMessageHandler
 {
     public function __construct(
         private readonly InboundMessageNotificationRecipientResolver $recipientResolver,
+        private readonly InternalNotificationChannelResolver $channelResolver,
     ) {}
 
     public function handle(InboundMessage $inboundMessage): ?string
@@ -57,14 +60,20 @@ class NotifyInternalUsersOfInboundMessageAction implements InboundMessageHandler
         TeamMember $teamMember,
         string $recipientSource,
     ): void {
-        if ($teamMember->canReceiveEmailNotifications(
-            TeamMemberNotificationPreference::TYPE_INBOUND_REPLIES
-        )) {
-            Mail::to($teamMember->email, $teamMember->name)
-                ->send(new InboundMessageNotificationMail(
-                    inboundMessage: $inboundMessage,
-                    recipientSource: $recipientSource,
-                ));
+        $channel = $this->channelResolver->resolve(
+            teamMember: $teamMember,
+            notificationType: TeamMemberNotificationPreference::TYPE_INBOUND_REPLIES,
+            allowedChannels: [MessageChannel::Email],
+        );
+
+        if ($channel !== MessageChannel::Email) {
+            return;
         }
+
+        Mail::to($teamMember->email, $teamMember->name)
+            ->send(new InboundMessageNotificationMail(
+                inboundMessage: $inboundMessage,
+                recipientSource: $recipientSource,
+            ));
     }
 }

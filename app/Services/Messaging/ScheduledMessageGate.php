@@ -2,7 +2,6 @@
 
 namespace App\Services\Messaging;
 
-use App\Enums\MessageChannel;
 use App\Models\Contact;
 use App\Models\ScheduledMessage;
 use App\Models\TeamMember;
@@ -14,6 +13,7 @@ class ScheduledMessageGate
         private readonly ConditionChecker $conditionChecker,
         private readonly MessageEligibilityGate $messageEligibilityGate,
         private readonly MessageRecipientPayloadResolver $payloadResolver,
+        private readonly InternalNotificationGate $internalNotificationGate,
     ) {}
 
     public function denialReason(ScheduledMessage $scheduledMessage): ?string
@@ -61,7 +61,11 @@ class ScheduledMessageGate
         }
 
         if ($recipient instanceof TeamMember) {
-            if (! $this->teamMemberAllows($scheduledMessage, $recipient)) {
+            if (! $this->internalNotificationGate->allows(
+                teamMember: $recipient,
+                channel: $scheduledMessage->channel,
+                notificationType: $this->notificationType($scheduledMessage),
+            )) {
                 return 'Team member notification preference denied send.';
             }
 
@@ -95,19 +99,6 @@ class ScheduledMessageGate
     {
         return is_string($payload['to'] ?? null)
             && trim($payload['to']) !== '';
-    }
-
-    private function teamMemberAllows(
-        ScheduledMessage $scheduledMessage,
-        TeamMember $teamMember,
-    ): bool {
-        $notificationType = $this->notificationType($scheduledMessage);
-
-        return match ($scheduledMessage->channel) {
-            MessageChannel::Email->value => $teamMember->canReceiveEmailNotifications($notificationType),
-            MessageChannel::Sms->value => $teamMember->canReceiveSmsNotifications($notificationType),
-            default => false,
-        };
     }
 
     private function notificationType(ScheduledMessage $scheduledMessage): ?string

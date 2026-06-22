@@ -2,7 +2,6 @@
 
 namespace App\Services\Messaging;
 
-use App\Enums\MessageChannel;
 use App\Models\Contact;
 use App\Models\TeamMember;
 use App\Services\ConditionChecker;
@@ -14,6 +13,7 @@ class MessagePlanningGate
         private readonly ConditionChecker $conditionChecker,
         private readonly MessageEligibilityGate $messageEligibilityGate,
         private readonly MessageRecipientPayloadResolver $payloadResolver,
+        private readonly InternalNotificationGate $internalNotificationGate,
     ) {}
 
     /**
@@ -56,7 +56,7 @@ class MessagePlanningGate
         }
 
         if ($recipient instanceof TeamMember) {
-            return $this->teamMemberAllows(
+            return $this->internalNotificationGate->allows(
                 teamMember: $recipient,
                 channel: $channel,
                 notificationType: $this->notificationType($definition),
@@ -81,18 +81,6 @@ class MessagePlanningGate
     {
         return is_string($payload['to'] ?? null)
             && trim($payload['to']) !== '';
-    }
-
-    private function teamMemberAllows(
-        TeamMember $teamMember,
-        string $channel,
-        ?string $notificationType,
-    ): bool {
-        return match ($channel) {
-            MessageChannel::Email->value => $teamMember->canReceiveEmailNotifications($notificationType),
-            MessageChannel::Sms->value => $teamMember->canReceiveSmsNotifications($notificationType),
-            default => false,
-        };
     }
 
     /**
