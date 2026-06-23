@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureModuleEnabled;
 use App\Http\Middleware\ForceStagingAccess;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -44,6 +45,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'staging.access' => ForceStagingAccess::class,
+            'module' => EnsureModuleEnabled::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [

@@ -12,6 +12,7 @@ use App\Services\Messaging\InternalNotificationChannelResolver;
 use App\Services\Messaging\InternalNotificationPreferences\TeamMemberInternalNotificationPreferenceResolver;
 use App\Services\Messaging\Sms\SmsProviderManager;
 use App\Services\Messaging\Sms\SmsWebhookHandlerResolver;
+use App\Support\Modules\ModuleManager;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -28,6 +29,8 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(config_path('messaging/sms.php'), 'messaging.sms');
         $this->mergeConfigFrom(config_path('messaging/email.php'), 'messaging.email');
+
+        $this->app->singleton(ModuleManager::class);
 
         $this->app->singleton(Client::class, function () {
             return new Client(

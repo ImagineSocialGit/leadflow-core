@@ -17,3 +17,10 @@ if (! function_exists('cdn_image')) {
         return "{$base}/images/{$path}";
     }
 }
+
+if (! function_exists('module_enabled')) {
+    function module_enabled(string $key): bool
+    {
+        return app(\App\Support\Modules\ModuleManager::class)->enabled($key);
+    }
+}

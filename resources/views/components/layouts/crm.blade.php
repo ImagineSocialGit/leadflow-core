@@ -21,9 +21,11 @@
                     >
                         {{ config('contacts.labels.plural') }}
                     </a>
-                    <a href="/webinars" class="block rounded-lg px-3 py-2 font-medium text-slate-700 transition hover:bg-slate-100">
-                        Webinars
-                    </a>
+                    @if(module_enabled('webinars'))
+                        <a href="/webinars" class="block rounded-lg px-3 py-2 font-medium text-slate-700 transition hover:bg-slate-100">
+                            Webinars
+                        </a>
+                    @endif
                     <form method="POST" action="/logout" class="">
                         @csrf
                         <div class="block">

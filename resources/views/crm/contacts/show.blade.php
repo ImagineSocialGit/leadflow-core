@@ -4,8 +4,8 @@
     :subheading="config('contacts.labels.singular').' record'"
 >
     <div class="space-y-6">
-        <div class="grid gap-6 lg:grid-cols-3">
-            <div class="lg:col-span-2">
+        <div class="grid gap-6 {{ module_enabled('webinars') ? 'lg:grid-cols-3' : '' }}">
+            <div class="{{ module_enabled('webinars') ? 'lg:col-span-2' : '' }}">
                 <x-ui.card class="space-y-4">
                     <div>
                         <p class="text-sm text-slate-500 capitalize">
@@ -39,6 +39,7 @@
                     </div>
                 </x-ui.card>
             </div>
+            @if(module_enabled('webinars'))
             <div>
                 <x-ui.card class="space-y-3">
                     <h3 class="text-lg font-semibold tracking-tight">
@@ -134,351 +135,393 @@
                     @endforelse
                 </x-ui.card>
             </div>
+            @endif
         </div>
 
-        <div class="grid gap-6 lg:grid-cols-2">
+        <div
+            class="grid gap-6"
+            x-data="{
+                tab: 'notes',
+                taskModalOpen: @js($errors->has('assigned_to_id') || $errors->has('title') || $errors->has('description') || $errors->has('due_at')),
+            }"
+        >
             <x-ui.card class="space-y-4">
-                <h3 class="text-lg font-semibold tracking-tight">
-                    Add Note
-                </h3>
-
-                <form
-                    method="POST"
-                    action="{{ route('crm.contacts.notes.store', $contact) }}"
-                    class="space-y-4"
-                >
-                    @csrf
-
+                <div class="flex items-center justify-between gap-4">
                     <div>
-                        <x-ui.form.label for="content">
-                            Note
-                        </x-ui.form.label>
-
-                        <x-ui.form.textarea
-                            id="content"
-                            name="content"
-                            rows="4"
-                        >{{ old('content') }}</x-ui.form.textarea>
-
-                        @error('content')
-                            <p class="mt-1 text-sm text-red-600">
-                                {{ $message }}
-                            </p>
-                        @enderror
+                        <h3 class="text-lg font-semibold tracking-tight">
+                            Activity
+                        </h3>
                     </div>
 
-                    <x-ui.button type="submit">
-                        Save Note
-                    </x-ui.button>
-                </form>
-
-                <div class="space-y-3 border-t border-slate-200 pt-4">
-                    @forelse ($contact->notes as $note)
-                        <div
-                            x-data="{ editing: false }"
-                            class="rounded-xl border border-slate-200 p-3"
+                    <div class="flex rounded-xl bg-slate-100 p-1 text-sm font-semibold">
+                        <button
+                            type="button"
+                            x-on:click="tab = 'notes'"
+                            class="rounded-lg px-3 py-1.5"
+                            x-bind:class="tab === 'notes' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
                         >
-                            <div x-show="! editing" class="flex justify-between items-center">
-                                <div class="space-y-2">
-                                    <p class="text-slate-800">
-                                        {{ $note->content }}
-                                    </p>
+                            Notes
+                        </button>
 
-                                    <p class="text-xs text-slate-500">
-                                        {{ $note->created_at->format('M j, Y g:i A') }}
-                                    </p>
+                        @if(module_enabled('tasks'))
+                            <button
+                                type="button"
+                                x-on:click="tab = 'tasks'"
+                                class="rounded-lg px-3 py-1.5"
+                                x-bind:class="tab === 'tasks' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+                            >
+                                Tasks
+                            </button>
+                        @endif
+                    </div>
+                </div>
+
+                <div x-show="tab === 'notes'" class="space-y-4">
+                    <h3 class="text-lg font-semibold tracking-tight">
+                        Add Note
+                    </h3>
+
+                    <form
+                        method="POST"
+                        action="{{ route('crm.contacts.notes.store', $contact) }}"
+                        class="space-y-4"
+                    >
+                        @csrf
+
+                        <div>
+                            <x-ui.form.label for="content">
+                                Note
+                            </x-ui.form.label>
+
+                            <x-ui.form.textarea
+                                id="content"
+                                name="content"
+                                rows="4"
+                            >{{ old('content') }}</x-ui.form.textarea>
+
+                            @error('content')
+                                <p class="mt-1 text-sm text-red-600">
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                        </div>
+
+                        <x-ui.button type="submit">
+                            Save Note
+                        </x-ui.button>
+                    </form>
+
+                    <div class="space-y-3 border-t border-slate-200 pt-4">
+                        @forelse ($contact->notes as $note)
+                            <div
+                                x-data="{ editing: false }"
+                                class="rounded-xl border border-slate-200 p-3"
+                            >
+                                <div x-show="! editing" class="flex justify-between items-center">
+                                    <div class="space-y-2">
+                                        <p class="text-slate-800">
+                                            {{ $note->content }}
+                                        </p>
+
+                                        <p class="text-xs text-slate-500">
+                                            {{ $note->created_at->format('M j, Y g:i A') }}
+                                        </p>
+                                    </div>
+
+                                    <div class="flex space-x-2">
+                                        <button
+                                            type="button"
+                                            x-on:click="editing = true"
+                                            class="text-sm font-semibold text-indigo-600 hover:underline cursor-pointer"
+                                        >
+                                            Edit
+                                        </button>
+
+                                        <form
+                                            method="POST"
+                                            action="{{ route('crm.contacts.notes.destroy', [$contact, $note]) }}"
+                                        >
+                                            @csrf
+                                            @method('DELETE')
+
+                                            <button
+                                                type="submit"
+                                                class="block text-sm font-semibold text-red-600 hover:underline cursor-pointer"
+                                            >
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
 
-                                <div class="flex space-x-2">
-                                    <button
-                                        type="button"
-                                        x-on:click="editing = true"
-                                        class="text-sm font-semibold text-indigo-600 hover:underline cursor-pointer"
-                                    >
-                                        Edit
-                                    </button>
+                                <form
+                                    x-show="editing"
+                                    method="POST"
+                                    action="{{ route('crm.contacts.notes.update', [$contact, $note]) }}"
+                                    class="space-y-3"
+                                >
+                                    @csrf
+                                    @method('PATCH')
 
-                                    <form
-                                        method="POST"
-                                        action="{{ route('crm.contacts.notes.destroy', [$contact, $note]) }}"
-                                    >
-                                        @csrf
-                                        @method('DELETE')
+                                    <x-ui.form.textarea name="content" rows="3">{{ old('content', $note->content) }}</x-ui.form.textarea>
 
+                                    <div class="flex gap-3">
                                         <button
                                             type="submit"
-                                            class="block text-sm font-semibold text-red-600 hover:underline cursor-pointer"
+                                            class="text-xs font-semibold text-indigo-600 hover:underline"
                                         >
-                                            Delete
+                                            Save
                                         </button>
-                                    </form>
-                                </div>
+
+                                        <button
+                                            type="button"
+                                            x-on:click="editing = false"
+                                            class="text-xs font-semibold text-slate-500 hover:underline"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
-
-                            <form
-                                x-show="editing"
-                                method="POST"
-                                action="{{ route('crm.contacts.notes.update', [$contact, $note]) }}"
-                                class="space-y-3"
-                            >
-                                @csrf
-                                @method('PATCH')
-
-                                <x-ui.form.textarea name="content" rows="3">{{ old('content', $note->content) }}</x-ui.form.textarea>
-
-                                <div class="flex gap-3">
-                                    <button
-                                        type="submit"
-                                        class="text-xs font-semibold text-indigo-600 hover:underline"
-                                    >
-                                        Save
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        x-on:click="editing = false"
-                                        class="text-xs font-semibold text-slate-500 hover:underline"
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    @empty
-                        <p class="text-sm text-slate-500">
-                            No notes yet.
-                        </p>
-                    @endforelse
+                        @empty
+                            <p class="text-sm text-slate-500">
+                                No notes yet.
+                            </p>
+                        @endforelse
+                    </div>
                 </div>
-            </x-ui.card>
 
-            <x-ui.card class="space-y-4">
-                <h3 class="text-lg font-semibold tracking-tight">
-                    Add Task
-                </h3>
+                @if(module_enabled('tasks'))
+                    <div x-show="tab === 'tasks'" class="space-y-4">
+                        <h3 class="text-lg font-semibold tracking-tight">
+                            Add Task
+                        </h3>
 
-                @php
-                    $initialAssignedToId = (string) old('assigned_to_id', '');
-                    $currentTeamMemberId = $currentTeamMember ? (string) $currentTeamMember->id : null;
+                        @php
+                            $initialAssignedToId = (string) old('assigned_to_id', '');
+                            $currentTeamMemberId = $currentTeamMember ? (string) $currentTeamMember->id : null;
 
-                    $initialNotifyAssignee = old('notify_assignee');
+                            $initialNotifyAssignee = old('notify_assignee');
 
-                    $shouldInitiallyNotify = $initialNotifyAssignee !== null
-                        ? (bool) $initialNotifyAssignee
-                        : ($initialAssignedToId !== '' && $initialAssignedToId !== $currentTeamMemberId);
-                @endphp
+                            $shouldInitiallyNotify = $initialNotifyAssignee !== null
+                                ? (bool) $initialNotifyAssignee
+                                : ($initialAssignedToId !== '' && $initialAssignedToId !== $currentTeamMemberId);
+                        @endphp
 
-                <form
-                    method="POST"
-                    action="{{ route('crm.contacts.tasks.store', $contact) }}"
-                    class="space-y-4"
-                    x-data="{
-                        assignedToId: @js($initialAssignedToId),
-                        currentTeamMemberId: @js($currentTeamMemberId),
-                        notifyAssignee: @js($shouldInitiallyNotify),
-                        updateNotifyAssigneeDefault() {
-                            this.notifyAssignee = this.assignedToId !== ''
-                                && this.assignedToId !== this.currentTeamMemberId;
-                        },
-                    }"
-                >
-                    @csrf
-
-                    <div>
-                        <x-ui.form.label for="assigned_to_id">
-                            Assigned To
-                        </x-ui.form.label>
-
-                        <x-ui.form.select
-                            id="assigned_to_id"
-                            name="assigned_to_id"
-                            x-model="assignedToId"
-                            x-on:change="updateNotifyAssigneeDefault"
+                        <form
+                            method="POST"
+                            action="{{ route('crm.contacts.tasks.store', $contact) }}"
+                            class="space-y-4"
+                            x-data="{
+                                assignedToId: @js($initialAssignedToId),
+                                currentTeamMemberId: @js($currentTeamMemberId),
+                                notifyAssignee: @js($shouldInitiallyNotify),
+                                updateNotifyAssigneeDefault() {
+                                    this.notifyAssignee = this.assignedToId !== ''
+                                        && this.assignedToId !== this.currentTeamMemberId;
+                                },
+                            }"
                         >
-                            <option value="">Select team member...</option>
+                            @csrf
 
-                            @foreach ($teamMembers as $teamMember)
-                                <option
-                                    value="{{ $teamMember->id }}"
-                                    @selected((string) old('assigned_to_id') === (string) $teamMember->id)
+                            <div>
+                                <x-ui.form.label for="assigned_to_id">
+                                    Assigned To
+                                </x-ui.form.label>
+
+                                <x-ui.form.select
+                                    id="assigned_to_id"
+                                    name="assigned_to_id"
+                                    x-model="assignedToId"
+                                    x-on:change="updateNotifyAssigneeDefault"
                                 >
-                                    {{ $teamMember->name }}
-                                    @if ($teamMember->email)
-                                        — {{ $teamMember->email }}
-                                    @endif
-                                </option>
-                            @endforeach
-                        </x-ui.form.select>
+                                    <option value="">Select team member...</option>
 
-                        @error('assigned_to_id')
-                            <p class="mt-1 text-sm text-red-600">
-                                {{ $message }}
-                            </p>
-                        @enderror
-                    </div>
+                                    @foreach ($teamMembers as $teamMember)
+                                        <option
+                                            value="{{ $teamMember->id }}"
+                                            @selected((string) old('assigned_to_id') === (string) $teamMember->id)
+                                        >
+                                            {{ $teamMember->name }}
+                                            @if ($teamMember->email)
+                                                — {{ $teamMember->email }}
+                                            @endif
+                                        </option>
+                                    @endforeach
+                                </x-ui.form.select>
 
-                    <div>
-                        <x-ui.form.label for="title">
-                            Task
-                        </x-ui.form.label>
-
-                        <x-ui.form.input
-                            id="title"
-                            name="title"
-                            :value="old('title')"
-                        />
-
-                        @error('title')
-                            <p class="mt-1 text-sm text-red-600">
-                                {{ $message }}
-                            </p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <x-ui.form.label for="description">
-                            Description
-                        </x-ui.form.label>
-
-                        <x-ui.form.textarea
-                            id="description"
-                            name="description"
-                            rows="3"
-                        >{{ old('description') }}</x-ui.form.textarea>
-
-                        @error('description')
-                            <p class="mt-1 text-sm text-red-600">
-                                {{ $message }}
-                            </p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <x-ui.form.label for="due_at">
-                            Due At
-                        </x-ui.form.label>
-
-                        <x-ui.form.input
-                            id="due_at"
-                            name="due_at"
-                            type="datetime-local"
-                            :value="old('due_at')"
-                        />
-
-                        @error('due_at')
-                            <p class="mt-1 text-sm text-red-600">
-                                {{ $message }}
-                            </p>
-                        @enderror
-                    </div>
-
-                    <input
-                        type="hidden"
-                        name="notify_assignee"
-                        value="0"
-                    >
-
-                    <label class="flex items-start gap-3 rounded-xl border border-slate-200 p-3">
-                        <input
-                            type="checkbox"
-                            name="notify_assignee"
-                            value="1"
-                            x-model="notifyAssignee"
-                            class="mt-1 rounded border-slate-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
-                        >
-
-                        <span>
-                            <span class="block text-sm font-semibold text-slate-900">
-                                Notify assignee
-                            </span>
-
-                            <span class="block text-sm text-slate-500">
-                                Send an internal task assignment notification based on the assignee’s notification preferences.
-                            </span>
-                        </span>
-                    </label>
-
-                    <x-ui.button type="submit">
-                        Create Task
-                    </x-ui.button>
-                </form>
-
-                <div class="space-y-3 border-t border-slate-200 pt-4">
-                    @forelse ($contact->tasks as $task)
-                        <div class="rounded-xl border border-slate-200 p-3">
-                            <div class="flex items-start justify-between gap-4">
-                                <div>
-                                    <p class="font-medium text-slate-900">
-                                        {{ $task->title }}
+                                @error('assigned_to_id')
+                                    <p class="mt-1 text-sm text-red-600">
+                                        {{ $message }}
                                     </p>
+                                @enderror
+                            </div>
 
-                                    <p class="mt-1 text-sm text-slate-500">
-                                        Assigned to:
-                                        <span class="font-medium text-slate-700">
-                                            {{ $task->assignedTo?->name ?? '—' }}
-                                        </span>
+                            <div>
+                                <x-ui.form.label for="title">
+                                    Task
+                                </x-ui.form.label>
+
+                                <x-ui.form.input
+                                    id="title"
+                                    name="title"
+                                    :value="old('title')"
+                                />
+
+                                @error('title')
+                                    <p class="mt-1 text-sm text-red-600">
+                                        {{ $message }}
                                     </p>
-                                </div>
+                                @enderror
+                            </div>
 
-                                <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $task->status === 'completed' ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700' }}">
-                                    {{ str($task->status)->replace('_', ' ')->title() }}
+                            <div>
+                                <x-ui.form.label for="description">
+                                    Description
+                                </x-ui.form.label>
+
+                                <x-ui.form.textarea
+                                    id="description"
+                                    name="description"
+                                    rows="3"
+                                >{{ old('description') }}</x-ui.form.textarea>
+
+                                @error('description')
+                                    <p class="mt-1 text-sm text-red-600">
+                                        {{ $message }}
+                                    </p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <x-ui.form.label for="due_at">
+                                    Due At
+                                </x-ui.form.label>
+
+                                <x-ui.form.input
+                                    id="due_at"
+                                    name="due_at"
+                                    type="datetime-local"
+                                    :value="old('due_at')"
+                                />
+
+                                @error('due_at')
+                                    <p class="mt-1 text-sm text-red-600">
+                                        {{ $message }}
+                                    </p>
+                                @enderror
+                            </div>
+
+                            <input
+                                type="hidden"
+                                name="notify_assignee"
+                                value="0"
+                            >
+
+                            <label class="flex items-start gap-3 rounded-xl border border-slate-200 p-3">
+                                <input
+                                    type="checkbox"
+                                    name="notify_assignee"
+                                    value="1"
+                                    x-model="notifyAssignee"
+                                    class="mt-1 rounded border-slate-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                >
+
+                                <span>
+                                    <span class="block text-sm font-semibold text-slate-900">
+                                        Notify assignee
+                                    </span>
+
+                                    <span class="block text-sm text-slate-500">
+                                        Send an internal task assignment notification based on the assignee’s notification preferences.
+                                    </span>
                                 </span>
-                            </div>
+                            </label>
 
-                            @if ($task->description)
-                                <p class="mt-3 text-sm text-slate-700">
-                                    {{ $task->description }}
+                            <x-ui.button type="submit">
+                                Create Task
+                            </x-ui.button>
+                        </form>
+
+                        <div class="space-y-3 border-t border-slate-200 pt-4">
+                            @forelse ($contact->tasks as $task)
+                                <div class="rounded-xl border border-slate-200 p-3">
+                                    <div class="flex items-start justify-between gap-4">
+                                        <div>
+                                            <p class="font-medium text-slate-900">
+                                                {{ $task->title }}
+                                            </p>
+
+                                            <p class="mt-1 text-sm text-slate-500">
+                                                Assigned to:
+                                                <span class="font-medium text-slate-700">
+                                                    {{ $task->assignedTo?->name ?? '—' }}
+                                                </span>
+                                            </p>
+                                        </div>
+
+                                        <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $task->status === 'completed' ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700' }}">
+                                            {{ str($task->status)->replace('_', ' ')->title() }}
+                                        </span>
+                                    </div>
+
+                                    @if ($task->description)
+                                        <p class="mt-3 text-sm text-slate-700">
+                                            {{ $task->description }}
+                                        </p>
+                                    @endif
+
+                                    <p class="mt-3 text-xs text-slate-500">
+                                        Due:
+                                        {{ $task->due_at?->format('M j, Y g:i A') ?? '—' }}
+                                    </p>
+
+                                    <div class="mt-3">
+                                        @if ($task->status !== 'completed')
+                                            <form
+                                                method="POST"
+                                                action="{{ route('crm.contacts.tasks.complete', [$contact, $task]) }}"
+                                            >
+                                                @csrf
+                                                @method('PATCH')
+
+                                                <x-ui.button
+                                                    type="submit"
+                                                    variant="secondary"
+                                                >
+                                                    Mark Complete
+                                                </x-ui.button>
+                                            </form>
+                                        @else
+                                            <form
+                                                method="POST"
+                                                action="{{ route('crm.contacts.tasks.reopen', [$contact, $task]) }}"
+                                            >
+                                                @csrf
+                                                @method('PATCH')
+
+                                                <x-ui.button
+                                                    type="submit"
+                                                    variant="ghost"
+                                                >
+                                                    Reopen
+                                                </x-ui.button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                </div>
+                            @empty
+                                <p class="text-sm text-slate-500">
+                                    No tasks yet.
                                 </p>
-                            @endif
-
-                            <p class="mt-3 text-xs text-slate-500">
-                                Due:
-                                {{ $task->due_at?->format('M j, Y g:i A') ?? '—' }}
-                            </p>
-
-                            <div class="mt-3">
-                                @if ($task->status !== 'completed')
-                                    <form
-                                        method="POST"
-                                        action="{{ route('crm.contacts.tasks.complete', [$contact, $task]) }}"
-                                    >
-                                        @csrf
-                                        @method('PATCH')
-
-                                        <x-ui.button
-                                            type="submit"
-                                            variant="secondary"
-                                        >
-                                            Mark Complete
-                                        </x-ui.button>
-                                    </form>
-                                @else
-                                    <form
-                                        method="POST"
-                                        action="{{ route('crm.contacts.tasks.reopen', [$contact, $task]) }}"
-                                    >
-                                        @csrf
-                                        @method('PATCH')
-
-                                        <x-ui.button
-                                            type="submit"
-                                            variant="ghost"
-                                        >
-                                            Reopen
-                                        </x-ui.button>
-                                    </form>
-                                @endif
-                            </div>
+                            @endforelse
                         </div>
-                    @empty
-                        <p class="text-sm text-slate-500">
-                            No tasks yet.
-                        </p>
-                    @endforelse
-                </div>
+                    </div>
+                @endif
             </x-ui.card>
         </div>
 
+        @if(module_enabled('messaging'))
         <div
             x-data="{ tab: new URLSearchParams(window.location.search).get('messages_tab') || 'messages' }"
         >
@@ -681,5 +724,6 @@
                 </div>
             </x-ui.card>
         </div>
+        @endif
     </div>
 </x-layouts.crm>
