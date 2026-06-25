@@ -8,12 +8,20 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use SplFileInfo;
 
 class ClientServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
         $this->loadClientEnvironment();
+
+        $preset = $this->selectedPreset();
+
+        if ($preset !== null) {
+            $this->mergePresetConfig($preset);
+        }
+
         $this->mergeClientConfig();
     }
 
@@ -25,6 +33,49 @@ class ClientServiceProvider extends ServiceProvider
             View::prependLocation($views);
             View::prependNamespace('client', $views);
         }
+    }
+
+    private function selectedPreset(): ?string
+    {
+        $explicit = config('client.preset');
+
+        if (is_string($explicit) && $explicit !== '') {
+            return $explicit;
+        }
+
+        $clientConfig = $this->loadClientConfigFile('client');
+
+        if (! is_array($clientConfig)) {
+            return null;
+        }
+
+        $preset = $clientConfig['preset'] ?? null;
+
+        return is_string($preset) && $preset !== ''
+            ? $preset
+            : null;
+    }
+
+    private function mergePresetConfig(string $preset): void
+    {
+        $defaults = config("presets.presets.{$preset}");
+
+        if (! is_array($defaults)) {
+            return;
+        }
+
+        foreach ($defaults as $key => $presetConfig) {
+            $current = config($key);
+
+            Config::set(
+                $key,
+                is_array($current) && is_array($presetConfig)
+                    ? $this->mergeConfigValues($current, $presetConfig)
+                    : $presetConfig,
+            );
+        }
+
+        Config::set('client.preset', $preset);
     }
 
     private function mergeClientConfig(): void
@@ -43,6 +94,10 @@ class ClientServiceProvider extends ServiceProvider
         );
 
         foreach ($iterator as $file) {
+            if (! $file instanceof SplFileInfo) {
+                continue;
+            }
+
             if (! $file->isFile() || $file->getExtension() !== 'php') {
                 continue;
             }
@@ -65,6 +120,23 @@ class ClientServiceProvider extends ServiceProvider
                     : $clientConfig,
             );
         }
+    }
+
+    private function loadClientConfigFile(string $key): mixed
+    {
+        $root = config('client.config_path');
+
+        if (! is_string($root) || ! is_dir($root)) {
+            return null;
+        }
+
+        $path = $root.DIRECTORY_SEPARATOR.str_replace('.', DIRECTORY_SEPARATOR, $key).'.php';
+
+        if (! is_file($path)) {
+            return null;
+        }
+
+        return require $path;
     }
 
     private function mergeConfigValues(array $defaults, array $overrides): array

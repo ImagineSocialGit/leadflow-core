@@ -6,6 +6,7 @@ $clientPath = base_path('client/'.$clientKey);
 
 return [
     'key' => $clientKey,
+    'preset' => env('CLIENT_PRESET', config('presets.default')),
     'path' => $clientPath,
     'config_path' => $clientPath.'/config',
     'views_path' => $clientPath.'/resources/views',
