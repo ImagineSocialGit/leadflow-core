@@ -456,19 +456,20 @@
 │   │   ├── 2026_05_19_154535_create_inbound_messages_table.php
 │   │   ├── 2026_05_19_211538_create_scheduled_messages_table.php
 │   │   ├── 2026_05_19_221010_create_message_suppressions_table.php
-│   │   ├── 2026_06_02_211108_create_mortgage_stages_table.php
-│   │   ├── 2026_06_02_211116_create_contact_mortgage_profiles_table.php
 │   │   ├── 2026_06_12_050337_create_campaign_enrollments_table.php
 │   │   ├── 2026_06_12_065258_create_broadcasts_table.php
 │   │   ├── 2026_06_12_065311_create_broadcast_recipients_table.php
 │   │   ├── 2026_06_18_203547_create_webinar_series_table.php
 │   │   ├── 2026_06_19_203548_create_webinars_table.php
 │   │   ├── 2026_06_19_203549_create_webinar_registrations_table.php
-│   │   └── 2026_06_20_155410_create_webinar_waitlist_signups_table.php
+│   │   ├── 2026_06_20_155410_create_webinar_waitlist_signups_table.php
+│   │   └── verticals
+│   │       └── mortgage
+│   │           ├── 2026_06_02_211108_create_mortgage_stages_table.php
+│   │           └── 2026_06_02_211116_create_contact_mortgage_profiles_table.php
 │   ├── schema
 │   └── seeders
 │       ├── DatabaseSeeder.php
-│       ├── TagSeeder.php
 │       ├── UserSeeder.php
 │       └── WebinarSeeder.php
 ├── docs
@@ -602,8 +603,6 @@
 │   │   │   ├── ScheduleNextCampaignStepActionTest.php
 │   │   │   └── ScheduleNextCampaignStepAfterScheduledMessageSentTest.php
 │   │   ├── CRM
-│   │   │   ├── ContactTaskAssignmentTest.php
-│   │   │   ├── PlaySystemDataModelTest.php
 │   │   │   ├── UpdateContactStatusActionTest.php
 │   │   │   └── WebinarSyncTest.php
 │   │   ├── Email
@@ -654,4 +653,4 @@
 │   └── TestCase.php
 └── vite.config.js
 
-208 directories, 447 files
+210 directories, 444 files
