@@ -2,15 +2,14 @@
 
 namespace App\Modules\Core\Controllers;
 
-use App\Modules\Core\Actions\Contacts\CreateOrUpdateContactAction;
 use App\Http\Controllers\Controller;
-use App\Modules\Core\Requests\StoreContactRequest;
+use App\Modules\Core\Actions\Contacts\CreateOrUpdateContactAction;
 use App\Modules\Core\Models\Contact;
 use App\Modules\Core\Models\ContactStatus;
-use App\Modules\Tasks\Models\Task;
-use App\Modules\InternalNotifications\Models\TeamMember;
+use App\Modules\Core\Requests\StoreContactRequest;
 use App\Modules\Core\Support\Contacts\ContactImportRegistry;
 use App\Modules\Core\Support\Contacts\ContactPanelRegistry;
+use App\Modules\Core\Support\Contacts\ContactShowDataRegistry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -57,18 +56,11 @@ class ContactController extends Controller
             ->with('success', config('contacts.labels.singular').' created.');
     }
 
-    public function show(Contact $contact, ContactPanelRegistry $contactPanelRegistry): View
-    {
-        $scheduledMessages = null;
-
-        if (module_enabled('messaging')) {
-            $scheduledMessages = $contact->scheduledMessages()
-                ->where('status', 'sent')
-                ->latest('send_at')
-                ->paginate(10, ['*'], 'messages_page')
-                ->withQueryString();
-        }
-
+    public function show(
+        Contact $contact,
+        ContactPanelRegistry $contactPanelRegistry,
+        ContactShowDataRegistry $contactShowDataRegistry,
+    ): View {
         $relations = [
             'notes' => fn ($query) => $query->latest(),
         ];
@@ -77,58 +69,24 @@ class ContactController extends Controller
             $relations[] = 'workflowProfile.contactStatus';
         }
 
-        if (module_enabled('messaging')) {
-            $relations[] = 'messageConsents';
-            $relations[] = 'consentRevocations';
-        }
-
         $contact->load($relations);
-
-        $taskView = request('task_view') === 'archived' ? 'archived' : 'active';
-
-        $tasks = collect();
-        $archivedTasks = collect();
-        $teamMembers = collect();
-        $currentTeamMember = null;
-
-        if (module_enabled('tasks')) {
-            $tasks = Task::query()
-                ->with('assignedTo')
-                ->where('related_type', $contact->getMorphClass())
-                ->where('related_id', $contact->id)
-                ->unarchived()
-                ->latest()
-                ->get();
-
-            $archivedTasks = Task::query()
-                ->with('assignedTo')
-                ->where('related_type', $contact->getMorphClass())
-                ->where('related_id', $contact->id)
-                ->archived()
-                ->latest('archived_at')
-                ->get();
-
-            $teamMembers = TeamMember::active()
-                ->orderBy('name')
-                ->get(['id', 'name', 'email']);
-
-            $currentTeamMember = TeamMember::query()
-                ->where('user_id', auth()->id())
-                ->first();
-        }
 
         $contactPanels = $contactPanelRegistry->panelsFor($contact);
 
-        return view('crm.contacts.show', compact(
-            'contact',
-            'scheduledMessages',
-            'teamMembers',
-            'currentTeamMember',
-            'taskView',
-            'tasks',
-            'archivedTasks',
-            'contactPanels',
-        ));
+        return view('crm.contacts.show', array_replace_recursive([
+            'contact' => $contact,
+            'contactPanels' => $contactPanels,
+
+            'scheduledMessages' => null,
+            'messageConsents' => collect(),
+            'consentRevocations' => collect(),
+
+            'teamMembers' => collect(),
+            'currentTeamMember' => null,
+            'taskView' => request('task_view') === 'archived' ? 'archived' : 'active',
+            'tasks' => collect(),
+            'archivedTasks' => collect(),
+        ], $contactShowDataRegistry->dataFor($contact)));
     }
 
     public function import(): View

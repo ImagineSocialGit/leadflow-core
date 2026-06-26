@@ -5,6 +5,7 @@ namespace App\Modules\Core\Providers;
 use App\Modules\Core\Data\Contacts\ContactImportField;
 use App\Modules\Core\Support\Contacts\ContactImportRegistry;
 use App\Modules\Core\Support\Contacts\ContactPanelRegistry;
+use App\Modules\Core\Support\Contacts\ContactShowDataRegistry;
 use Illuminate\Support\ServiceProvider;
 
 class CoreModuleServiceProvider extends ServiceProvider
@@ -12,6 +13,12 @@ class CoreModuleServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(ContactPanelRegistry::class);
+
+        $this->app->singleton(ContactShowDataRegistry::class, function ($app): ContactShowDataRegistry {
+            return new ContactShowDataRegistry(
+                providers: $app->tagged('core.contact_show_data_providers'),
+            );
+        });
 
         $this->app->singleton(ContactImportRegistry::class, function (): ContactImportRegistry {
             return (new ContactImportRegistry)->registerFields([

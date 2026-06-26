@@ -2,13 +2,14 @@
 
 namespace App\Modules\InboundMessaging\Actions\Sms\Inbound;
 
-use App\Modules\Messaging\Actions\RevokeMessageConsentAction;
+use App\Modules\Core\Models\Contact;
 use App\Modules\InboundMessaging\Contracts\InboundMessageHandler;
+use App\Modules\InboundMessaging\Models\InboundMessage;
+use App\Modules\Messaging\Actions\RevokeMessageConsentAction;
 use App\Modules\Messaging\Enums\MessageChannel;
 use App\Modules\Messaging\Enums\MessagePurpose;
 use App\Modules\Messaging\Models\ConsentRevocation;
-use App\Modules\Core\Models\Contact;
-use App\Modules\InboundMessaging\Models\InboundMessage;
+use App\Modules\Messaging\Models\MessageConsent;
 use BackedEnum;
 
 class RevokeSmsConsentFromInboundMessageAction implements InboundMessageHandler
@@ -22,7 +23,7 @@ class RevokeSmsConsentFromInboundMessageAction implements InboundMessageHandler
         $sender = $inboundMessage->sender;
 
         if (! $sender instanceof Contact) {
-            return $this->stopResponse($inboundMessage);
+            return $this->stopResponse();
         }
 
         $purpose = $this->value($inboundMessage->purpose);
@@ -37,7 +38,7 @@ class RevokeSmsConsentFromInboundMessageAction implements InboundMessageHandler
 
             $inboundMessage->markProcessed();
 
-            return $this->stopResponse($inboundMessage);
+            return $this->stopResponse();
         }
 
         $this->logUnknownProviderContext($inboundMessage, $sender);
@@ -45,21 +46,21 @@ class RevokeSmsConsentFromInboundMessageAction implements InboundMessageHandler
 
         $inboundMessage->markProcessed();
 
-        return $this->stopResponse($inboundMessage);
+        return $this->stopResponse();
     }
 
     private function revokeAllSmsConsent(InboundMessage $inboundMessage, Contact $contact): void
     {
-        $contact
-            ->messageConsents()
+        MessageConsent::query()
+            ->where('contact_id', $contact->id)
             ->where('channel', MessageChannel::Sms->value)
             ->get(['purpose', 'scope'])
-            ->map(fn ($consent) => [
+            ->map(fn (MessageConsent $consent): array => [
                 'purpose' => $this->value($consent->purpose),
                 'scope' => $consent->scope,
             ])
-            ->filter(fn (array $consent) => $consent['purpose'] !== null)
-            ->unique(fn (array $consent) => $consent['purpose'].'|'.$consent['scope'])
+            ->filter(fn (array $consent): bool => $consent['purpose'] !== null)
+            ->unique(fn (array $consent): string => $consent['purpose'].'|'.$consent['scope'])
             ->values()
             ->each(function (array $consent) use ($inboundMessage, $contact): void {
                 $this->revokePurpose(
@@ -112,7 +113,7 @@ class RevokeSmsConsentFromInboundMessageAction implements InboundMessageHandler
             : $inboundMessage->provider.'_inbound_sms';
     }
 
-    private function stopResponse(InboundMessage $inboundMessage): ?string
+    private function stopResponse(): ?string
     {
         return config('messaging.sms.inbound.stop_response');
     }

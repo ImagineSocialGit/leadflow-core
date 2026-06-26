@@ -7,6 +7,7 @@ use App\Modules\InternalNotifications\Listeners\ScheduleInboundMessageInternalNo
 use App\Modules\InternalNotifications\Services\InternalNotificationChannelResolver;
 use App\Modules\InternalNotifications\Services\InternalNotificationPreferences\TeamMemberInternalNotificationPreferenceResolver;
 use App\Modules\InternalNotifications\Services\Messaging\TeamMemberMessageRecipientGate;
+use App\Modules\InternalNotifications\Services\Messaging\TeamMemberMessageRecipientPayloadProvider;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
@@ -25,6 +26,10 @@ class InternalNotificationsModuleServiceProvider extends ServiceProvider
         $this->app->tag([
             TeamMemberMessageRecipientGate::class,
         ], 'messaging.message_recipient_gates');
+
+        $this->app->tag([
+            TeamMemberMessageRecipientPayloadProvider::class,
+        ], 'messaging.message_recipient_payload_providers');
     }
 
     public function boot(): void

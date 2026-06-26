@@ -7,6 +7,8 @@ use Illuminate\Support\Arr;
 class ModuleManager
 {
     /**
+     * Explicitly enabled module keys plus core.
+     *
      * @return array<string>
      */
     public function enabledKeys(): array
@@ -17,18 +19,35 @@ class ModuleManager
             return ['core'];
         }
 
+        $keys = array_values(array_filter(
+            array_map('strval', $enabled),
+            fn (string $key): bool => $key !== ''
+        ));
+
         return array_values(array_unique([
             'core',
-            ...array_map('strval', $enabled),
+            ...$keys,
         ]));
+    }
+
+    /**
+     * Enabled module keys plus required dependency keys.
+     *
+     * @return array<string>
+     */
+    public function enabledKeysWithDependencies(): array
+    {
+        $resolved = [];
+
+        foreach ($this->enabledKeys() as $key) {
+            $this->addEnabledKeyWithDependencies($key, $resolved);
+        }
+
+        return array_values(array_unique($resolved));
     }
 
     public function enabled(string $key): bool
     {
-        if ($key === 'core') {
-            return true;
-        }
-
         return in_array($key, $this->enabledKeys(), true);
     }
 
@@ -47,12 +66,15 @@ class ModuleManager
      */
     public function dependencies(string $key): array
     {
-        return Arr::wrap(config("modules.modules.{$key}.depends_on", []));
+        return array_values(array_filter(
+            Arr::wrap(config("modules.modules.{$key}.depends_on", [])),
+            fn (mixed $dependency): bool => is_string($dependency) && $dependency !== '',
+        ));
     }
 
     public function known(string $key): bool
     {
-        return array_key_exists($key, config('modules.modules', []));
+        return array_key_exists($key, $this->definitions());
     }
 
     /**
@@ -94,12 +116,44 @@ class ModuleManager
     {
         $providers = [];
 
-        foreach (array_keys($this->enabledDefinitions()) as $key) {
+        foreach ($this->enabledKeysWithDependencies() as $key) {
             foreach ($this->providers($key) as $provider) {
                 $providers[] = $provider;
             }
         }
 
         return array_values(array_unique($providers));
+    }
+
+    /**
+     * @param  array<int, string>  $resolved
+     * @param  array<int, string>  $resolving
+     */
+    private function addEnabledKeyWithDependencies(
+        string $key,
+        array &$resolved,
+        array $resolving = [],
+    ): void {
+        if (in_array($key, $resolved, true)) {
+            return;
+        }
+
+        if (in_array($key, $resolving, true)) {
+            return;
+        }
+
+        if (! $this->known($key)) {
+            $resolved[] = $key;
+
+            return;
+        }
+
+        $resolving[] = $key;
+
+        foreach ($this->dependencies($key) as $dependency) {
+            $this->addEnabledKeyWithDependencies($dependency, $resolved, $resolving);
+        }
+
+        $resolved[] = $key;
     }
 }

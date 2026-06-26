@@ -2,14 +2,17 @@
 
 namespace App\Modules\Messaging\Services;
 
-use App\Modules\Messaging\Enums\MessageChannel;
 use App\Modules\Core\Models\Contact;
-use App\Modules\InternalNotifications\Models\TeamMember;
+use App\Modules\Messaging\Enums\MessageChannel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class MessageRecipientPayloadResolver
 {
+    public function __construct(
+        private readonly MessageRecipientPayloadProviderRegistry $payloadProviderRegistry,
+    ) {}
+
     /**
      * @param  array<string, mixed>  $definitionPayload
      * @param  array<string, mixed>  $payload
@@ -38,7 +41,7 @@ class MessageRecipientPayloadResolver
             return null;
         }
 
-        $resolvedPayload = array_replace_recursive(
+        return array_replace_recursive(
             $mergedPayload,
             [
                 'to' => trim($destination),
@@ -50,8 +53,6 @@ class MessageRecipientPayloadResolver
                 'message_type' => $messageType,
             ],
         );
-
-        return $resolvedPayload;
     }
 
     /**
@@ -83,11 +84,7 @@ class MessageRecipientPayloadResolver
         return match (true) {
             $recipient instanceof Contact && $channel === MessageChannel::Email->value => $recipient->email,
             $recipient instanceof Contact && $channel === MessageChannel::Sms->value => $recipient->phone,
-
-            $recipient instanceof TeamMember && $channel === MessageChannel::Email->value => $recipient->email,
-            $recipient instanceof TeamMember && $channel === MessageChannel::Sms->value => $recipient->phone,
-
-            default => null,
+            default => $this->payloadProviderRegistry->destinationForChannel($recipient, $channel),
         };
     }
 

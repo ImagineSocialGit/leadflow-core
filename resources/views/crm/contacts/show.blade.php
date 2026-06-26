@@ -331,7 +331,7 @@
 
                 <div x-show="tab === 'consents'" class="space-y-4">
                     <div class="space-y-3">
-                        @forelse ($contact->messageConsents as $consent)
+                        @forelse ($messageConsents as $consent)
                             <div class="rounded-xl border border-slate-200 p-3">
                                 <div class="flex items-start justify-between gap-4">
                                     <div>
@@ -383,7 +383,7 @@
                         </h4>
 
                         <div class="mt-3 space-y-3">
-                            @forelse ($contact->consentRevocations as $revocation)
+                            @forelse ($consentRevocations as $revocation)
                                 <div class="rounded-xl border border-slate-200 p-3">
                                     <div class="flex items-start justify-between gap-4">
                                         <div>

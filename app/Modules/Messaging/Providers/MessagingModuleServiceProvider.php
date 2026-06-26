@@ -2,8 +2,10 @@
 
 namespace App\Modules\Messaging\Providers;
 
+use App\Modules\Messaging\Services\ContactShow\ContactMessagingShowDataProvider;
 use App\Modules\Messaging\Services\Email\EmailProviderManager;
 use App\Modules\Messaging\Services\MessageRecipientGateRegistry;
+use App\Modules\Messaging\Services\MessageRecipientPayloadProviderRegistry;
 use App\Modules\Messaging\Services\Sms\SmsProviderManager;
 use Illuminate\Support\ServiceProvider;
 use Twilio\Rest\Client;
@@ -33,6 +35,16 @@ class MessagingModuleServiceProvider extends ServiceProvider
                 gates: $app->tagged('messaging.message_recipient_gates'),
             );
         });
+
+        $this->app->singleton(MessageRecipientPayloadProviderRegistry::class, function ($app) {
+            return new MessageRecipientPayloadProviderRegistry(
+                providers: $app->tagged('messaging.message_recipient_payload_providers'),
+            );
+        });
+
+        $this->app->tag([
+            ContactMessagingShowDataProvider::class,
+        ], 'core.contact_show_data_providers');
     }
 
     public function boot(): void
